@@ -1,0 +1,63 @@
+<resources>
+    <string name="app_name">Recipe Sharing</string>
+    <string name="new_recipes_notification_channel_name">Background update</string>
+    <string name="gram_name">g</string>
+    <string name="kilogram_name">kg</string>
+    <string name="litre_name">l</string>
+    <string name="millilitre_name">ml</string>
+
+    <string name="error_info_title">Oops, something went wrong</string>
+
+    <string name="step_order">Step %1$d</string>
+    <string name="minutes_amount">%1$d min</string>
+    <string name="instruction_string">Instructions (%1$d steps)</string>
+    <string name="recipe_description_label">Describe the recipe</string>
+    <string name="recipe_name_label">Enter the name</string>
+    <string name="recipe_name_input">Recipe name</string>
+    <string name="ingredient_name_input">Name</string>
+    <string name="ingredient_amount_input">Amount</string>
+    <string name="save_changes_str">Confirm changes</string>
+    <string name="cancel_changes_str">Cancel changes</string>
+    <string name="add_ingredient_str">Add ingredient</string>
+    <string name="add_step_str">Add Step</string>
+    <string name="add_txt">Add</string>
+    <string name="step_description_str">Description</string>
+    <string name="step_duration_str">Duration (min)</string>
+    <string name="step_configure_dialog_header">Step Editing</string>
+    <string name="go_to_login_str">Go to Login</string>
+    <string name="login_enter_str">Login</string>
+    <string name="password_enter_str">Password</string>
+    <string name="password_repeat_str">Repeat Password</string>
+    <string name="register_confirm_str">Register</string>
+    <string name="login_confirm_str">Authorize</string>
+    <string name="login_page_header">Authorization</string>
+    <string name="register_page_header">Registration</string>
+    <string name="more_btn_text">More</string>
+
+    <string name="creator_screen_header">Creators</string>
+    <string name="creator_page_header">Creator Info</string>
+    <string name="follow_button_txt">Follow (%1$s followers)</string>
+    <string name="followers_count">Followers: %1$s</string>
+    <string name="creator_name_input">Creator nickname</string>
+
+    <string name="unauthorized_txt">Sign up</string>
+    <string name="recipes_page_title">Recipes</string>
+    <string name="favorites_page_title">Favorites</string>
+    <string name="follows_page_title">Follows</string>
+    <string name="user_info_page_title">User Info</string>
+    <string name="reload_page_btn_txt">Reload</string>
+    <string name="confirm_txt">Confirm</string>
+    <string name="cancel_txt">Cancel</string>
+
+    <string name="new_recipes_message_title">New recipes</string>
+    <string name="new_recipes_message_text">Hey! %1$s have posted %2$d new recipes to look at. Have you seen them?!</string>
+    <string name="no_description">This recipe does not have any description</string>
+    <string name="no_items">It seems that this creator haven`t published any recipe or cannot load them. Please, try again later.</string>
+    <string name="no_recipe">Cannot find recipe</string>
+    <string name="filters_load_error">Cannot load requested filters</string>
+    <string name="no_userID">Cannot load this creator. Please try reload the page.</string>
+    <string name="unknown_error_txt">Unknown error. Try to reload the page.</string>
+    <string name="no_such_route">An error occurred while trying to visit this page. Please, check if you chose age correctly and try again later.</string>
+    <string name="no_saved_filters">No filters applied</string>
+    <string name="token_expired">Authentication token has expired. Try to login again</string>
+</resources>
