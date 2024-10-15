@@ -38,7 +38,7 @@ import androidx.wear.compose.material.ExperimentalWearMaterialApi
 import androidx.wear.compose.material.FractionalThreshold
 import androidx.wear.compose.material.rememberSwipeableState
 import androidx.wear.compose.material.swipeable
-import com.receipts.receipt_sharing.data.recipes.Measure
+import com.receipts.receipt_sharing.domain.recipes.Measure
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
 import kotlin.math.absoluteValue
 import kotlin.math.roundToInt

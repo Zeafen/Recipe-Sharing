@@ -23,12 +23,14 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.receipts.receipt_sharing.R
-import com.receipts.receipt_sharing.data.CreatorRequest
+import com.receipts.receipt_sharing.domain.CreatorRequest
+import com.receipts.receipt_sharing.domain.apiServices.UnsafeImageLoader
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
 
 @Composable
 fun CreatorCell(modifier: Modifier = Modifier,
-                creator : CreatorRequest) {
+                creator : CreatorRequest
+) {
     Row(modifier = modifier) {
         if(creator.imageUrl.isBlank())
             Image(modifier = Modifier
@@ -47,7 +49,8 @@ fun CreatorCell(modifier: Modifier = Modifier,
                     .data(creator.imageUrl)
                     .crossfade(true)
                     .build(),
-                contentScale = ContentScale.Crop,
+                imageLoader = UnsafeImageLoader.getInstance(),
+                contentScale = ContentScale.Fit,
                 contentDescription = "")
         Text(modifier = Modifier
             .padding(horizontal = 8.dp)
@@ -68,7 +71,8 @@ private fun Preview() {
                 repeat(10) {
                     CreatorCell(modifier = Modifier
                         .fillMaxWidth(),
-                        creator = CreatorRequest("","New artist New artist New artist New artist New artist New artist New artist",""))
+                        creator = CreatorRequest("","New artist New artist New artist New artist New artist New artist New artist","")
+                    )
                 }
             }
         }

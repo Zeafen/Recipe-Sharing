@@ -1,7 +1,8 @@
-package com.receipts.receipt_sharing.data.repositories
+package com.receipts.receipt_sharing.data.repositoriesImpl
 
-import com.receipts.receipt_sharing.data.request.AuthRequest
-import com.receipts.receipt_sharing.data.response.AuthResult
+import com.receipts.receipt_sharing.domain.repositories.IAuthRepository
+import com.receipts.receipt_sharing.domain.request.AuthRequest
+import com.receipts.receipt_sharing.domain.response.AuthResult
 import com.receipts.receipt_sharing.domain.apiServices.RecipesAPIService
 import retrofit2.HttpException
 

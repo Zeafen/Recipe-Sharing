@@ -37,9 +37,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.receipts.receipt_sharing.R
-import com.receipts.receipt_sharing.data.CreatorRequest
-import com.receipts.receipt_sharing.data.response.RecipeResult
-import com.receipts.receipt_sharing.domain.viewModels.CreatorsScreenEvent
+import com.receipts.receipt_sharing.domain.CreatorRequest
+import com.receipts.receipt_sharing.domain.response.RecipeResult
+import com.receipts.receipt_sharing.data.viewModels.CreatorsScreenEvent
 import com.receipts.receipt_sharing.ui.ErrorInfoPage
 import com.receipts.receipt_sharing.ui.shimmerEffect
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme

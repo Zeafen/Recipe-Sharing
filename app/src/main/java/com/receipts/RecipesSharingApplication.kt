@@ -5,8 +5,9 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import com.receipts.receipt_sharing.R
-import com.receipts.receipt_sharing.data.repositories.AuthDataStoreRepository
-import com.receipts.receipt_sharing.data.repositories.CreatorsRecipesAmountRepository
+import com.receipts.receipt_sharing.data.repositoriesImpl.AuthDataStoreRepository
+import com.receipts.receipt_sharing.data.repositoriesImpl.CreatorsRecipesAmountRepository
+import com.receipts.receipt_sharing.domain.apiServices.UnsafeImageLoader
 import com.receipts.receipt_sharing.domain.helpers.FileHelper
 import dagger.hilt.android.HiltAndroidApp
 
@@ -21,6 +22,7 @@ class RecipesApplication : Application(){
         CreatorsRecipesAmountRepository.createInstance(this)
         AuthDataStoreRepository.createInstance(this)
         FileHelper.createInstance(this)
+        UnsafeImageLoader.initialize(this)
 
         val name = getString(R.string.new_recipes_notification_channel_name)
         val channel = NotificationChannel(

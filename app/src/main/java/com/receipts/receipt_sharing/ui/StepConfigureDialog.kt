@@ -35,15 +35,16 @@ import androidx.compose.ui.window.Dialog
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.ButtonDefaults
 import com.receipts.receipt_sharing.R
-import com.receipts.receipt_sharing.data.recipes.Step
+import com.receipts.receipt_sharing.domain.recipes.Step
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
 import okhttp3.internal.toLongOrDefault
 
 @Composable
 fun StepConfigureDialog(
-                        onDismissRequest : () -> Unit,
-                        onSaveChanges : (Step) -> Unit,
-                        step : Step = Step("", 0)) {
+    onDismissRequest : () -> Unit,
+    onSaveChanges : (Step) -> Unit,
+    step : Step = Step("", 0)
+) {
     Dialog(onDismissRequest = onDismissRequest) {
         var stepState by remember {
             mutableStateOf(step)

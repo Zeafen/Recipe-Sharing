@@ -1,4 +1,4 @@
-package com.receipts.receipt_sharing.data.response
+package com.receipts.receipt_sharing.domain.response
 
 sealed class AuthResult<T>(val data : T? = null, val info: String? = null) {
     class Authorized<T>(data : T?) : AuthResult<T>(data)

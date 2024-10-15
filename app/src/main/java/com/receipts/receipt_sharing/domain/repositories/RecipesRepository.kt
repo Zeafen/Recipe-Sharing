@@ -1,6 +1,6 @@
 
-import com.receipts.receipt_sharing.data.recipes.Recipe
-import com.receipts.receipt_sharing.data.response.RecipeResult
+import com.receipts.receipt_sharing.domain.recipes.Recipe
+import com.receipts.receipt_sharing.domain.response.RecipeResult
 import java.io.File
 
 interface RecipesRepository {

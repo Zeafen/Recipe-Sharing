@@ -1,10 +1,11 @@
 package com.receipts.receipt_sharing.ui.creators
 
-import com.receipts.receipt_sharing.data.CreatorRequest
-import com.receipts.receipt_sharing.data.recipes.Recipe
-import com.receipts.receipt_sharing.data.response.RecipeResult
+import com.receipts.receipt_sharing.domain.CreatorRequest
+import com.receipts.receipt_sharing.domain.recipes.Recipe
+import com.receipts.receipt_sharing.domain.response.RecipeResult
 
 data class CreatorPageState(
+    val userInfoLoaded : Boolean = false,
     val creator : RecipeResult<CreatorRequest> = RecipeResult.Downloading(),
     val recipes : RecipeResult<List<Recipe>> = RecipeResult.Downloading(),
     val creatorName : String = "",

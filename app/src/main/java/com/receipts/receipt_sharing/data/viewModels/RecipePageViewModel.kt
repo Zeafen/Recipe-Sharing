@@ -1,17 +1,16 @@
-package com.receipts.receipt_sharing.domain.viewModels
+package com.receipts.receipt_sharing.data.viewModels
 
 import android.net.Uri
-import android.util.Log
-import androidx.core.net.toFile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.receipts.receipt_sharing.data.recipes.Ingredient
-import com.receipts.receipt_sharing.data.recipes.Recipe
-import com.receipts.receipt_sharing.data.recipes.Step
-import com.receipts.receipt_sharing.data.repositories.AuthDataStoreRepository
-import com.receipts.receipt_sharing.data.repositories.FiltersRepositoryImpl
-import com.receipts.receipt_sharing.data.repositories.RecipesRepositoryImpl
-import com.receipts.receipt_sharing.data.response.RecipeResult
+import com.receipts.receipt_sharing.domain.recipes.Ingredient
+import com.receipts.receipt_sharing.domain.recipes.Recipe
+import com.receipts.receipt_sharing.domain.recipes.Step
+import com.receipts.receipt_sharing.data.repositoriesImpl.AuthDataStoreRepository
+import com.receipts.receipt_sharing.data.repositoriesImpl.FiltersRepositoryImpl
+import com.receipts.receipt_sharing.data.repositoriesImpl.RecipesRepositoryImpl
+import com.receipts.receipt_sharing.domain.response.RecipeResult
+import com.receipts.receipt_sharing.domain.helpers.FileHelper
 import com.receipts.receipt_sharing.ui.recipe.RecipePageState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,6 +20,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.File
 import javax.inject.Inject
 
 private const val TAG = "recipePageVM"
@@ -31,6 +31,7 @@ class RecipePageViewModel @Inject constructor(
     private val filtersRepo : FiltersRepositoryImpl
 ) : ViewModel() {
 
+    private val fileHelper = FileHelper.get()
     private val authDataStoreRepo = AuthDataStoreRepository.get()
     private val _selectedRecipe = MutableStateFlow<RecipeResult<Recipe>>(RecipeResult.Downloading())
 
@@ -61,7 +62,6 @@ class RecipePageViewModel @Inject constructor(
             }
 
             is RecipePageEvent.LoadRecipe -> viewModelScope.launch {
-                Log.i(TAG, "Loading started")
                 val token = authDataStoreRepo.authDataStoreFlow.first().token
                 launch {
 
@@ -73,7 +73,6 @@ class RecipePageViewModel @Inject constructor(
                             recipesRepo.getRecipeByID(it, event.receiptId)
                         } ?: RecipeResult.Error("Unauthorized")
                     }
-                    Log.i(TAG, "Loading ended up: ${_selectedRecipe.value}")
                 }
                 launch {
 
@@ -101,7 +100,6 @@ class RecipePageViewModel @Inject constructor(
                         )
                     }
                 }
-                Log.i(TAG, "Updating has been ended up: ${state.value}")
             }
 
             is RecipePageEvent.RemoveIngredient -> viewModelScope.launch {
@@ -121,6 +119,8 @@ class RecipePageViewModel @Inject constructor(
             }
 
             RecipePageEvent.SaveChanges -> viewModelScope.launch {
+
+
                 val token = authDataStoreRepo.authDataStoreFlow.first().token
                 val name = state.value.recipeName
                 val desc = state.value.recipeDescription
@@ -156,7 +156,8 @@ class RecipePageViewModel @Inject constructor(
                 viewModelScope.launch {
                     val token = authDataStoreRepo.authDataStoreFlow.first().token
                     if (token != null) {
-                        event.imageUri?.let { imageUri ->
+                            val file = fileHelper.getFileFromUri(event.imageUri)
+                        file?.let { imageFilePath ->
                             _state.update {
                                 it.copy(
                                     imageUrl = RecipeResult.Downloading()
@@ -166,7 +167,7 @@ class RecipePageViewModel @Inject constructor(
                                 it.copy(
                                     imageUrl = recipesRepo.uploadRecipeImage(
                                         token,
-                                        imageUri.toFile()
+                                        File(imageFilePath)
                                     )
                                 )
                             }

@@ -43,15 +43,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.receipts.receipt_sharing.R
-import com.receipts.receipt_sharing.data.recipes.Recipe
-import com.receipts.receipt_sharing.data.recipes.Step
+import com.receipts.receipt_sharing.domain.recipes.Recipe
+import com.receipts.receipt_sharing.domain.recipes.Step
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun StepRow(modifier : Modifier = Modifier,
             stepOrder : Int,
-            step: Step) {
+            step: Step
+) {
     var openStepsState by remember {
         mutableStateOf(false)
     }
@@ -323,7 +324,8 @@ fun EditableStepsRows(modifier: Modifier = Modifier,
 @Preview
 private fun StepsRowsPreview(){
     var recipe by remember {
-        mutableStateOf(Recipe(
+        mutableStateOf(
+            Recipe(
             "",
             "",
             "",
@@ -341,7 +343,8 @@ private fun StepsRowsPreview(){
                         "\n" +
                         "Phasellus nulla leo, condimentum in est et, ornare tincidunt neque. Morbi lectus velit, cursus quis pharetra sed, semper rhoncus felis. Pellentesque volutpat ipsum vitae mattis sodales. Proin mattis nulla velit, ac venenatis nisi euismod ut. Sed non imperdiet neque. Sed lacinia libero erat. Vestibulum id pellentesque tellus, at suscipit nulla. Duis ut erat interdum, laoreet nibh ut, lobortis est.", 123123123L)
             )
-        ))
+        )
+        )
     }
     RecipeSharing_theme {
 
@@ -369,5 +372,6 @@ private fun StepsPreview(){
         stepOrder = 1,
         step = Step("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse sit amet est varius, tempor tortor non, pellentesque mi. Praesent accumsan facilisis urna nec semper. Proin gravida consectetur augue. Nullam pharetra nulla at malesuada consequat. Donec eu tortor vitae risus laoreet mollis nec in ipsum. Donec sem erat, rhoncus a iaculis at, accumsan eget nisl. Nulla hendrerit dui in quam rutrum, id ultricies urna facilisis. Fusce urna augue, maximus at tortor pellentesque, laoreet auctor tortor. Maecenas ut eros enim. Donec faucibus venenatis semper. Pellentesque laoreet metus blandit arcu venenatis auctor ac non arcu.\n" +
                 "\n" +
-                "Phasellus nulla leo, condimentum in est et, ornare tincidunt neque. Morbi lectus velit, cursus quis pharetra sed, semper rhoncus felis. Pellentesque volutpat ipsum vitae mattis sodales. Proin mattis nulla velit, ac venenatis nisi euismod ut. Sed non imperdiet neque. Sed lacinia libero erat. Vestibulum id pellentesque tellus, at suscipit nulla. Duis ut erat interdum, laoreet nibh ut, lobortis est.", 123123123L))
+                "Phasellus nulla leo, condimentum in est et, ornare tincidunt neque. Morbi lectus velit, cursus quis pharetra sed, semper rhoncus felis. Pellentesque volutpat ipsum vitae mattis sodales. Proin mattis nulla velit, ac venenatis nisi euismod ut. Sed non imperdiet neque. Sed lacinia libero erat. Vestibulum id pellentesque tellus, at suscipit nulla. Duis ut erat interdum, laoreet nibh ut, lobortis est.", 123123123L)
+    )
 }

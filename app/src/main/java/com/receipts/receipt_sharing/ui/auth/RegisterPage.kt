@@ -32,8 +32,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.receipts.receipt_sharing.R
-import com.receipts.receipt_sharing.data.response.AuthResult
-import com.receipts.receipt_sharing.domain.viewModels.AuthEvent
+import com.receipts.receipt_sharing.domain.response.AuthResult
+import com.receipts.receipt_sharing.data.viewModels.AuthEvent
 import com.receipts.receipt_sharing.ui.ErrorInfoPage
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
 

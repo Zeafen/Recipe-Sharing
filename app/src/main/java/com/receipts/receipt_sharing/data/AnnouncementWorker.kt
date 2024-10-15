@@ -1,4 +1,4 @@
-package com.receipts.receipt_sharing.domain
+package com.receipts.receipt_sharing.data
 
 import android.app.Notification
 import android.app.NotificationManager
@@ -7,10 +7,10 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.receipts.NEW_RECIPES_NOTIFICATION_CHANNEL_ID
 import com.receipts.receipt_sharing.R
-import com.receipts.receipt_sharing.data.repositories.AuthDataStoreRepository
-import com.receipts.receipt_sharing.data.repositories.CreatorsRecipesAmountRepository
-import com.receipts.receipt_sharing.data.repositories.CreatorsRepository
-import com.receipts.receipt_sharing.data.repositories.RecipesRepositoryImpl
+import com.receipts.receipt_sharing.data.repositoriesImpl.AuthDataStoreRepository
+import com.receipts.receipt_sharing.data.repositoriesImpl.CreatorsRecipesAmountRepository
+import com.receipts.receipt_sharing.domain.repositories.CreatorsRepository
+import com.receipts.receipt_sharing.data.repositoriesImpl.RecipesRepositoryImpl
 import com.receipts.receipt_sharing.domain.helpers.isPermissionGranted
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject

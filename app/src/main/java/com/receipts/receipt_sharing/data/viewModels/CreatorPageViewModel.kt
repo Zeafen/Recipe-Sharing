@@ -1,14 +1,14 @@
-package com.receipts.receipt_sharing.domain.viewModels
+package com.receipts.receipt_sharing.data.viewModels
 
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.receipts.receipt_sharing.data.CreatorRequest
-import com.receipts.receipt_sharing.data.recipes.Recipe
-import com.receipts.receipt_sharing.data.repositories.AuthDataStoreRepository
-import com.receipts.receipt_sharing.data.repositories.CreatorsRepositoryImpl
-import com.receipts.receipt_sharing.data.repositories.RecipesRepositoryImpl
-import com.receipts.receipt_sharing.data.response.RecipeResult
+import com.receipts.receipt_sharing.domain.CreatorRequest
+import com.receipts.receipt_sharing.domain.recipes.Recipe
+import com.receipts.receipt_sharing.data.repositoriesImpl.AuthDataStoreRepository
+import com.receipts.receipt_sharing.data.repositoriesImpl.CreatorsRepositoryImpl
+import com.receipts.receipt_sharing.data.repositoriesImpl.RecipesRepositoryImpl
+import com.receipts.receipt_sharing.domain.response.RecipeResult
 import com.receipts.receipt_sharing.domain.helpers.FileHelper
 import com.receipts.receipt_sharing.ui.creators.CreatorPageState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import java.io.File
 import javax.inject.Inject
 
 @HiltViewModel
@@ -79,6 +80,7 @@ class CreatorPageViewModel @Inject constructor(
                         if (_creator.value is RecipeResult.Succeed)
                             _state.update {
                                 it.copy(
+                                    userInfoLoaded = false,
                                     creatorName = _creator.value.data?.nickname ?: "",
                                     imageUrl = _creator.value.data?.imageUrl,
                                     follows = token?.let {
@@ -137,10 +139,10 @@ class CreatorPageViewModel @Inject constructor(
                     val token = authDataStore.authDataStoreFlow.first().token
                     if (token != null) {
                         val file = FileHelper.get().getFileFromUri(event.imageUri)
-                        file?.let { imageUri ->
+                        file?.let { imageFile ->
                             val url = recipesRepo.uploadCreatorImage(
                                 token,
-                                file
+                                File(imageFile)
                             )
 
                             url.data?.let { resPath ->
@@ -189,6 +191,7 @@ class CreatorPageViewModel @Inject constructor(
                         if (_creator.value is RecipeResult.Succeed)
                             _state.update {
                                 it.copy(
+                                    userInfoLoaded = true,
                                     creatorName = _creator.value.data?.nickname ?: "",
                                     imageUrl = _creator.value.data?.imageUrl,
                                     follows = false,

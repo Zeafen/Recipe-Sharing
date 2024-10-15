@@ -31,8 +31,8 @@ import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.ButtonDefaults
 import androidx.wear.compose.material.Text
 import com.receipts.receipt_sharing.R
-import com.receipts.receipt_sharing.data.recipes.Ingredient
-import com.receipts.receipt_sharing.data.recipes.Measure
+import com.receipts.receipt_sharing.domain.recipes.Ingredient
+import com.receipts.receipt_sharing.domain.recipes.Measure
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
 
 @Composable

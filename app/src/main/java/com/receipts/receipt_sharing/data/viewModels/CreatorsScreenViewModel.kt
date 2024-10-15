@@ -1,12 +1,12 @@
-package com.receipts.receipt_sharing.domain.viewModels
+package com.receipts.receipt_sharing.data.viewModels
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.receipts.receipt_sharing.data.CreatorRequest
-import com.receipts.receipt_sharing.data.repositories.AuthDataStoreRepository
-import com.receipts.receipt_sharing.data.repositories.CreatorsRepositoryImpl
-import com.receipts.receipt_sharing.data.response.RecipeResult
+import com.receipts.receipt_sharing.domain.CreatorRequest
+import com.receipts.receipt_sharing.data.repositoriesImpl.AuthDataStoreRepository
+import com.receipts.receipt_sharing.data.repositoriesImpl.CreatorsRepositoryImpl
+import com.receipts.receipt_sharing.domain.response.RecipeResult
 import com.receipts.receipt_sharing.ui.creators.CreatorsScreenState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

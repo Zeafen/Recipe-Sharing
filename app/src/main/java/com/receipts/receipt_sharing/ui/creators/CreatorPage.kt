@@ -55,10 +55,11 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.receipts.receipt_sharing.R
-import com.receipts.receipt_sharing.data.CreatorRequest
-import com.receipts.receipt_sharing.data.recipes.Recipe
-import com.receipts.receipt_sharing.data.response.RecipeResult
-import com.receipts.receipt_sharing.domain.viewModels.CreatorPageEvent
+import com.receipts.receipt_sharing.domain.CreatorRequest
+import com.receipts.receipt_sharing.domain.recipes.Recipe
+import com.receipts.receipt_sharing.domain.response.RecipeResult
+import com.receipts.receipt_sharing.domain.apiServices.UnsafeImageLoader
+import com.receipts.receipt_sharing.data.viewModels.CreatorPageEvent
 import com.receipts.receipt_sharing.ui.ErrorInfoPage
 import com.receipts.receipt_sharing.ui.recipe.RecipeCard
 import com.receipts.receipt_sharing.ui.shimmerEffect
@@ -211,7 +212,8 @@ fun CreatorPage(modifier: Modifier = Modifier,
                                             .data(state.creator.data.imageUrl)
                                             .crossfade(true)
                                             .build(),
-                                        contentScale = ContentScale.Crop,
+                                        imageLoader = UnsafeImageLoader.getInstance(),
+                                        contentScale = ContentScale.Fit,
                                         contentDescription = "",
                                     )
                             }

@@ -1,14 +1,15 @@
 package com.receipts.receipt_sharing.domain.apiServices
 
-import com.receipts.receipt_sharing.data.CreatorRequest
-import com.receipts.receipt_sharing.data.FilterRequest
-import com.receipts.receipt_sharing.data.recipes.Recipe
-import com.receipts.receipt_sharing.data.request.AuthRequest
+import com.receipts.receipt_sharing.domain.CreatorRequest
+import com.receipts.receipt_sharing.domain.FilterRequest
+import com.receipts.receipt_sharing.domain.recipes.Recipe
+import com.receipts.receipt_sharing.domain.request.AuthRequest
 import okhttp3.MultipartBody
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
+import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Part
@@ -31,12 +32,15 @@ interface RecipesAPIService {
         @Header("Authorization") token : String
     )
 
+    @Multipart
     @POST("Files/recipes")
     suspend fun uploadRecipeImage(
         @Header("Authorization") token : String,
         @Part imagePart : MultipartBody.Part
     ) : String
-    @POST("Files/creator")
+
+    @Multipart
+    @POST("Files/creators")
     suspend fun uploadCreatorImage(
         @Header("Authorization") token : String,
         @Part imagePart : MultipartBody.Part
@@ -49,12 +53,12 @@ interface RecipesAPIService {
 
     @GET("Favorites/byname")
     suspend fun getFavoritesByName(@Header("Authorization") token : String, @Query("name") name : String) : List<Recipe>
-    @GET("Favorites/filtered")
+    @POST("Favorites/filtered")
     suspend fun getFilteredFavorites(
         @Header("Authorization") token : String,
         @Body requested : List<String>
     ) : List<Recipe>
-    @GET("Favorites/filtered/byname/{name}")
+    @POST("Favorites/filtered/byname")
     suspend fun getFilteredFavoritesByName(
         @Header("Authorization") token : String,
         @Query("name") name : String,
@@ -69,12 +73,12 @@ interface RecipesAPIService {
     suspend fun getOwn(@Header("Authorization") token : String,
                        @Path("id") recipeID : String) : Boolean
 
-    @GET("Recipes/filtered")
+    @POST("Recipes/filtered")
     suspend fun getFilteredRecipes(@Header("Authorization")token : String,
                                    @Body requested : List<String>) : List<Recipe>
-    @GET("Recipes/filtered/byname/{name}")
+    @POST("Recipes/filtered/byname")
     suspend fun getFilteredRecipesByName(@Header("Authorization")token : String,
-                                   @Path("name") name : String,
+                                   @Query("name") name : String,
                                    @Body requested : List<String>
     ) : List<Recipe>
 
@@ -93,19 +97,19 @@ interface RecipesAPIService {
         @Header("Authorization") token : String,
         @Path("id") creatorID : String
     ) : List<Recipe>
-    @GET("Recipes/bycreator")
+    @GET("Recipes/bycreator/{id}/byname")
     suspend fun getRecipesByCreatorByName(
         @Header("Authorization") token : String,
-        @Query("id") creatorID : String,
+        @Path("id") creatorID : String,
         @Query("name") recipeName : String
     ) : List<Recipe>
-    @GET("Recipes/bycreator/{id}/filtred")
+    @POST("Recipes/bycreator/{id}/filtred")
     suspend fun getFilteredRecipesByCreator(
         @Header("Authorization") token : String,
         @Path("id") creatorID : String,
         @Body request : List<String>
     ) : List<Recipe>
-    @GET("Recipes/bycreator/{id}/filtered/byname")
+    @POST("Recipes/bycreator/{id}/filtered/byname")
     suspend fun getFilteredRecipesByCreatorByName(
         @Header("Authorization") token : String,
         @Path("id") creatorID : String,
@@ -113,10 +117,10 @@ interface RecipesAPIService {
         @Body request : List<String>
     ) : List<Recipe>
 
-    @GET("Recipes/byname/{name}")
+    @GET("Recipes/byname")
     suspend fun getRecipesByName(
         @Header("Authorization") token: String,
-        @Path("name") name : String
+        @Query("name") name : String
     ) : List<Recipe>
 
     @POST("Recipes")
@@ -183,7 +187,7 @@ interface RecipesAPIService {
     ) : List<CreatorRequest>
 
     @GET("Follows/byname")
-    suspend fun getFollowsByName(@Header("Authorization") token : String, @Body name : String) : List<CreatorRequest>
+    suspend fun getFollowsByName(@Header("Authorization") token : String, @Query("name") name : String) : List<CreatorRequest>
 
     @GET("Follows/self")
     suspend fun getFollowers(

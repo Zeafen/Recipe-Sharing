@@ -53,6 +53,7 @@
     <string name="new_recipes_message_text">Hey! %1$s have posted %2$d new recipes to look at. Have you seen them?!</string>
     <string name="no_description">This recipe does not have any description</string>
     <string name="no_items">It seems that this creator haven`t published any recipe or cannot load them. Please, try again later.</string>
+    <string name="no_recipes">It seems that there isn`t at least any recipe within these searching conditions</string>
     <string name="no_recipe">Cannot find recipe</string>
     <string name="filters_load_error">Cannot load requested filters</string>
     <string name="no_userID">Cannot load this creator. Please try reload the page.</string>

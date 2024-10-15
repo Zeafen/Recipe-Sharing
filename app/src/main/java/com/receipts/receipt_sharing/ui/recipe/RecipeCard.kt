@@ -48,7 +48,8 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.receipts.receipt_sharing.R
-import com.receipts.receipt_sharing.data.recipes.Recipe
+import com.receipts.receipt_sharing.domain.recipes.Recipe
+import com.receipts.receipt_sharing.domain.apiServices.UnsafeImageLoader
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -92,6 +93,7 @@ fun RecipeCard(
                     .data(recipe.imageUrl)
                     .crossfade(true)
                     .build(),
+                imageLoader = UnsafeImageLoader.getInstance(),
                 contentScale = ContentScale.Fit,
                 contentDescription = "",
             )

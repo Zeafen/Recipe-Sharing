@@ -1,4 +1,4 @@
-package com.receipts.receipt_sharing.data.repositories
+package com.receipts.receipt_sharing.data.repositoriesImpl
 
 import android.content.Context
 import androidx.datastore.dataStore
@@ -47,7 +47,7 @@ class AuthDataStoreRepository private constructor (
             instance = AuthDataStoreRepository(context)
         }
 
-        fun get() : AuthDataStoreRepository{
+        fun get() : AuthDataStoreRepository {
             return instance ?: throw IllegalStateException("Repository hasn`t been initialized")
         }
     }
@@ -77,7 +77,7 @@ class CreatorsRecipesAmountRepository private constructor(
             instance = CreatorsRecipesAmountRepository(context)
         }
 
-        fun get() : CreatorsRecipesAmountRepository{
+        fun get() : CreatorsRecipesAmountRepository {
             return instance ?: throw IllegalStateException("Repository hasn`t been initialized")
         }
     }

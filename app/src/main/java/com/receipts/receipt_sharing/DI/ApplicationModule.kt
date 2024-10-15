@@ -1,10 +1,10 @@
-package com.receipts.receipt_sharing.domain.DI
+package com.receipts.receipt_sharing.DI
 
 import com.google.gson.GsonBuilder
-import com.receipts.receipt_sharing.data.repositories.AuthRepositoryImpl
-import com.receipts.receipt_sharing.data.repositories.CreatorsRepositoryImpl
-import com.receipts.receipt_sharing.data.repositories.FiltersRepositoryImpl
-import com.receipts.receipt_sharing.data.repositories.RecipesRepositoryImpl
+import com.receipts.receipt_sharing.data.repositoriesImpl.AuthRepositoryImpl
+import com.receipts.receipt_sharing.data.repositoriesImpl.CreatorsRepositoryImpl
+import com.receipts.receipt_sharing.data.repositoriesImpl.FiltersRepositoryImpl
+import com.receipts.receipt_sharing.data.repositoriesImpl.RecipesRepositoryImpl
 import com.receipts.receipt_sharing.domain.apiServices.RecipesAPIService
 import com.receipts.receipt_sharing.domain.apiServices.UnsafeOkHttpClient
 import dagger.Module
@@ -16,7 +16,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.converter.scalars.ScalarsConverterFactory
 import javax.inject.Singleton
 
-private const val BASE_URL = "https://<IP_ADDRESS>:<PORT>/"
+private const val BASE_URL = "https://192.168.139.103:7129/"
 val unsafeClient = UnsafeOkHttpClient.getOkHttpClient()
 @Module
 @InstallIn(SingletonComponent::class)
@@ -43,7 +43,7 @@ object ApplicationModule{
     @Singleton
     fun provideFiltersRepo(
         api : RecipesAPIService
-    ) : FiltersRepositoryImpl{
+    ) : FiltersRepositoryImpl {
         return FiltersRepositoryImpl(api)
     }
     @Provides
@@ -66,7 +66,7 @@ object ApplicationModule{
     @Singleton
     fun provideCreatorsRepo(
         api : RecipesAPIService
-    ) : CreatorsRepositoryImpl{
+    ) : CreatorsRepositoryImpl {
         return CreatorsRepositoryImpl(api)
     }
 }

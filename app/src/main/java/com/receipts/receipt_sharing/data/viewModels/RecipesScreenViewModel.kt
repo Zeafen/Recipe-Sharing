@@ -1,13 +1,13 @@
-package com.receipts.receipt_sharing.domain.viewModels
+package com.receipts.receipt_sharing.data.viewModels
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.receipts.receipt_sharing.data.recipes.Recipe
-import com.receipts.receipt_sharing.data.repositories.AuthDataStoreRepository
-import com.receipts.receipt_sharing.data.repositories.FiltersRepositoryImpl
-import com.receipts.receipt_sharing.data.repositories.RecipesRepositoryImpl
-import com.receipts.receipt_sharing.data.response.RecipeResult
+import com.receipts.receipt_sharing.domain.recipes.Recipe
+import com.receipts.receipt_sharing.data.repositoriesImpl.AuthDataStoreRepository
+import com.receipts.receipt_sharing.data.repositoriesImpl.FiltersRepositoryImpl
+import com.receipts.receipt_sharing.data.repositoriesImpl.RecipesRepositoryImpl
+import com.receipts.receipt_sharing.domain.response.RecipeResult
 import com.receipts.receipt_sharing.ui.recipe.CellsAmount
 import com.receipts.receipt_sharing.ui.recipe.RecipesScreenState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -95,13 +95,13 @@ class RecipesScreenViewModel @Inject constructor(
                     }
                     _recipes.update { RecipeResult.Downloading() }
                     val token = authDataStoreRepo.authDataStoreFlow.first().token
+                    val data = token?.let {
+                        receiptsRepo.getFavorites(it)
+                    }?: RecipeResult.Error()
+
                     _recipes.update {
-                        Log.i(TAG, "start of loading favorites")
-                        token?.let {
-                            receiptsRepo.getFavorites(it)
-                        }?:RecipeResult.Error()
+                        data
                     }
-                    Log.i(TAG, "favorites loaded")
                 }
             }
 
@@ -159,7 +159,7 @@ class RecipesScreenViewModel @Inject constructor(
                     _recipes.update {
                         token?.let {
                             receiptsRepo.getRecipesByCreator(it, event.creatorId)
-                        }?:RecipeResult.Error()
+                        }?: RecipeResult.Error()
                     }
                 }
             }
@@ -171,9 +171,6 @@ class RecipesScreenViewModel @Inject constructor(
                         it.copy(
                             savedFilters = event.filters
                         )
-                    }
-                    _state.update {
-                        it.copy(savedFilters = event.filters)
                     }
                     _recipes.update {
                         RecipeResult.Downloading()
@@ -194,13 +191,13 @@ class RecipesScreenViewModel @Inject constructor(
                                         receiptsRepo.getFilteredFavoritesByName(it, state.value.searchString, event.filters)
                                 }
                                 else -> {
-                                    if(state.value.searchString.isNotEmpty())
+                                    if(state.value.searchString.isEmpty())
                                         receiptsRepo.getFilteredRecipes(it, event.filters)
                                     else
                                         receiptsRepo.getFilteredRecipesByName(it, event.filters, state.value.searchString)
                                 }
                             }
-                        }?:RecipeResult.Error("Unauthorized")
+                        }?: RecipeResult.Error("Unauthorized")
                     }
                 }
             }

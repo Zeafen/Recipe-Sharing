@@ -25,6 +25,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -55,10 +56,11 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.receipts.receipt_sharing.R
-import com.receipts.receipt_sharing.data.CreatorRequest
-import com.receipts.receipt_sharing.data.recipes.Recipe
-import com.receipts.receipt_sharing.data.response.RecipeResult
-import com.receipts.receipt_sharing.domain.viewModels.CreatorPageEvent
+import com.receipts.receipt_sharing.domain.CreatorRequest
+import com.receipts.receipt_sharing.domain.recipes.Recipe
+import com.receipts.receipt_sharing.domain.response.RecipeResult
+import com.receipts.receipt_sharing.domain.apiServices.UnsafeImageLoader
+import com.receipts.receipt_sharing.data.viewModels.CreatorPageEvent
 import com.receipts.receipt_sharing.ui.ErrorInfoPage
 import com.receipts.receipt_sharing.ui.recipe.RecipeCard
 import com.receipts.receipt_sharing.ui.shimmerEffect
@@ -100,6 +102,11 @@ fun CreatorConfigPage(
                 navigationIcon = {
                     IconButton(onClick = onOpenMenu) {
                         Icon(Icons.Default.Menu, contentDescription = "")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { onEvent(CreatorPageEvent.SaveChanges) }) {
+                        Icon(Icons.Default.Check, contentDescription = "")
                     }
                 })
         }) {
@@ -203,7 +210,8 @@ fun CreatorConfigPage(
                                             .data(state.creator.data.imageUrl)
                                             .crossfade(true)
                                             .build(),
-                                        contentScale = ContentScale.Crop,
+                                        imageLoader = UnsafeImageLoader.getInstance(),
+                                        contentScale = ContentScale.Fit,
                                         contentDescription = "",
                                     )
                             }

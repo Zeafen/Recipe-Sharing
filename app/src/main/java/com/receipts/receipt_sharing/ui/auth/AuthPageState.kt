@@ -1,6 +1,6 @@
 package com.receipts.receipt_sharing.ui.auth
 
-import com.receipts.receipt_sharing.data.response.AuthResult
+import com.receipts.receipt_sharing.domain.response.AuthResult
 
 data class AuthPageState(
     val login : String = "",

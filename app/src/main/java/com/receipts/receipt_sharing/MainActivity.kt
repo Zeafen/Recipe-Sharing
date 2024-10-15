@@ -17,8 +17,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
@@ -52,20 +52,23 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.receipts.receipt_sharing.data.dataStore.UserInfo
-import com.receipts.receipt_sharing.data.repositories.authDataStore
-import com.receipts.receipt_sharing.data.response.AuthResult
-import com.receipts.receipt_sharing.domain.AnnouncementWorker
+import com.receipts.receipt_sharing.data.repositoriesImpl.authDataStore
+import com.receipts.receipt_sharing.domain.response.AuthResult
+import com.receipts.receipt_sharing.data.AnnouncementWorker
+import com.receipts.receipt_sharing.domain.apiServices.UnsafeImageLoader
 import com.receipts.receipt_sharing.domain.helpers.isPermissionsGranted
-import com.receipts.receipt_sharing.domain.viewModels.AuthViewModel
-import com.receipts.receipt_sharing.domain.viewModels.CreatorPageEvent
-import com.receipts.receipt_sharing.domain.viewModels.CreatorPageViewModel
-import com.receipts.receipt_sharing.domain.viewModels.CreatorsScreenEvent
-import com.receipts.receipt_sharing.domain.viewModels.CreatorsScreenViewModel
-import com.receipts.receipt_sharing.domain.viewModels.RecipePageEvent
-import com.receipts.receipt_sharing.domain.viewModels.RecipePageViewModel
-import com.receipts.receipt_sharing.domain.viewModels.RecipesScreenEvent
-import com.receipts.receipt_sharing.domain.viewModels.RecipesScreenViewModel
+import com.receipts.receipt_sharing.data.viewModels.AuthViewModel
+import com.receipts.receipt_sharing.data.viewModels.CreatorPageEvent
+import com.receipts.receipt_sharing.data.viewModels.CreatorPageViewModel
+import com.receipts.receipt_sharing.data.viewModels.CreatorsScreenEvent
+import com.receipts.receipt_sharing.data.viewModels.CreatorsScreenViewModel
+import com.receipts.receipt_sharing.data.viewModels.RecipePageEvent
+import com.receipts.receipt_sharing.data.viewModels.RecipePageViewModel
+import com.receipts.receipt_sharing.data.viewModels.RecipesScreenEvent
+import com.receipts.receipt_sharing.data.viewModels.RecipesScreenViewModel
 import com.receipts.receipt_sharing.ui.auth.LoginScreen
 import com.receipts.receipt_sharing.ui.auth.RegisterScreen
 import com.receipts.receipt_sharing.ui.creators.CreatorConfigPage
@@ -162,6 +165,7 @@ class MainActivity : ComponentActivity() {
                                         }
                                     }
                                 } else {
+                                    if(userState.imageUrl.isNullOrEmpty())
                                     Image(
                                         modifier = Modifier
                                             .fillMaxWidth(),
@@ -169,13 +173,26 @@ class MainActivity : ComponentActivity() {
                                         contentDescription = "",
                                         contentScale = ContentScale.FillWidth
                                     )
+                                    else
+                                        AsyncImage(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(8.dp),
+                                            model = ImageRequest.Builder(context)
+                                                .data(userState.imageUrl)
+                                                .crossfade(true)
+                                                .build(),
+                                            imageLoader = UnsafeImageLoader.getInstance(),
+                                            contentScale = ContentScale.Fit,
+                                            contentDescription = "",
+                                        )
                                     Text(
                                         modifier = Modifier
                                             .padding(start = 16.dp, top = 8.dp, bottom = 32.dp),
-                                        text = "User name",
+                                        text = userState.userName,
                                         style = MaterialTheme.typography.headlineLarge
                                     )
-                                    Divider()
+                                    HorizontalDivider()
 
                                     navItems.indices.forEach {
                                         NavigationDrawerItem(
@@ -207,7 +224,7 @@ class MainActivity : ComponentActivity() {
                                                 }
                                             }
                                         )
-                                        Divider()
+                                        HorizontalDivider()
                                     }
 
                                 }
@@ -421,7 +438,7 @@ class MainActivity : ComponentActivity() {
 
                                     val state by creatorVM.state.collectAsState()
 
-                                    if (state.creatorName != userState.userName)
+                                    if (!state.userInfoLoaded)
                                         creatorVM.onEvent(CreatorPageEvent.LoadUserInfo)
 
                                     CreatorConfigPage(
@@ -671,7 +688,6 @@ class MainActivity : ComponentActivity() {
                                     val state by recipesVM.state.collectAsState()
                                     if (!state.favoritesLoaded)
                                         recipesVM.onEvent(RecipesScreenEvent.LoadFavorites)
-
                                     RecipesScreen(
                                         state = state,
                                         onEvent = recipesVM::onEvent,

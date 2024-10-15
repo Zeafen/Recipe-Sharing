@@ -1,8 +1,8 @@
-package com.receipts.receipt_sharing.data.repositories
+package com.receipts.receipt_sharing.data.repositoriesImpl
 
 import RecipesRepository
-import com.receipts.receipt_sharing.data.recipes.Recipe
-import com.receipts.receipt_sharing.data.response.RecipeResult
+import com.receipts.receipt_sharing.domain.recipes.Recipe
+import com.receipts.receipt_sharing.domain.response.RecipeResult
 import com.receipts.receipt_sharing.domain.apiServices.RecipesAPIService
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -20,7 +20,7 @@ class RecipesRepositoryImpl @Inject constructor (
         return try {
             RecipeResult.Succeed(api.uploadRecipeImage(token,
                 MultipartBody.Part
-                .createFormData("image", imageFile.name, imageFile.asRequestBody())))
+                .createFormData("image", imageFile.nameWithoutExtension, imageFile.asRequestBody())))
         } catch(e : HttpException){
             RecipeResult.Error(e.message)
         } catch (e : IOException){
@@ -32,7 +32,7 @@ class RecipesRepositoryImpl @Inject constructor (
         return try {
             RecipeResult.Succeed(api.uploadCreatorImage(token,
                 MultipartBody.Part
-                    .createFormData("picture", imageFile.name, imageFile.asRequestBody())))
+                    .createFormData("image", imageFile.nameWithoutExtension, imageFile.asRequestBody())))
         } catch(e : HttpException){
             RecipeResult.Error(e.message)
         } catch (e : IOException){

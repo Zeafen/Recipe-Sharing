@@ -3,10 +3,9 @@ package com.receipts.receipt_sharing.domain.helpers
 import android.content.Context
 import android.net.Uri
 import android.provider.MediaStore
-import java.io.File
 
 class FileHelper private constructor(private val applicationContext: Context) {
-        fun getFileFromUri(uri : Uri?) : File?{
+        fun getFileFromUri(uri : Uri?) : String?{
             return uri?.let {
                 val cursor = applicationContext.contentResolver.query(
                     it, arrayOf(MediaStore.Images.ImageColumns.DATA), null, null, null
@@ -20,7 +19,7 @@ class FileHelper private constructor(private val applicationContext: Context) {
                     else ""
                 }?:""
                 cursor?.close()
-                File(path)
+                path
             }
         }
     companion object {

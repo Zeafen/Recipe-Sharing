@@ -1,7 +1,8 @@
-package com.receipts.receipt_sharing.data.repositories
+package com.receipts.receipt_sharing.data.repositoriesImpl
 
-import com.receipts.receipt_sharing.data.FilterRequest
-import com.receipts.receipt_sharing.data.response.RecipeResult
+import com.receipts.receipt_sharing.domain.FilterRequest
+import com.receipts.receipt_sharing.domain.repositories.IFiltersRepository
+import com.receipts.receipt_sharing.domain.response.RecipeResult
 import com.receipts.receipt_sharing.domain.apiServices.RecipesAPIService
 import retrofit2.HttpException
 

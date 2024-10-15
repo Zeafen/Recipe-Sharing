@@ -1,6 +1,6 @@
-package com.receipts.receipt_sharing.data.repositories
+package com.receipts.receipt_sharing.domain.repositories
 
-import com.receipts.receipt_sharing.data.response.RecipeResult
+import com.receipts.receipt_sharing.domain.response.RecipeResult
 
 interface IFiltersRepository {
     suspend fun GetCategories(

@@ -55,9 +55,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.receipts.receipt_sharing.R
-import com.receipts.receipt_sharing.data.recipes.Recipe
-import com.receipts.receipt_sharing.data.response.RecipeResult
-import com.receipts.receipt_sharing.domain.viewModels.RecipesScreenEvent
+import com.receipts.receipt_sharing.domain.recipes.Recipe
+import com.receipts.receipt_sharing.domain.response.RecipeResult
+import com.receipts.receipt_sharing.data.viewModels.RecipesScreenEvent
 import com.receipts.receipt_sharing.ui.ErrorInfoPage
 import com.receipts.receipt_sharing.ui.shimmerEffect
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
@@ -154,7 +154,7 @@ fun RecipesScreen(
             isRefreshing = state.recipes is RecipeResult.Downloading,
             onRefresh = {
                 onEvent(
-                    if (state.favoritesLoaded)
+                    if (!state.favoritesLoaded)
                         RecipesScreenEvent.LoadData
                     else RecipesScreenEvent.LoadFavorites
                 )
@@ -301,7 +301,7 @@ fun RecipesScreen(
                                         modifier = Modifier
                                             .alpha(0.2f)
                                             .fillMaxSize(),
-                                        text = stringResource(R.string.no_items),
+                                        text = stringResource(R.string.no_recipes),
                                         style = MaterialTheme.typography.headlineMedium,
                                         textAlign = TextAlign.Center
                                     )
