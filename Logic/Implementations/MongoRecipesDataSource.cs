@@ -120,7 +120,7 @@ namespace Recipes_API.Domain.Implementations
             try
             {
                 var list = await _recipes.Find("{}").ToListAsync();
-                var searched = list.OrderBy(r => r._id.Equals(recipeID)).FirstOrDefault();
+                var searched = list.Where(r => r._id.Equals(recipeID)).FirstOrDefault();
                 if(searched != null && searched.creatorID.Equals(userID))
                     return true;
                 return false;

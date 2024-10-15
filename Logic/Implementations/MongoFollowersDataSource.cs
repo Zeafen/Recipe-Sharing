@@ -53,7 +53,7 @@ namespace Recipes_API.Logic.Implementations
             try
             {
                 var list = await _follows.Find("{}").ToListAsync();
-                return list.OrderBy(f => f.creatorID.Equals(creatorID)).ToList();
+                return list.Where(f => f.creatorID.Equals(creatorID)).ToList();
             }
             catch (Exception)
             {
@@ -66,7 +66,7 @@ namespace Recipes_API.Logic.Implementations
             try
             {
                 var list = await _follows.Find("{}").ToListAsync();
-                return list.OrderBy(f => f.userID.Equals(userID)).ToList();
+                return list.Where(f => f.userID.Equals(userID)).ToList();
             }
             catch (Exception)
             {

@@ -77,7 +77,7 @@ namespace Recipes_API.Controllers
         }
 
         [HttpGet("byname")]
-        public async Task<ActionResult<IEnumerable<CreatorRequest>>> GetCreatorsByName(string name)
+        public async Task<ActionResult<IEnumerable<CreatorRequest>>> GetCreatorsByName([FromQuery(Name = "name")] string name)
         {
             try
             {

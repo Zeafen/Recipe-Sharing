@@ -43,13 +43,17 @@ namespace Recipes_API.Controllers
                 {
                     var favorites = await _favorites.GetFavorites(userId);
                     List<RecipeRequest> recipes = new List<RecipeRequest>();
-                    favorites.ForEach(async f =>
+
+                    foreach (var f in favorites)
                     {
                         Recipe? rec = await _recipes.GetRecipeByID(f.recipeID);
                         if (rec != null)
-                            recipes.Add(
-                                (RecipeRequest)rec);
-                    });
+                        {
+                            var data =
+                                (RecipeRequest)rec;
+                            recipes.Add(data);
+                        }
+                    }
                     return recipes;
                 }
                 return Conflict("Cannot find information about your id");
@@ -84,7 +88,7 @@ namespace Recipes_API.Controllers
         }
 
         [HttpGet("byname")]
-        public async Task<ActionResult<IEnumerable<RecipeRequest>>> GetFavoritesByName(string name)
+        public async Task<ActionResult<IEnumerable<RecipeRequest>>> GetFavoritesByName([FromQuery(Name = "name")] string name)
         {
             try
             {
@@ -96,13 +100,13 @@ namespace Recipes_API.Controllers
                 {
                     var favorites = await _favorites.GetFavorites(userId);
                     List<RecipeRequest> recipes = new List<RecipeRequest>();
-                    favorites.ForEach(async f =>
+                    foreach (var favorite in favorites)
                     {
-                        Recipe? rec = await _recipes.GetRecipeByID(f.recipeID);
+                        Recipe? rec = await _recipes.GetRecipeByID(favorite.recipeID);
                         if (rec != null && rec.recipeName.Contains(name))
                             recipes.Add(
                                 (RecipeRequest)rec);
-                    });
+                    };
                     return recipes;
                 }
                 return Conflict("Cannot find information about your id");
@@ -113,8 +117,8 @@ namespace Recipes_API.Controllers
             }
         }
 
-        [HttpGet("filtered")]
-        public async Task<ActionResult<IEnumerable<RecipeRequest>>> GetFilteredFavorites(List<string> requested)
+        [HttpPost("filtered")]
+        public async Task<ActionResult<IEnumerable<RecipeRequest>>> GetFilteredFavorites([FromBody]List<string> requested)
         {
             try
             {
@@ -126,14 +130,14 @@ namespace Recipes_API.Controllers
                 {
                     var favorites = await _favorites.GetFavorites(userId);
                     List<RecipeRequest> recipes = new List<RecipeRequest>();
-                    favorites.ForEach(async fav =>
+                    foreach(var fav in favorites)
                     {
                         var filters = await _filters.GetFiltersByRecipe(fav._id);
                         Recipe? rec = await _recipes.GetRecipeByID(fav.recipeID);
                         if(filters.All(f => requested.Any(r => r.Equals(f.filterValue))))
                         recipes.Add(
                             (RecipeRequest)rec);
-                    });
+                    };
                     return recipes;
                 }
                 return Conflict("Cannot find information about your id");
@@ -144,8 +148,8 @@ namespace Recipes_API.Controllers
             }
         }
 
-        [HttpGet("filtered/byname/{name}")]
-        public async Task<ActionResult<IEnumerable<RecipeRequest>>> GetFilteredFavoritesByName(string name, List<string> requested)
+        [HttpPost("filtered/byname")]
+        public async Task<ActionResult<IEnumerable<RecipeRequest>>> GetFilteredFavoritesByName([FromQuery(Name = "name")] string name, [FromBody]List<string> requested)
         {
             try
             {
@@ -157,14 +161,14 @@ namespace Recipes_API.Controllers
                 {
                     var favorites = await _favorites.GetFavorites(userId);
                     List<RecipeRequest> recipes = new List<RecipeRequest>();
-                    favorites.ForEach(async fav =>
+                    foreach (var fav in favorites)
                     {
                         var filters = await _filters.GetFiltersByRecipe(fav._id);
                         Recipe? rec = await _recipes.GetRecipeByID(fav.recipeID);
                         if (filters.All(f => requested.Any(r => r.Equals(f.filterValue))) && rec.recipeName.Contains(name))
                             recipes.Add(
                                 (RecipeRequest)rec);
-                    });
+                    };
                     return recipes;
                 }
                 return Conflict("Cannot find information about your id");

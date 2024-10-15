@@ -40,10 +40,12 @@ namespace Receipts_API.Controllers
                 {
                     var follows = await _follows.GetFollows(userID);
                     List<CreatorRequest> creators = new List<CreatorRequest>();
-                    follows.ForEach(async f =>
+                    foreach (var f in follows)
                     {
-                        creators.Add((CreatorRequest)await _users.GetUserByID(f.creatorID));
-                    });
+                        var creator = await _users.GetUserByID(f.creatorID);
+                        if(creator != null)
+                            creators.Add((CreatorRequest)creator);
+                    };
                     return creators;
                 }
                 return Conflict("Cannot find information about your id");
@@ -67,10 +69,10 @@ namespace Receipts_API.Controllers
                 {
                     var follows = await _follows.GetFollowers(userID);
                     List<CreatorRequest> creators = new List<CreatorRequest>();
-                    follows.ForEach(async f =>
+                    foreach(var f in follows)
                     {
                         creators.Add((CreatorRequest)await _users.GetUserByID(f.creatorID));
-                    });
+                    };
                     return creators;
                 }
                 return Conflict("Cannot find information about your id");
@@ -94,12 +96,12 @@ namespace Receipts_API.Controllers
                 {
                     var follows = await _follows.GetFollowers(userID);
                     List<CreatorRequest> creators = new List<CreatorRequest>();
-                    follows.ForEach(async f =>
+                    foreach (var f in follows)
                     {
                         var creator = (CreatorRequest)await _users.GetUserByID(f.creatorID);
                         if(creator != null && creator.nickname.Contains(name, StringComparison.OrdinalIgnoreCase))
                             creators.Add(creator);
-                    });
+                    };
                     return creators;
                 }
                 return Conflict("Cannot find information about your id");
@@ -123,12 +125,12 @@ namespace Receipts_API.Controllers
                 {
                     var follows = await _follows.GetFollowers(creatorID);
                     List<CreatorRequest> creators = new List<CreatorRequest>();
-                    follows.ForEach(async f =>
+                    foreach (var f in follows)
                     {
                         CreatorRequest? follower = (CreatorRequest)await _users.GetUserByID(f.creatorID);
                         if (follower is not null)
                             creators.Add(follower);
-                    });
+                    };
                     return creators;
                 }
                 return Conflict("Cannot find information about your id");

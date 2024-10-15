@@ -225,7 +225,7 @@
     "ContainingType": "Recipes_API.Controllers.FavoritesController",
     "Method": "GetFilteredFavorites",
     "RelativePath": "Favorites/filtered",
-    "HttpMethod": "GET",
+    "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [
@@ -250,15 +250,15 @@
   {
     "ContainingType": "Recipes_API.Controllers.FavoritesController",
     "Method": "GetFilteredFavoritesByName",
-    "RelativePath": "Favorites/filtered/byname/{name}",
-    "HttpMethod": "GET",
+    "RelativePath": "Favorites/filtered/byname",
+    "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
         "Name": "name",
         "Type": "System.String",
-        "IsRequired": true
+        "IsRequired": false
       },
       {
         "Name": "requested",
@@ -704,37 +704,6 @@
   },
   {
     "ContainingType": "Recipes_API.Controllers.RecipesController",
-    "Method": "GetRecipesByCreatorByName",
-    "RelativePath": "Recipes/bycreator",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.String",
-        "IsRequired": false
-      },
-      {
-        "Name": "name",
-        "Type": "System.String",
-        "IsRequired": false
-      }
-    ],
-    "ReturnTypes": [
-      {
-        "Type": "System.Collections.Generic.List\u00601[[Recipes_API.Data.Recipes.RecipeRequest, Receipts_API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
-  },
-  {
-    "ContainingType": "Recipes_API.Controllers.RecipesController",
     "Method": "GetRecipesByCreator",
     "RelativePath": "Recipes/bycreator/{id}",
     "HttpMethod": "GET",
@@ -761,9 +730,40 @@
   },
   {
     "ContainingType": "Recipes_API.Controllers.RecipesController",
+    "Method": "GetRecipesByCreatorByName",
+    "RelativePath": "Recipes/bycreator/{id}/byname",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.String",
+        "IsRequired": true
+      },
+      {
+        "Name": "name",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Collections.Generic.List\u00601[[Recipes_API.Data.Recipes.RecipeRequest, Receipts_API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Recipes_API.Controllers.RecipesController",
     "Method": "GetFilteredCreatorRecipes",
     "RelativePath": "Recipes/bycreator/{id}/filtered",
-    "HttpMethod": "GET",
+    "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [
@@ -794,7 +794,7 @@
     "ContainingType": "Recipes_API.Controllers.RecipesController",
     "Method": "GetFilteredCreatorRecipes",
     "RelativePath": "Recipes/bycreator/{id}/filtered/byname",
-    "HttpMethod": "GET",
+    "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [
@@ -829,7 +829,7 @@
   {
     "ContainingType": "Recipes_API.Controllers.RecipesController",
     "Method": "GetRecipesByName",
-    "RelativePath": "Recipes/byname/{name}",
+    "RelativePath": "Recipes/byname",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
@@ -837,7 +837,7 @@
       {
         "Name": "name",
         "Type": "System.String",
-        "IsRequired": true
+        "IsRequired": false
       }
     ],
     "ReturnTypes": [
@@ -856,7 +856,7 @@
     "ContainingType": "Recipes_API.Controllers.RecipesController",
     "Method": "GetFilteredRecipe",
     "RelativePath": "Recipes/filtered",
-    "HttpMethod": "GET",
+    "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [
@@ -881,15 +881,15 @@
   {
     "ContainingType": "Recipes_API.Controllers.RecipesController",
     "Method": "GetFilteredRecipeByName",
-    "RelativePath": "Recipes/filtered/byname/{name}",
-    "HttpMethod": "GET",
+    "RelativePath": "Recipes/filtered/byname",
+    "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
         "Name": "name",
         "Type": "System.String",
-        "IsRequired": true
+        "IsRequired": false
       },
       {
         "Name": "requested",

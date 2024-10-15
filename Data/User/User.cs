@@ -21,11 +21,9 @@ namespace Recipes_API.Data.User
             this.salt = salt;
         }
 
-        public static explicit operator CreatorRequest?(User user)
+        public static explicit operator CreatorRequest(User user)
         {
-            if (user != null)
-                return new CreatorRequest(user._id.ToString(), user.nickname, user.imageUrl);
-            else return null;
+            return new CreatorRequest(user._id.ToString(), user.nickname, user.imageUrl);
         }
     }
 

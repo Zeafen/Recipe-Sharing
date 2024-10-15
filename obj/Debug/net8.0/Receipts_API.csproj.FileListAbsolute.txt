@@ -53,3 +53,4 @@ C:\Users\Kombucha\Desktop\Receipts_API\Receipts_API\bin\Debug\net8.0\System.Iden
 C:\Users\Kombucha\Desktop\Receipts_API\Receipts_API\bin\Debug\net8.0\Docker.DotNet.dll
 C:\Users\Kombucha\Desktop\Receipts_API\Receipts_API\bin\Debug\net8.0\Newtonsoft.Json.dll
 C:\Users\Kombucha\Desktop\Receipts_API\Receipts_API\obj\Debug\net8.0\Receipts.0A72D357.Up2Date
+C:\Users\Kombucha\Desktop\Receipts_API\Receipts_API\obj\Debug\net8.0\Receipts_API.sourcelink.json

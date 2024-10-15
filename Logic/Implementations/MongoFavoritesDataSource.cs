@@ -28,7 +28,7 @@ namespace Recipes_API.Logic.Implementations
             try
             {
                 var favorites = await _favorites.Find("{}").ToListAsync();
-                var existing = favorites.OrderBy(f => f.userID.Equals(favorite.userID) && f.recipeID.Equals(favorite.recipeID)).FirstOrDefault();
+                var existing = favorites.Where(f => f.userID.Equals(favorite.userID) && f.recipeID.Equals(favorite.recipeID)).FirstOrDefault();
                 if (existing != null)
                     return false;
                 await _favorites.InsertOneAsync(favorite);
@@ -45,7 +45,7 @@ namespace Recipes_API.Logic.Implementations
             try
             {
                 var favorites = await _favorites.Find("{}").ToListAsync();
-                return favorites.OrderBy(f => f.userID.Equals(userID)).ToList();
+                return favorites.Where(f => f.userID.Equals(userID)).ToList();
             }
             catch (Exception)
             {
@@ -58,7 +58,7 @@ namespace Recipes_API.Logic.Implementations
             try
             {
                 var favorites = await _favorites.Find("{}").ToListAsync();
-                favorites = favorites.OrderBy(f => f.userID.Equals(userID)).ToList();
+                favorites = favorites.Where(f => f.userID.Equals(userID)).ToList();
                 List<FavoriteRecord> result = new List<FavoriteRecord>();
                 foreach (var favorite in favorites)
                 {

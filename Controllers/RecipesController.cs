@@ -13,6 +13,11 @@ using Recipes_API.Data.Recipes;
 using Recipes_API.Domain.Services;
 using System.IdentityModel.Tokens.Jwt;
 
+public class Test
+{
+    public List<string> requested { get; set; }
+}
+
 namespace Recipes_API.Controllers
 {
     [Route("[controller]")]
@@ -67,8 +72,8 @@ namespace Recipes_API.Controllers
             }
         }
 
-        [HttpGet("filtered")]
-        public async Task<ActionResult<List<RecipeRequest>>> GetFilteredRecipe(List<string> requested)
+        [HttpPost("filtered")]
+        public async Task<ActionResult<List<RecipeRequest>>> GetFilteredRecipe([FromBody] List<string> requested)
         {
             try
             {
@@ -88,8 +93,8 @@ namespace Recipes_API.Controllers
             }
         }
 
-        [HttpGet("filtered/byname/{name}")]
-        public async Task<ActionResult<List<RecipeRequest>>> GetFilteredRecipeByName(string name, List<string> requested)
+        [HttpPost("filtered/byname")]
+        public async Task<ActionResult<List<RecipeRequest>>> GetFilteredRecipeByName([FromQuery(Name ="name")] string name, List<string> requested)
         {
             try
             {
@@ -155,8 +160,8 @@ namespace Recipes_API.Controllers
             }
         }
 
-        [HttpGet("bycreator")]
-        public async Task<ActionResult<List<RecipeRequest>>> GetRecipesByCreatorByName(string id, string name)
+        [HttpGet("bycreator/{id}/byname")]
+        public async Task<ActionResult<List<RecipeRequest>>> GetRecipesByCreatorByName(string id, [FromQuery(Name = "name")] string name)
         {
             try
             {
@@ -181,7 +186,7 @@ namespace Recipes_API.Controllers
             }
         }
 
-        [HttpGet("bycreator/{id}/filtered")]
+        [HttpPost("bycreator/{id}/filtered")]
         public async Task<ActionResult<List<RecipeRequest>>> GetFilteredCreatorRecipes(string id, List<string> requested)
         {
             try
@@ -201,8 +206,8 @@ namespace Recipes_API.Controllers
                 return BadRequest(ex.Message);
             }
         }
-        [HttpGet("bycreator/{id}/filtered/byname")]
-        public async Task<ActionResult<List<RecipeRequest>>> GetFilteredCreatorRecipes(string id, string name, List<string> requested)
+        [HttpPost("bycreator/{id}/filtered/byname")]
+        public async Task<ActionResult<List<RecipeRequest>>> GetFilteredCreatorRecipes(string id, [FromQuery(Name = "name")] string name, List<string> requested)
         {
             try
             {
@@ -222,8 +227,8 @@ namespace Recipes_API.Controllers
             }
         }
 
-        [HttpGet("byname/{name}")]
-        public async Task<ActionResult<List<RecipeRequest>>> GetRecipesByName(string? name)
+        [HttpGet("byname")]
+        public async Task<ActionResult<List<RecipeRequest>>> GetRecipesByName([FromQuery(Name = "name")]  string? name)
         {
             try
             {
