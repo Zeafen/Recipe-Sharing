@@ -24,16 +24,21 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.receipts.receipt_sharing.R
-import com.receipts.receipt_sharing.domain.response.AuthResult
 import com.receipts.receipt_sharing.data.viewModels.AuthEvent
+import com.receipts.receipt_sharing.domain.response.AuthResult
 import com.receipts.receipt_sharing.ui.ErrorInfoPage
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
 
@@ -116,6 +121,7 @@ fun LoginScreen(
                     OutlinedTextField(modifier = Modifier
                         .padding(vertical = 8.dp),
                         value = state.password,
+                        visualTransformation = PasswordVisualTransformation('*'),
                         label = { Text(text = stringResource(R.string.password_enter_str)) },
                         onValueChange = { onEvent(AuthEvent.SetPassword(it)) })
                     Button(modifier = Modifier
@@ -145,10 +151,16 @@ fun LoginScreen(
 private fun Preview() {
     RecipeSharing_theme(darkTheme = true) {
         Surface {
-            LoginScreen(onGotoRegister = { /*TODO*/ }, state = AuthPageState(
-                result = AuthResult.Unauthorized()
-            ),
-                onEvent = {},
+            var state by remember {
+                mutableStateOf(AuthPageState(
+                    result = AuthResult.Unauthorized()
+                ))
+            }
+            LoginScreen(onGotoRegister = { /*TODO*/ }, state = state,
+                onEvent = {
+                          if(it is AuthEvent.SetPassword)
+                              state = state.copy(password = it.password)
+                },
                 onOpenMenu = {},
                 onAuthorizationFinished = {})
         }

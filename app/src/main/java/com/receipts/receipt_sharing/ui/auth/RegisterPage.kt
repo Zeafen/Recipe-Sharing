@@ -28,12 +28,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.receipts.receipt_sharing.R
-import com.receipts.receipt_sharing.domain.response.AuthResult
 import com.receipts.receipt_sharing.data.viewModels.AuthEvent
+import com.receipts.receipt_sharing.domain.response.AuthResult
 import com.receipts.receipt_sharing.ui.ErrorInfoPage
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
 
@@ -110,11 +111,13 @@ fun RegisterScreen(
                         .padding(vertical = 8.dp),
                         value = state.password,
                         label = { Text(text = stringResource(R.string.password_enter_str)) },
+                        visualTransformation = PasswordVisualTransformation('*'),
                         onValueChange = { onEvent(AuthEvent.SetPassword(it)) })
                     OutlinedTextField(modifier = Modifier
                         .padding(vertical = 8.dp),
                         value = state.repeatPassword,
                         label = { Text(text = stringResource(R.string.password_repeat_str)) },
+                        visualTransformation = PasswordVisualTransformation('*'),
                         onValueChange = { onEvent(AuthEvent.SetRepeatPassword(it)) })
                     Button(modifier = Modifier
                         .fillMaxWidth()
@@ -143,7 +146,7 @@ private fun Preview() {
         Surface {
             RegisterScreen(onGotoLogin = { /*TODO*/ },
                 state = AuthPageState(
-                result = AuthResult.Loading()
+                result = AuthResult.Unauthorized()
             ),
                 onEvent = {},
                 onOpenMenu = {},
