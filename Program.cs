@@ -37,7 +37,7 @@ builder.Services.AddAuthentication(opts =>
         };
     });
 
-string CONNECTION_STRING = "<Connection_String>";
+string CONNECTION_STRING = "CONNECTION_STRING";
 var settings = MongoClientSettings.FromConnectionString($"{CONNECTION_STRING}");
 settings.ServerApi = new ServerApi(ServerApiVersion.V1);
 

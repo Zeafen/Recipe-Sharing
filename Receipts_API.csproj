@@ -18,6 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="static\images\creators\" />
     <Folder Include="static\images\recipes\" />
   </ItemGroup>
 

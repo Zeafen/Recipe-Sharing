@@ -39,10 +39,20 @@ namespace Recipes_API.Controllers
         {
             try
             {
-                var recipes = await _recipes.GetRecipes();
-                if (recipes == null)
-                    return BadRequest();
-                return (from r in recipes select (RecipeRequest)r).ToList();
+                var token = await HttpContext.GetTokenAsync("access_token");
+                var claim = new JwtSecurityTokenHandler().ReadJwtToken(token).Claims.FirstOrDefault(c => c.Type == "userID");
+                if (claim == null)
+                    return Conflict("Cannot find information about your id");
+
+                if (ObjectId.TryParse(claim.Value, out var userID))
+                {
+
+                    var recipes = await _recipes.GetRecipes();
+                    if (recipes == null)
+                        return BadRequest();
+                    return (from r in recipes where !r.creatorID.Equals(userID) select (RecipeRequest)r).ToList();
+                }
+                return Conflict("Incorrect claim form: userID");
             }
             catch (Exception ex)
             {
@@ -77,15 +87,24 @@ namespace Recipes_API.Controllers
         {
             try
             {
-                var recipes = (await _recipes.GetRecipes())??new List<Recipe>();
-                var result = new List<RecipeRequest>();
-                foreach(var recipe in recipes)
+                var token = await HttpContext.GetTokenAsync("access_token");
+                var claim = new JwtSecurityTokenHandler().ReadJwtToken(token).Claims.FirstOrDefault(c => c.Type == "userID");
+                if (claim == null)
+                    return Conflict("Cannot find information about your id");
+
+                if (ObjectId.TryParse(claim.Value, out var userID))
                 {
-                    var filters = await _filters.GetFiltersByRecipe(recipe._id);
-                    if (requested.All(r => filters.FirstOrDefault(f => f.filterValue.Equals(r, StringComparison.OrdinalIgnoreCase)) is not null))
-                        result.Add((RecipeRequest)recipe);
+                    var recipes = (await _recipes.GetRecipes()) ?? new List<Recipe>();
+                    var result = new List<RecipeRequest>();
+                    foreach (var recipe in recipes)
+                    {
+                        var filters = await _filters.GetFiltersByRecipe(recipe._id);
+                        if (requested.All(r => filters.FirstOrDefault(f => f.filterValue.Equals(r, StringComparison.OrdinalIgnoreCase)) is not null))
+                            result.Add((RecipeRequest)recipe);
+                    }
+                    return result.Where(r => !r.creatorID.Equals(userID)).ToList();
                 }
-                return result;
+                return Conflict("Incorrect claim form: userID");
             }
             catch (Exception ex)
             {
@@ -98,15 +117,24 @@ namespace Recipes_API.Controllers
         {
             try
             {
-                var recipes = (await _recipes.GetRecipes())??new List<Recipe>();
-                var result = new List<RecipeRequest>();
-                foreach(var recipe in recipes)
+                var token = await HttpContext.GetTokenAsync("access_token");
+                var claim = new JwtSecurityTokenHandler().ReadJwtToken(token).Claims.FirstOrDefault(c => c.Type == "userID");
+                if (claim == null)
+                    return Conflict("Cannot find information about your id");
+
+                if (ObjectId.TryParse(claim.Value, out var userID))
                 {
-                    var filters = await _filters.GetFiltersByRecipe(recipe._id);
-                    if (requested.All(r => filters.FirstOrDefault(f => f.filterValue.Equals(r, StringComparison.OrdinalIgnoreCase)) is not null))
-                        result.Add((RecipeRequest)recipe);
+                    var recipes = (await _recipes.GetRecipes()) ?? new List<Recipe>();
+                    var result = new List<RecipeRequest>();
+                    foreach (var recipe in recipes)
+                    {
+                        var filters = await _filters.GetFiltersByRecipe(recipe._id);
+                        if (requested.All(r => filters.FirstOrDefault(f => f.filterValue.Equals(r, StringComparison.OrdinalIgnoreCase)) is not null))
+                            result.Add((RecipeRequest)recipe);
+                    }
+                    return (from r in result where r.recipeName.Contains(name, StringComparison.OrdinalIgnoreCase) && !r.creatorID.Equals(userID) select r).ToList();
                 }
-                return (from r in result where r.recipeName.Contains(name, StringComparison.OrdinalIgnoreCase) select r).ToList();
+                return Conflict("Incorrect claim form: userID");
             }
             catch (Exception ex)
             {
@@ -232,12 +260,21 @@ namespace Recipes_API.Controllers
         {
             try
             {
-                if (string.IsNullOrEmpty(name))
-                    return Conflict();
-                var recipes = await _recipes.GetRecipesByName(name);
-                if (recipes == null)
-                    return BadRequest();
-                return (from r in recipes select (RecipeRequest)r).ToList();
+                var token = await HttpContext.GetTokenAsync("access_token");
+                var claim = new JwtSecurityTokenHandler().ReadJwtToken(token).Claims.FirstOrDefault(c => c.Type == "userID");
+                if (claim == null)
+                    return Conflict("Cannot find information about your id");
+
+                if (ObjectId.TryParse(claim.Value, out var userID))
+                {
+                    if (string.IsNullOrEmpty(name))
+                        return Conflict();
+                    var recipes = await _recipes.GetRecipesByName(name);
+                    if (recipes == null)
+                        return BadRequest();
+                    return (from r in recipes where !r.creatorID.Equals(userID) select (RecipeRequest)r).ToList();
+                }
+                return Conflict("Incorrect claim form: userID");
             }
             catch (Exception ex)
             {
