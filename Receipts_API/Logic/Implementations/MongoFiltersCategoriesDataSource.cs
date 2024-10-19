@@ -34,7 +34,7 @@ namespace Receipts_API.Logic.Implementations
                     throw new Exception("Cannot find record with such id");
                 var existed = await _recipeFilters.Find(rf => rf.recipeID.Equals(recipeID) && rf.filterID.Equals(filterId)).FirstOrDefaultAsync();
                 var hasOne = (await GetFiltersByCategory(filter.categoryID)).Any(f => f._id.Equals(filterId));
-                if (existed is null && !hasOne)
+                if (existed is null && hasOne)
                 {
                     _recipeFilters.InsertOne(new RecipeFilters(recipeID, filterId));
                     return true;
@@ -129,9 +129,8 @@ namespace Receipts_API.Logic.Implementations
         {
             try
             {
-                var filter = Builders<RecipeFilters>.Filter
-                    .Eq(f => f.recipeID, recipeID);
-                var recipeFilters = await _recipeFilters.Find(filter).ToListAsync();
+                var filters = await _recipeFilters.Find("{}").ToListAsync();
+                var recipeFilters = filters.Where(f => f.recipeID.Equals(recipeID)).ToList();
                 List<Filter> result = new List<Filter>();
                 foreach (var item in recipeFilters)
                 {

@@ -91,8 +91,16 @@ namespace Recipes_API.Domain.Implementations
         {
             try
             {
-                var updated = await _recipes.FindOneAndReplaceAsync(r => r._id.Equals(r._id), recipe, new() { ReturnDocument = ReturnDocument.After });
-                if (updated == null)
+                var filter = Builders<Recipe>.Filter
+                    .Eq(r => r._id, recipe._id);
+                var update = Builders<Recipe>.Update
+                    .Set(r => r.recipeName, recipe.recipeName)
+                    .Set(r => r.description, recipe.description)
+                    .Set(r => r.steps, recipe.steps)
+                    .Set(r => r.ingredients, recipe.ingredients)
+                    .Set(r => r.imageUrl, recipe.imageUrl);
+                var updated = await _recipes.UpdateOneAsync(filter, update);
+                if (updated == null || !updated.IsAcknowledged)
                     return false;
                 return true;
 

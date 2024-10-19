@@ -91,6 +91,7 @@ namespace Receipts_API.Controllers
             {
                 if (ObjectId.TryParse(request.recipeID, out var recipeId))
                 {
+                    await _filters.ClearRecipeFilters(recipeId);
                     foreach (var filter in request.filters)
                         await _filters.AttachFilterToRecipe(recipeId, filter);
                     return Ok();

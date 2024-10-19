@@ -55,6 +55,33 @@ namespace Recipes_API.Controllers
             }
         }
 
+
+        [HttpGet("own")]
+        public async Task<ActionResult<List<RecipeRequest>>> GetOwnRecipes()
+        {
+            try
+            {
+                var token = await HttpContext.GetTokenAsync("access_token");
+                var claim = new JwtSecurityTokenHandler().ReadJwtToken(token).Claims.FirstOrDefault(c => c.Type == "userID");
+                if (claim == null)
+                    return Conflict("Cannot find information about your id");
+
+                if (ObjectId.TryParse(claim.Value, out var userID))
+                {
+
+                    var recipes = await _recipes.GetRecipesByCreator(userID);
+                    if (recipes == null)
+                        return BadRequest();
+                    return (from r in recipes select (RecipeRequest)r).ToList();
+                }
+                return Conflict("Incorrect claim form: userID");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
         [HttpGet("own/{id}")]
         public async Task<ActionResult<bool>> GetOwns(string id)
         {
@@ -278,7 +305,7 @@ namespace Recipes_API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult> PostRecipe(RecipeRequest request)
+        public async Task<ActionResult<string>> PostRecipe(RecipeRequest request)
         {
             try
             {
@@ -293,7 +320,7 @@ namespace Recipes_API.Controllers
                     var recipe = new Recipe(request.imageUrl, request.recipeName, request.description, request.ingredients, request.steps, userID);
                     var wasAcknowledged = await _recipes.InsertRecipe(recipe);
                     if (wasAcknowledged)
-                        return Ok();
+                        return recipe._id.ToString();
                     return BadRequest();
                 }
                 else
