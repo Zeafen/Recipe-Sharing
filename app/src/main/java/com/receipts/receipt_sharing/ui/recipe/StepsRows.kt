@@ -113,7 +113,7 @@ fun StepRow(modifier : Modifier = Modifier,
                             style = MaterialTheme.typography.titleMedium)
                         Text(modifier = Modifier
                             .alpha(0.5f),
-                            text = "${step.duration/60000} min",
+                            text = "${step.duration} min",
                             style = MaterialTheme.typography.titleMedium)
                     }
                     Row(modifier = Modifier
@@ -176,7 +176,7 @@ fun StepsRows(modifier : Modifier = Modifier,
                     Text(
                         modifier = Modifier
                             .alpha(0.5f),
-                        text = "${steps.sumOf { s -> s.duration } / 60000} min",
+                        text = "${steps.sumOf { s -> s.duration }} min",
                         style = MaterialTheme.typography.titleMedium
                     )
                 }
@@ -198,7 +198,7 @@ fun StepsRows(modifier : Modifier = Modifier,
                         Text(
                             modifier = Modifier
                                 .alpha(0.5f),
-                            text = "${steps.sumOf { s -> s.duration } / 60000} min",
+                            text = "${steps.sumOf { s -> s.duration }} min",
                             style = MaterialTheme.typography.titleMedium
                         )
                     }
@@ -281,7 +281,7 @@ fun EditableStepsRows(modifier: Modifier = Modifier,
                         Text(
                             modifier = Modifier
                                 .alpha(0.5f),
-                            text = "${steps.sumOf { s -> s.duration } / 60000} min",
+                            text = "${steps.sumOf { s -> s.duration }} min",
                             style = MaterialTheme.typography.titleMedium
                         )
                     }

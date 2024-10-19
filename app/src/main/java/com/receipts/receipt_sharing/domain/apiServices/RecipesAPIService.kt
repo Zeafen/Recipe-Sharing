@@ -73,6 +73,9 @@ interface RecipesAPIService {
     suspend fun getOwn(@Header("Authorization") token : String,
                        @Path("id") recipeID : String) : Boolean
 
+    @GET("Recipes/own")
+    suspend fun  getOwnRecipes(@Header("Authorization")token : String) : List<Recipe>
+
     @POST("Recipes/filtered")
     suspend fun getFilteredRecipes(@Header("Authorization")token : String,
                                    @Body requested : List<String>) : List<Recipe>
@@ -127,7 +130,7 @@ interface RecipesAPIService {
     suspend fun postRecipe(
         @Header("Authorization") token : String,
         @Body request : Recipe
-    )
+    ) : String
 
     @DELETE("Recipes/{id}")
     suspend fun deleteRecipe(

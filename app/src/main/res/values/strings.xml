@@ -42,6 +42,7 @@
 
     <string name="unauthorized_txt">Sign up</string>
     <string name="recipes_page_title">Recipes</string>
+    <string name="own_recipes_page_title">Own recipes</string>
     <string name="favorites_page_title">Favorites</string>
     <string name="follows_page_title">Follows</string>
     <string name="user_info_page_title">User Info</string>

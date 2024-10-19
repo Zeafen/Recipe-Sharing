@@ -16,7 +16,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.converter.scalars.ScalarsConverterFactory
 import javax.inject.Singleton
 
-private const val BASE_URL = "https://192.168.139.103:7129/"
+private const val BASE_URL = "https://<SERVER_IP>:<SERVER_PORT>/"
 val unsafeClient = UnsafeOkHttpClient.getOkHttpClient()
 @Module
 @InstallIn(SingletonComponent::class)

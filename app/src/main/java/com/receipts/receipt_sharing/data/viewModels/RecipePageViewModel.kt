@@ -3,14 +3,14 @@ package com.receipts.receipt_sharing.data.viewModels
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.receipts.receipt_sharing.domain.recipes.Ingredient
-import com.receipts.receipt_sharing.domain.recipes.Recipe
-import com.receipts.receipt_sharing.domain.recipes.Step
 import com.receipts.receipt_sharing.data.repositoriesImpl.AuthDataStoreRepository
 import com.receipts.receipt_sharing.data.repositoriesImpl.FiltersRepositoryImpl
 import com.receipts.receipt_sharing.data.repositoriesImpl.RecipesRepositoryImpl
-import com.receipts.receipt_sharing.domain.response.RecipeResult
 import com.receipts.receipt_sharing.domain.helpers.FileHelper
+import com.receipts.receipt_sharing.domain.recipes.Ingredient
+import com.receipts.receipt_sharing.domain.recipes.Recipe
+import com.receipts.receipt_sharing.domain.recipes.Step
+import com.receipts.receipt_sharing.domain.response.RecipeResult
 import com.receipts.receipt_sharing.ui.recipe.RecipePageState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,8 +27,8 @@ private const val TAG = "recipePageVM"
 
 @HiltViewModel
 class RecipePageViewModel @Inject constructor(
-    private val recipesRepo : RecipesRepositoryImpl,
-    private val filtersRepo : FiltersRepositoryImpl
+    private val recipesRepo: RecipesRepositoryImpl,
+    private val filtersRepo: FiltersRepositoryImpl
 ) : ViewModel() {
 
     private val fileHelper = FileHelper.get()
@@ -63,42 +63,36 @@ class RecipePageViewModel @Inject constructor(
 
             is RecipePageEvent.LoadRecipe -> viewModelScope.launch {
                 val token = authDataStoreRepo.authDataStoreFlow.first().token
-                launch {
-
-                    _selectedRecipe.update {
-                        RecipeResult.Downloading()
-                    }
-                    _selectedRecipe.update {
-                        token?.let {
-                            recipesRepo.getRecipeByID(it, event.receiptId)
-                        } ?: RecipeResult.Error("Unauthorized")
-                    }
+                _selectedRecipe.update {
+                    RecipeResult.Downloading()
                 }
-                launch {
+                _selectedRecipe.update {
+                    token?.let {
+                        recipesRepo.getRecipeByID(it, event.receiptId)
+                    } ?: RecipeResult.Error("Unauthorized")
+                }
+                val filters = if (!token.isNullOrEmpty()) filtersRepo.getFiltersByRecipe(
+                    token,
+                    event.receiptId
+                ) else RecipeResult.Error()
 
-                    val filters = if (!token.isNullOrEmpty()) filtersRepo.getFiltersByRecipe(
-                            token,
-                            event.receiptId
-                        ) else RecipeResult.Error()
 
-
-                    val owns = token?.let {
-                        recipesRepo.isRecipeOwn(it, event.receiptId)
-                    }
-                    val isFavorite = token?.let {
-                        recipesRepo.isRecipeInFavorites(it, event.receiptId)
-                    }
-                    _state.update {
-                        it.copy(
-                            recipeName = state.value.recipe.data?.recipeName ?: "",
-                            recipeDescription = state.value.recipe.data?.description ?: "",
-                            own = owns?.data ?: false,
-                            filters = filters,
-                            isFavorite = isFavorite?.data ?: false,
-                            ingredients = state.value.recipe.data?.ingredients ?: emptyList(),
-                            steps = state.value.recipe.data?.steps ?: emptyList()
-                        )
-                    }
+                val owns = token?.let {
+                    recipesRepo.isRecipeOwn(it, event.receiptId)
+                }
+                val isFavorite = token?.let {
+                    recipesRepo.isRecipeInFavorites(it, event.receiptId)
+                }
+                _state.update {
+                    it.copy(
+                        recipeName = state.value.recipe.data?.recipeName ?: "",
+                        recipeDescription = state.value.recipe.data?.description ?: "",
+                        own = owns?.data ?: false,
+                        filters = filters,
+                        isFavorite = isFavorite?.data ?: false,
+                        ingredients = state.value.recipe.data?.ingredients ?: emptyList(),
+                        steps = state.value.recipe.data?.steps ?: emptyList()
+                    )
                 }
             }
 
@@ -119,14 +113,13 @@ class RecipePageViewModel @Inject constructor(
             }
 
             RecipePageEvent.SaveChanges -> viewModelScope.launch {
-
-
                 val token = authDataStoreRepo.authDataStoreFlow.first().token
                 val name = state.value.recipeName
                 val desc = state.value.recipeDescription
                 val ingr = state.value.ingredients
                 val steps = state.value.steps
                 val imageUrl = state.value.imageUrl
+                val filters = state.value.filters.data
                 if (name.isBlank() || desc.isBlank() || ingr.isEmpty() || steps.isEmpty())
                     return@launch
                 val recipe = state.value.recipe.data?.copy(
@@ -137,10 +130,16 @@ class RecipePageViewModel @Inject constructor(
                     imageUrl = imageUrl.data
                 )
                 if (!token.isNullOrEmpty() && recipe != null && state.value.own) {
-                    if (recipe.recipeID.isEmpty())
-                        recipesRepo.postRecipe(token, recipe)
-                    else
+                    var updateID = if (recipe.recipeID.isEmpty())
+                        recipesRepo.postRecipe(token, recipe).data
+                    else{
                         recipesRepo.updateRecipe(token, recipe)
+                        recipe.recipeID
+                    }
+
+                    if(updateID != null && !filters.isNullOrEmpty()){
+                        filtersRepo.attachFiltersToRecipe(token, updateID, filters)
+                    }
                 }
             }
 
@@ -156,7 +155,7 @@ class RecipePageViewModel @Inject constructor(
                 viewModelScope.launch {
                     val token = authDataStoreRepo.authDataStoreFlow.first().token
                     if (token != null) {
-                            val file = fileHelper.getFileFromUri(event.imageUri)
+                        val file = fileHelper.getFileFromUri(event.imageUri)
                         file?.let { imageFilePath ->
                             _state.update {
                                 it.copy(
@@ -258,6 +257,12 @@ class RecipePageViewModel @Inject constructor(
                     )
                 }
             }
+
+            is RecipePageEvent.SetFilters -> _state.update {
+                it.copy(
+                    filters = RecipeResult.Succeed(event.filters)
+                )
+            }
         }
     }
 }
@@ -279,4 +284,5 @@ sealed class RecipePageEvent {
     data class CheckIsFavorite(val recipeID: String) : RecipePageEvent()
     data object SaveChanges : RecipePageEvent()
     data object ClearData : RecipePageEvent()
+    data class SetFilters(val filters: List<String>) : RecipePageEvent()
 }

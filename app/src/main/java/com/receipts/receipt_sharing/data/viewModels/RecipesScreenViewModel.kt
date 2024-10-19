@@ -3,10 +3,10 @@ package com.receipts.receipt_sharing.data.viewModels
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.receipts.receipt_sharing.domain.recipes.Recipe
 import com.receipts.receipt_sharing.data.repositoriesImpl.AuthDataStoreRepository
 import com.receipts.receipt_sharing.data.repositoriesImpl.FiltersRepositoryImpl
 import com.receipts.receipt_sharing.data.repositoriesImpl.RecipesRepositoryImpl
+import com.receipts.receipt_sharing.domain.recipes.Recipe
 import com.receipts.receipt_sharing.domain.response.RecipeResult
 import com.receipts.receipt_sharing.ui.recipe.CellsAmount
 import com.receipts.receipt_sharing.ui.recipe.RecipesScreenState
@@ -70,6 +70,7 @@ class RecipesScreenViewModel @Inject constructor(
 
     fun onEvent(event : RecipesScreenEvent){
         when(event){
+
             RecipesScreenEvent.LoadData -> {
                 viewModelScope.launch {
                     _state.update {
@@ -210,12 +211,34 @@ class RecipesScreenViewModel @Inject constructor(
                         )
                     }
             }
+
+            RecipesScreenEvent.LoadOwnData -> {
+                viewModelScope.launch {
+                    _state.update {
+                        it.copy(favoritesLoaded = true,
+                            creatorLoaded = true)
+                    }
+                    _recipes.update { RecipeResult.Downloading() }
+                    val token = authDataStoreRepo.authDataStoreFlow.first().token
+                    _recipes.update {
+                        token?.let {
+                            Log.i(TAG, "start of loading")
+                            val data = receiptsRepo.getOwnRecipes(it)
+                            data
+                        } ?: RecipeResult.Error()
+                    }
+                    Log.i(TAG, "End of loading")
+                }
+            }
         }
     }
 }
 
 sealed class RecipesScreenEvent{
     data object LoadData : RecipesScreenEvent()
+
+    data object LoadOwnData : RecipesScreenEvent()
+
     data object LoadFavorites : RecipesScreenEvent()
     data class LoadCreatorsRecipes(val creatorId : String) : RecipesScreenEvent()
     data class SetSearchName(val receiptName : String) : RecipesScreenEvent()

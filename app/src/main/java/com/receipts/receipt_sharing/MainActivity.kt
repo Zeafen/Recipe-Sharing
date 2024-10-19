@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
@@ -54,12 +55,10 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.receipts.receipt_sharing.data.AnnouncementWorker
 import com.receipts.receipt_sharing.data.dataStore.UserInfo
 import com.receipts.receipt_sharing.data.repositoriesImpl.authDataStore
-import com.receipts.receipt_sharing.domain.response.AuthResult
-import com.receipts.receipt_sharing.data.AnnouncementWorker
-import com.receipts.receipt_sharing.domain.apiServices.UnsafeImageLoader
-import com.receipts.receipt_sharing.domain.helpers.isPermissionsGranted
+import com.receipts.receipt_sharing.data.viewModels.AuthEvent
 import com.receipts.receipt_sharing.data.viewModels.AuthViewModel
 import com.receipts.receipt_sharing.data.viewModels.CreatorPageEvent
 import com.receipts.receipt_sharing.data.viewModels.CreatorPageViewModel
@@ -69,6 +68,9 @@ import com.receipts.receipt_sharing.data.viewModels.RecipePageEvent
 import com.receipts.receipt_sharing.data.viewModels.RecipePageViewModel
 import com.receipts.receipt_sharing.data.viewModels.RecipesScreenEvent
 import com.receipts.receipt_sharing.data.viewModels.RecipesScreenViewModel
+import com.receipts.receipt_sharing.domain.apiServices.UnsafeImageLoader
+import com.receipts.receipt_sharing.domain.helpers.isPermissionsGranted
+import com.receipts.receipt_sharing.domain.response.AuthResult
 import com.receipts.receipt_sharing.ui.auth.LoginScreen
 import com.receipts.receipt_sharing.ui.auth.RegisterScreen
 import com.receipts.receipt_sharing.ui.creators.CreatorConfigPage
@@ -123,6 +125,11 @@ class MainActivity : ComponentActivity() {
                     R.drawable.recipes_page_ic
                 ),
                 RecipeNavigationItem(
+                    NavigationRoutes.Recipes.OwnRecipesScreen,
+                    R.string.own_recipes_page_title,
+                    R.drawable.own_recipes_page_ic
+                ),
+                RecipeNavigationItem(
                     NavigationRoutes.Recipes.FavoritesPage,
                     R.string.favorites_page_title,
                     R.drawable.in_favorite_ic
@@ -168,15 +175,17 @@ class MainActivity : ComponentActivity() {
                                     if(userState.imageUrl.isNullOrEmpty())
                                     Image(
                                         modifier = Modifier
-                                            .fillMaxWidth(),
+                                            .fillMaxWidth()
+                                            .heightIn(min = 100.dp, max = 200.dp),
                                         painter = painterResource(id = R.drawable.no_image),
                                         contentDescription = "",
-                                        contentScale = ContentScale.FillWidth
+                                        contentScale = ContentScale.Crop
                                     )
                                     else
                                         AsyncImage(
                                             modifier = Modifier
                                                 .fillMaxWidth()
+                                                .heightIn(min = 100.dp, max = 200.dp)
                                                 .padding(8.dp),
                                             model = ImageRequest.Builder(context)
                                                 .data(userState.imageUrl)
@@ -301,7 +310,8 @@ class MainActivity : ComponentActivity() {
                                         }
                                         is AuthResult.Error -> {
                                             navController.popBackStack()
-                                            navController.navigate(NavigationRoutes.Auth.RegisterPage)
+                                            navController.navigate(NavigationRoutes.Auth.AuthorizePage)
+                                            authVm.onEvent(AuthEvent.ClearData)
                                             Toast.makeText(context, R.string.token_expired, Toast.LENGTH_SHORT).show()
                                         }
                                         is AuthResult.Loading -> {
@@ -528,7 +538,7 @@ class MainActivity : ComponentActivity() {
                                         },
                                         onGoToFilters = {
                                             recipesScreenVm.onEvent(RecipesScreenEvent.LoadFilters)
-                                            navController.navigate(NavigationRoutes.Recipes.FiltersSelection)
+                                            navController.navigate(NavigationRoutes.Recipes.FiltersSelection(false))
                                         }
                                     )
 
@@ -536,19 +546,20 @@ class MainActivity : ComponentActivity() {
                                 }
 
                                 composable<NavigationRoutes.Recipes.FiltersSelection> {
+                                    val isRecipePage = it.toRoute<NavigationRoutes.Recipes.FiltersSelection>().isRecipePage
                                     val parentEntry =
                                         remember { navController.getBackStackEntry<NavigationRoutes.Recipes.RecipesFolder>() }
                                     val recipesScreenVm =
                                         hiltViewModel<RecipesScreenViewModel>(parentEntry)
+                                    val recipesPageVM = hiltViewModel<RecipePageViewModel>(parentEntry)
                                     val state by recipesScreenVm.state.collectAsState()
 
                                     FiltersPage(categorizedItems = state.filters,
                                         onFiltersConfirmed = {
-                                            recipesScreenVm.onEvent(
-                                                RecipesScreenEvent.SetFilters(
-                                                    it
-                                                )
-                                            )
+                                            if(isRecipePage)
+                                                recipesPageVM.onEvent(RecipePageEvent.SetFilters(it))
+                                            else
+                                                recipesScreenVm.onEvent(RecipesScreenEvent.SetFilters(it))
                                             navController.navigateUp()
                                         },
                                         onCancelChanges = {
@@ -586,10 +597,51 @@ class MainActivity : ComponentActivity() {
                                         },
                                         onGoToFilters = {
                                             recipesVM.onEvent(RecipesScreenEvent.LoadFilters)
-                                            navController.navigate(NavigationRoutes.Recipes.FiltersSelection)
+                                            navController.navigate(NavigationRoutes.Recipes.FiltersSelection(false))
                                         }
                                     )
                                 }
+                                composable<NavigationRoutes.Recipes.OwnRecipesScreen> {
+                                    val parentEntry =
+                                        remember { navController.getBackStackEntry<NavigationRoutes.Recipes.RecipesFolder>() }
+                                    val recipePVM: RecipePageViewModel = hiltViewModel(parentEntry)
+                                    val recipesVM =
+                                        hiltViewModel<RecipesScreenViewModel>(parentEntry)
+                                    val state by recipesVM.state.collectAsState()
+
+                                    if(!state.creatorLoaded)
+                                        recipesVM.onEvent(RecipesScreenEvent.LoadOwnData)
+
+                                    RecipesScreen(
+                                        state = state,
+                                        onEvent = recipesVM::onEvent,
+                                        onOpenMenu = {
+                                            scope.launch {
+                                                drawerState.apply {
+                                                    if (drawerState.isOpen) drawerState.close()
+                                                    else drawerState.open()
+                                                }
+                                            }
+                                        },
+                                        onGoToAddRecipe = {
+                                            recipePVM.onEvent(RecipePageEvent.ClearData)
+                                            navController.navigate(NavigationRoutes.Recipes.RecipeAddingPage)
+                                        },
+                                        onGoToRecipe = {
+                                            recipePVM.onEvent(RecipePageEvent.LoadRecipe(it))
+                                            navController.navigate(
+                                                NavigationRoutes.Recipes.RecipePage(
+                                                    it
+                                                )
+                                            )
+                                        },
+                                        onGoToFilters = {
+                                            recipesVM.onEvent(RecipesScreenEvent.LoadFilters)
+                                            navController.navigate(NavigationRoutes.Recipes.FiltersSelection(false))
+                                        }
+                                    )
+                                }
+
                                 composable<NavigationRoutes.Recipes.RecipePage> {
                                     val args =
                                         it.toRoute<NavigationRoutes.Recipes.RecipePage>().recipeID
@@ -621,6 +673,13 @@ class MainActivity : ComponentActivity() {
                                             onConfigCompleted = {
                                                 recipesScreenVM.onEvent(RecipesScreenEvent.LoadData)
                                                 navController.navigate(NavigationRoutes.Recipes.RecipesScreen)
+                                            },
+                                            onGoToFilters = {
+                                                recipesScreenVM.onEvent(RecipesScreenEvent.LoadFilters)
+                                                navController.navigate(NavigationRoutes.Recipes.FiltersSelection(true))
+                                            },
+                                            onDiscardChanges = {
+                                                navController.navigateUp()
                                             })
 
                                         false -> RecipePage(
@@ -642,12 +701,8 @@ class MainActivity : ComponentActivity() {
                                                 )
                                             },
                                             onGoToFilteredScreen = {
-                                                recipesScreenVM.onEvent(
-                                                    RecipesScreenEvent.SetFilters(
-                                                        listOf(it)
-                                                    )
-                                                )
-                                                recipesScreenVM.onEvent(RecipesScreenEvent.LoadData)
+                                                recipesScreenVM.onEvent(RecipesScreenEvent.SetFilters(
+                                                    listOf(it)))
                                                 navController.navigate(NavigationRoutes.Recipes.RecipesScreen)
                                             }
                                         )
@@ -674,8 +729,15 @@ class MainActivity : ComponentActivity() {
                                         },
                                         onReloadData = { recipeVm.onEvent(RecipePageEvent.ClearData) },
                                         onConfigCompleted = {
-                                            recipesScreenVM.onEvent(RecipesScreenEvent.LoadData)
-                                            navController.navigate(NavigationRoutes.Recipes.RecipesScreen)
+                                            navController.navigateUp()
+                                        },
+                                        onGoToFilters = {
+                                            recipesScreenVM.onEvent(RecipesScreenEvent.LoadFilters)
+                                            navController.navigate(NavigationRoutes.Recipes.FiltersSelection(true))
+                                        },
+                                        onDiscardChanges = {
+                                            recipeVm.onEvent(RecipePageEvent.ClearData)
+                                            navController.navigateUp()
                                         })
                                 }
                                 composable<NavigationRoutes.Recipes.FavoritesPage> {
@@ -713,7 +775,7 @@ class MainActivity : ComponentActivity() {
                                         },
                                         onGoToFilters = {
                                             recipesVM.onEvent(RecipesScreenEvent.LoadFilters)
-                                            navController.navigate(NavigationRoutes.Recipes.FiltersSelection)
+                                            navController.navigate(NavigationRoutes.Recipes.FiltersSelection(false))
                                         }
                                     )
                                 }
@@ -798,7 +860,12 @@ sealed class NavigationRoutes{
         data object RecipesScreen : Recipes()
 
         @Serializable
-        data object FiltersSelection : Recipes()
+        data object OwnRecipesScreen : Recipes()
+
+        @Serializable
+        data class   FiltersSelection(
+            val isRecipePage : Boolean = false
+        ) : Recipes()
 
         @Serializable
         data class CreatorRecipesScreen(val creatorID : String) : Recipes()

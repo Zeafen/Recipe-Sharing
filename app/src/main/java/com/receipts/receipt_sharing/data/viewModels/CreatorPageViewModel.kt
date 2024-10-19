@@ -3,13 +3,13 @@ package com.receipts.receipt_sharing.data.viewModels
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.receipts.receipt_sharing.domain.CreatorRequest
-import com.receipts.receipt_sharing.domain.recipes.Recipe
 import com.receipts.receipt_sharing.data.repositoriesImpl.AuthDataStoreRepository
 import com.receipts.receipt_sharing.data.repositoriesImpl.CreatorsRepositoryImpl
 import com.receipts.receipt_sharing.data.repositoriesImpl.RecipesRepositoryImpl
-import com.receipts.receipt_sharing.domain.response.RecipeResult
+import com.receipts.receipt_sharing.domain.CreatorRequest
 import com.receipts.receipt_sharing.domain.helpers.FileHelper
+import com.receipts.receipt_sharing.domain.recipes.Recipe
+import com.receipts.receipt_sharing.domain.response.RecipeResult
 import com.receipts.receipt_sharing.ui.creators.CreatorPageState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,7 +29,7 @@ class CreatorPageViewModel @Inject constructor(
     private val creatorRepo : CreatorsRepositoryImpl,
 ) : ViewModel() {
 
-    private val authDataStore = AuthDataStoreRepository.get()
+    private val authDataStoreRepo = AuthDataStoreRepository.get()
 
     private val _creator = MutableStateFlow<RecipeResult<CreatorRequest>>(RecipeResult.Downloading())
     private val _recipes = MutableStateFlow<RecipeResult<List<Recipe>>>(RecipeResult.Downloading())
@@ -43,7 +43,7 @@ class CreatorPageViewModel @Inject constructor(
         when(event){
             CreatorPageEvent.AddToFollows -> {
                 viewModelScope.launch {
-                    val token = authDataStore.authDataStoreFlow.first().token
+                    val token = authDataStoreRepo.authDataStoreFlow.first().token
                     val follows = token?.let {
                         if(state.value.creator.data != null){
                             when(creatorRepo.addToFollows(it, state.value.creator.data!!.userID)){
@@ -66,7 +66,7 @@ class CreatorPageViewModel @Inject constructor(
             }
             is CreatorPageEvent.LoadCreator -> {
                 viewModelScope.launch {
-                    val token = authDataStore.authDataStoreFlow.first().token
+                    val token = authDataStoreRepo.authDataStoreFlow.first().token
                     launch {
                         _creator.update {
                             RecipeResult.Downloading()
@@ -100,7 +100,7 @@ class CreatorPageViewModel @Inject constructor(
                             RecipeResult.Downloading()
                         }
                         _recipes.update {
-                            authDataStore.authDataStoreFlow.first().token?.let {
+                            authDataStoreRepo.authDataStoreFlow.first().token?.let {
                                 recipesRepo.getRecipesByCreator(it, event.creatorID)
                             } ?: RecipeResult.Error()
                         }
@@ -109,7 +109,7 @@ class CreatorPageViewModel @Inject constructor(
             }
             CreatorPageEvent.RemoveFromFollows -> {
                 viewModelScope.launch {
-                    val token = authDataStore.authDataStoreFlow.first().token
+                    val token = authDataStoreRepo.authDataStoreFlow.first().token
                     val follows = token?.let {
                         if(state.value.creator.data != null){
                             when(creatorRepo.removeFromFollows(it, state.value.creator.data!!.userID)){
@@ -136,7 +136,7 @@ class CreatorPageViewModel @Inject constructor(
             is CreatorPageEvent.SetImageUrl -> {
                 viewModelScope.launch {
 
-                    val token = authDataStore.authDataStoreFlow.first().token
+                    val token = authDataStoreRepo.authDataStoreFlow.first().token
                     if (token != null) {
                         val file = FileHelper.get().getFileFromUri(event.imageUri)
                         file?.let { imageFile ->
@@ -167,7 +167,7 @@ class CreatorPageViewModel @Inject constructor(
                         nickname = creatorName,
                         imageUrl = imageUrl ?: state.value.creator.data!!.imageUrl
                     )
-                    authDataStore.authDataStoreFlow.first().token?.let {
+                    authDataStoreRepo.authDataStoreFlow.first().token?.let {
                         if(creator != null)
                             creatorRepo.updateCreator(it, creator)
                     }
@@ -176,7 +176,7 @@ class CreatorPageViewModel @Inject constructor(
 
             CreatorPageEvent.LoadUserInfo -> {
                 viewModelScope.launch {
-                    val token = authDataStore.authDataStoreFlow.first().token
+                    val token = authDataStoreRepo.authDataStoreFlow.first().token
                     _creator.update {
                         RecipeResult.Downloading()
                     }
@@ -207,9 +207,21 @@ class CreatorPageViewModel @Inject constructor(
                             RecipeResult.Downloading()
                         }
                         _recipes.update {
-                            authDataStore.authDataStoreFlow.first().token?.let {
-                                recipesRepo.getRecipes(it)
+                            authDataStoreRepo.authDataStoreFlow.first().token?.let {
+                                recipesRepo.getOwnRecipes(it)
                             } ?: RecipeResult.Error()
+                        }
+                    }
+                }
+            }
+
+            CreatorPageEvent.UpdateUserState -> {
+                viewModelScope.launch {
+                    val token = authDataStoreRepo.authDataStoreFlow.first().token
+                    token?.let {
+                        creatorRepo.getUserInfo(it).data?.let {
+                            authDataStoreRepo.updateUserName(it.nickname)
+                            authDataStoreRepo.updateImageUrl(it.imageUrl)
                         }
                     }
                 }
@@ -220,7 +232,7 @@ class CreatorPageViewModel @Inject constructor(
                     _recipes.update {
                         RecipeResult.Downloading()
                     }
-                    val token = authDataStore.authDataStoreFlow.first().token
+                    val token = authDataStoreRepo.authDataStoreFlow.first().token
                     _recipes.update {
                         token?.let {tok ->
                             state.value.creator.data?.let {creator ->
@@ -237,6 +249,8 @@ class CreatorPageViewModel @Inject constructor(
 sealed class CreatorPageEvent{
     data class LoadCreator(val creatorID : String) : CreatorPageEvent()
     data object LoadUserInfo : CreatorPageEvent()
+
+    data object UpdateUserState : CreatorPageEvent()
     data class SetCreatorName(val name : String) : CreatorPageEvent()
     data class SetImageUrl(val imageUri : Uri?) : CreatorPageEvent()
     data object AddToFollows : CreatorPageEvent()

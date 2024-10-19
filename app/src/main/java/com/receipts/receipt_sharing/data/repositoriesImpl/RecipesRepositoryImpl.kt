@@ -1,9 +1,9 @@
 package com.receipts.receipt_sharing.data.repositoriesImpl
 
 import RecipesRepository
+import com.receipts.receipt_sharing.domain.apiServices.RecipesAPIService
 import com.receipts.receipt_sharing.domain.recipes.Recipe
 import com.receipts.receipt_sharing.domain.response.RecipeResult
-import com.receipts.receipt_sharing.domain.apiServices.RecipesAPIService
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okio.IOException
@@ -47,6 +47,24 @@ class RecipesRepositoryImpl @Inject constructor (
         }
         catch (e : HttpException){
             return RecipeResult.Error(e.message)
+        }
+    }
+
+    override suspend fun getOwnRecipes(token: String): RecipeResult<List<Recipe>> {
+        return try {
+            RecipeResult.Succeed(api.getOwnRecipes(token))
+        }
+        catch (e : HttpException){
+            e.printStackTrace()
+            RecipeResult.Error(e.message())
+        }
+        catch (e : IOException){
+            e.printStackTrace()
+            RecipeResult.Error(e.message)
+        }
+        catch (e : Exception){
+            e.printStackTrace()
+            RecipeResult.Error(e.message)
         }
     }
 
@@ -166,10 +184,9 @@ class RecipesRepositoryImpl @Inject constructor (
         }
     }
 
-    override suspend fun postRecipe(token: String, request: Recipe): RecipeResult<Unit> {
+    override suspend fun postRecipe(token: String, request: Recipe): RecipeResult<String> {
         return try {
-            api.postRecipe(token, request)
-            RecipeResult.Succeed()
+            RecipeResult.Succeed(api.postRecipe(token, request))
         } catch (e : HttpException){
             RecipeResult.Error(e.message)
         } catch (e: Exception) {

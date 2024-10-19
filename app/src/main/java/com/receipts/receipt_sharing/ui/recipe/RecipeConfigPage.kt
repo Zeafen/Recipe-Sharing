@@ -18,12 +18,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Menu
@@ -56,18 +58,19 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.receipts.receipt_sharing.R
+import com.receipts.receipt_sharing.data.viewModels.RecipePageEvent
+import com.receipts.receipt_sharing.domain.apiServices.UnsafeImageLoader
 import com.receipts.receipt_sharing.domain.recipes.Ingredient
 import com.receipts.receipt_sharing.domain.recipes.Measure
 import com.receipts.receipt_sharing.domain.recipes.Recipe
 import com.receipts.receipt_sharing.domain.recipes.Step
 import com.receipts.receipt_sharing.domain.response.RecipeResult
-import com.receipts.receipt_sharing.domain.apiServices.UnsafeImageLoader
-import com.receipts.receipt_sharing.data.viewModels.RecipePageEvent
 import com.receipts.receipt_sharing.ui.ErrorInfoPage
 import com.receipts.receipt_sharing.ui.IngredientConfigureDialog
 import com.receipts.receipt_sharing.ui.StepConfigureDialog
@@ -77,12 +80,14 @@ import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecipeConfigPage(
-    modifier : Modifier = Modifier,
-    state : RecipePageState,
-    onEvent : (RecipePageEvent) -> Unit,
-    onOpenMenu : () -> Unit,
-    onReloadData : () -> Unit,
-    onConfigCompleted : () -> Unit
+    modifier: Modifier = Modifier,
+    state: RecipePageState,
+    onEvent: (RecipePageEvent) -> Unit,
+    onOpenMenu: () -> Unit,
+    onReloadData: () -> Unit,
+    onConfigCompleted: () -> Unit,
+    onDiscardChanges : () -> Unit,
+    onGoToFilters: () -> Unit
 ) {
     var openAddIngredientDialog by rememberSaveable {
         mutableStateOf(false)
@@ -150,8 +155,8 @@ fun RecipeConfigPage(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { /*TODO*/ }) {
-
+                    IconButton(onClick = onDiscardChanges) {
+                        Icon(Icons.Default.Clear, contentDescription = "'")
                     }
                 })
         },
@@ -278,6 +283,7 @@ fun RecipeConfigPage(
                                     isEditing = false
                                     selectedIndex = -1
                                 })
+
                         LazyColumn(
                             modifier = Modifier.background(MaterialTheme.colorScheme.surface),
                         ) {
@@ -320,6 +326,79 @@ fun RecipeConfigPage(
                                         contentScale = ContentScale.Fit,
                                         contentDescription = "",
                                     )
+                            }
+
+                            item {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(bottom = 12.dp),
+                                    horizontalArrangement = Arrangement.End,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    LazyRow(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                    ) {
+                                        if (!state.filters.data.isNullOrEmpty())
+                                            items(state.filters.data) {
+                                                Row(
+                                                    modifier = Modifier
+                                                        .padding(
+                                                            vertical = 12.dp,
+                                                            horizontal = 4.dp
+                                                        )
+                                                        .clip(CircleShape)
+                                                        .background(MaterialTheme.colorScheme.secondaryContainer),
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.SpaceBetween
+                                                ) {
+                                                    Text(
+                                                        modifier = Modifier
+                                                            .padding(start = 8.dp),
+                                                        text = it,
+                                                    )
+                                                    IconButton(onClick = {
+                                                        onEvent(
+                                                            RecipePageEvent.SetFilters(
+                                                                state.filters.data.minus(it)
+                                                            )
+                                                        )
+                                                    }) {
+                                                        Icon(
+                                                            Icons.Default.Clear,
+                                                            contentDescription = ""
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        else {
+                                            item {
+                                                Text(
+                                                    modifier = Modifier
+                                                        .padding(
+                                                            vertical = 12.dp,
+                                                            horizontal = 8.dp
+                                                        )
+                                                        .alpha(0.35f),
+                                                    text = stringResource(id = R.string.no_saved_filters),
+                                                    style = MaterialTheme.typography.headlineSmall,
+                                                    textAlign = TextAlign.Center
+                                                )
+                                            }
+                                        }
+                                    }
+                                    IconButton(onClick = {
+                                        onGoToFilters()
+                                    }) {
+                                        Icon(
+                                            modifier = Modifier
+                                                .size(32.dp),
+                                            painter = painterResource(id = R.drawable.filter_ic),
+                                            contentDescription = ""
+                                        )
+                                    }
+                                }
                             }
                             item {
                                 OutlinedTextField(
@@ -490,12 +569,20 @@ private fun ReceiptPagePreview() {
                                 ),
                             )
                         )
+                    ),
+                    filters = RecipeResult.Succeed(
+                        listOf(
+                            "FilterOne",
+                            "FilterTwo"
+                        )
                     )
                 ),
                 onEvent = {},
                 onOpenMenu = {},
                 onReloadData = {},
-                onConfigCompleted = {})
+                onConfigCompleted = {},
+                onGoToFilters = {},
+                onDiscardChanges = {})
         }
     }
 }

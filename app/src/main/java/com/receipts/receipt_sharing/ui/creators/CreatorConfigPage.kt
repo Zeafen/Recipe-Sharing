@@ -56,11 +56,11 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.receipts.receipt_sharing.R
+import com.receipts.receipt_sharing.data.viewModels.CreatorPageEvent
 import com.receipts.receipt_sharing.domain.CreatorRequest
+import com.receipts.receipt_sharing.domain.apiServices.UnsafeImageLoader
 import com.receipts.receipt_sharing.domain.recipes.Recipe
 import com.receipts.receipt_sharing.domain.response.RecipeResult
-import com.receipts.receipt_sharing.domain.apiServices.UnsafeImageLoader
-import com.receipts.receipt_sharing.data.viewModels.CreatorPageEvent
 import com.receipts.receipt_sharing.ui.ErrorInfoPage
 import com.receipts.receipt_sharing.ui.recipe.RecipeCard
 import com.receipts.receipt_sharing.ui.shimmerEffect
@@ -105,7 +105,10 @@ fun CreatorConfigPage(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { onEvent(CreatorPageEvent.SaveChanges) }) {
+                    IconButton(onClick = {
+                        onEvent(CreatorPageEvent.SaveChanges)
+                        onEvent(CreatorPageEvent.UpdateUserState)
+                    }) {
                         Icon(Icons.Default.Check, contentDescription = "")
                     }
                 })
@@ -205,7 +208,15 @@ fun CreatorConfigPage(
                                     AsyncImage(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .padding(8.dp),
+                                            .padding(8.dp)
+                                            .clickable {
+                                                photoLauncher.launch(
+                                                    PickVisualMediaRequest
+                                                        .Builder()
+                                                        .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                                        .build()
+                                                )
+                                            },
                                         model = ImageRequest.Builder(LocalContext.current)
                                             .data(state.creator.data.imageUrl)
                                             .crossfade(true)

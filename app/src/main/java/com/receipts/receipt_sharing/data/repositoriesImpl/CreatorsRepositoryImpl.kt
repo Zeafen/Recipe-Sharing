@@ -1,12 +1,12 @@
 package com.receipts.receipt_sharing.data.repositoriesImpl
 
 import com.receipts.receipt_sharing.domain.CreatorRequest
+import com.receipts.receipt_sharing.domain.apiServices.RecipesAPIService
 import com.receipts.receipt_sharing.domain.repositories.CreatorsRepository
 import com.receipts.receipt_sharing.domain.response.RecipeResult
-import com.receipts.receipt_sharing.domain.apiServices.RecipesAPIService
 import retrofit2.HttpException
 
-class CreatorsRepositoryImpl constructor(
+class CreatorsRepositoryImpl (
     private val api : RecipesAPIService
 ) : CreatorsRepository {
     override suspend fun getCreators(token: String): RecipeResult<List<CreatorRequest>> {

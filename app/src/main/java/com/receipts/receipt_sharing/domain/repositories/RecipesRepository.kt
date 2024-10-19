@@ -10,6 +10,8 @@ interface RecipesRepository {
 
     suspend fun getRecipes(token : String) : RecipeResult<List<Recipe>>
 
+    suspend fun getOwnRecipes(token : String) : RecipeResult<List<Recipe>>
+
     suspend fun getRecipeByID(
         token : String,
         receiptID : String
@@ -71,7 +73,7 @@ interface RecipesRepository {
     suspend fun postRecipe(
         token : String,
         request : Recipe
-    ) : RecipeResult<Unit>
+    ) : RecipeResult<String>
 
     suspend fun deleteRecipe(
         token : String,

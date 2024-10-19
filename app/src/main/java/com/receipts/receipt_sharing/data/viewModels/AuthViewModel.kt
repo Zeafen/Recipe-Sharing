@@ -19,8 +19,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
-    private val authRepo : AuthRepositoryImpl,
-    private val creatorsRepo : CreatorsRepositoryImpl,
+    private val authRepo: AuthRepositoryImpl,
+    private val creatorsRepo: CreatorsRepositoryImpl,
 ) : ViewModel() {
 
     private val authDataStoreRepo = AuthDataStoreRepository.get()
@@ -29,7 +29,7 @@ class AuthViewModel @Inject constructor(
 
     private val _state = MutableStateFlow(AuthPageState())
 
-    val state = combine(_result, _state){res, state ->
+    val state = combine(_result, _state) { res, state ->
         state.copy(
             result = res
         )
@@ -40,29 +40,29 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             val token = authDataStoreRepo.authDataStoreFlow.first().token
 
-                _result.update {
-                    AuthResult.Loading()
-                }
-                _result.update {
-                    token?.let { tok ->
-                        val userInfo = creatorsRepo.getUserInfo(tok)
-                        if (userInfo.data != null) {
-                            authDataStoreRepo.updateUserName(userInfo.data.nickname)
-                            authDataStoreRepo.updateImageUrl(userInfo.data.imageUrl)
-                        }
-                        authRepo.authorize(tok)
-                    } ?: AuthResult.Unauthorized()
-                }
+            _result.update {
+                AuthResult.Loading()
+            }
+            _result.update {
+                token?.let { tok ->
+                    val userInfo = creatorsRepo.getUserInfo(tok)
+                    if (userInfo.data != null) {
+                        authDataStoreRepo.updateUserName(userInfo.data.nickname)
+                        authDataStoreRepo.updateImageUrl(userInfo.data.imageUrl)
+                    }
+                    authRepo.authorize(tok)
+                } ?: AuthResult.Unauthorized()
+            }
         }
     }
 
-    fun onEvent(event : AuthEvent){
-        when(event){
+    fun onEvent(event: AuthEvent) {
+        when (event) {
             AuthEvent.ConfirmLogin -> {
                 viewModelScope.launch {
                     val login = state.value.login
                     val password = state.value.password
-                    if(login.isBlank() || password.isBlank())
+                    if (login.isBlank() || password.isBlank())
                         return@launch
 
                     _result.update {
@@ -80,12 +80,13 @@ class AuthViewModel @Inject constructor(
                     }
                 }
             }
+
             AuthEvent.ConfirmRegister -> {
                 viewModelScope.launch {
                     val login = state.value.login
                     val password = state.value.password
                     val repeatPassword = state.value.repeatPassword
-                    if(login.isBlank() || password.isBlank() || repeatPassword.isBlank() || password != repeatPassword)
+                    if (login.isBlank() || password.isBlank() || repeatPassword.isBlank() || password != repeatPassword)
                         return@launch
                     _result.update {
                         AuthResult.Loading()
@@ -102,12 +103,15 @@ class AuthViewModel @Inject constructor(
                     }
                 }
             }
+
             is AuthEvent.SetLogin -> _state.update {
                 it.copy(login = event.login)
             }
+
             is AuthEvent.SetPassword -> _state.update {
                 it.copy(password = event.password)
             }
+
             is AuthEvent.SetRepeatPassword -> _state.update {
                 it.copy(repeatPassword = event.password)
             }
@@ -130,10 +134,10 @@ class AuthViewModel @Inject constructor(
 }
 
 
-sealed class AuthEvent{
-    data class SetLogin(val login : String) : AuthEvent()
-    data class SetPassword(val password : String) : AuthEvent()
-    data class SetRepeatPassword(val password : String) : AuthEvent()
+sealed class AuthEvent {
+    data class SetLogin(val login: String) : AuthEvent()
+    data class SetPassword(val password: String) : AuthEvent()
+    data class SetRepeatPassword(val password: String) : AuthEvent()
     data object ConfirmLogin : AuthEvent()
     data object ConfirmRegister : AuthEvent()
     data object ClearData : AuthEvent()
