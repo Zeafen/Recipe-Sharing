@@ -56,7 +56,6 @@ import com.receipts.receipt_sharing.domain.recipes.Step
 import com.receipts.receipt_sharing.domain.response.RecipeResult
 import com.receipts.receipt_sharing.ui.ErrorInfoPage
 import com.receipts.receipt_sharing.ui.shimmerEffect
-import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -387,7 +386,6 @@ fun IngredientCell(
 @Preview
 @Composable
 private fun ReceiptPagePreview() {
-    RecipeSharing_theme {
         RecipePage(state = RecipePageState(
             recipe = RecipeResult.Succeed(
                 Recipe(
@@ -401,8 +399,6 @@ private fun ReceiptPagePreview() {
                         Ingredient("Mayonaise2", 100L, Measure.Millilitres),
                         Ingredient("Mayonaise3", 100L, Measure.Millilitres),
                         Ingredient("Mayonaise4", 100L, Measure.Millilitres),
-                        Ingredient("Mayonaise5", 100L, Measure.Millilitres),
-                        Ingredient("Mayonaise6", 100L, Measure.Millilitres)
                     ),
                     steps = listOf(
                         Step("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse sit amet est varius, tempor tortor non, pellentesque mi. Praesent accumsan facilisis urna nec semper. Proin gravida consectetur augue. Nullam pharetra nulla at malesuada consequat. Donec eu tortor vitae risus laoreet mollis nec in ipsum. Donec sem erat, rhoncus a iaculis at, accumsan eget nisl. Nulla hendrerit dui in quam rutrum, id ultricies urna facilisis. Fusce urna augue, maximus at tortor pellentesque, laoreet auctor tortor. Maecenas ut eros enim. Donec faucibus venenatis semper. Pellentesque laoreet metus blandit arcu venenatis auctor ac non arcu.\n" +
@@ -443,4 +439,3 @@ private fun ReceiptPagePreview() {
             onReloadData = {},
             onGoToFilteredScreen = {})
     }
-}

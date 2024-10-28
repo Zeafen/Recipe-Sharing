@@ -55,12 +55,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.receipts.receipt_sharing.R
+import com.receipts.receipt_sharing.data.viewModels.RecipesScreenEvent
 import com.receipts.receipt_sharing.domain.recipes.Recipe
 import com.receipts.receipt_sharing.domain.response.RecipeResult
-import com.receipts.receipt_sharing.data.viewModels.RecipesScreenEvent
 import com.receipts.receipt_sharing.ui.ErrorInfoPage
 import com.receipts.receipt_sharing.ui.shimmerEffect
-import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
 
 
 @Composable
@@ -393,7 +392,6 @@ fun RecipesScreenPreview() {
         ))
     }
 
-    RecipeSharing_theme(darkTheme = true) {
         Surface {
             if (opem)
                 Dialog(onDismissRequest = { opem = false }) {
@@ -414,4 +412,3 @@ fun RecipesScreenPreview() {
                 onGoToFilters = {})
         }
     }
-}

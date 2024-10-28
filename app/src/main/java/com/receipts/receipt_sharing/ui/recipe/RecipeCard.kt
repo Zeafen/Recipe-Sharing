@@ -48,8 +48,8 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.receipts.receipt_sharing.R
-import com.receipts.receipt_sharing.domain.recipes.Recipe
 import com.receipts.receipt_sharing.domain.apiServices.UnsafeImageLoader
+import com.receipts.receipt_sharing.domain.recipes.Recipe
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -75,12 +75,7 @@ fun RecipeCard(
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
                     .fillMaxWidth()
-                    .padding(8.dp)
-                    .pointerInput(Unit) {
-                        detectTapGestures(
-                            onLongPress = { openDescription = !openDescription }
-                        )
-                    },
+                    .padding(8.dp),
                 contentScale = ContentScale.Crop,
                 painter = painterResource(R.drawable.no_image), contentDescription = ""
             )
@@ -101,7 +96,12 @@ fun RecipeCard(
         Text(
             modifier = Modifier
                 .align(Alignment.Start)
-                .padding(start = 16.dp, top = 12.dp, bottom = 8.dp),
+                .padding(start = 16.dp, top = 12.dp, bottom = 8.dp)
+                .pointerInput(Unit) {
+                    detectTapGestures(
+                        onLongPress = { openDescription = !openDescription }
+                    )
+                },
             style = MaterialTheme.typography.headlineLarge,
             text = recipe.recipeName,
             maxLines = 2,

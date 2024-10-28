@@ -75,7 +75,6 @@ import com.receipts.receipt_sharing.ui.ErrorInfoPage
 import com.receipts.receipt_sharing.ui.IngredientConfigureDialog
 import com.receipts.receipt_sharing.ui.StepConfigureDialog
 import com.receipts.receipt_sharing.ui.shimmerEffect
-import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -522,9 +521,6 @@ fun RecipeConfigPage(
 @Preview
 @Composable
 private fun ReceiptPagePreview() {
-    RecipeSharing_theme(
-        darkTheme = false
-    ) {
         Surface {
             RecipeConfigPage(modifier = Modifier
                 .fillMaxSize(),
@@ -585,4 +581,4 @@ private fun ReceiptPagePreview() {
                 onDiscardChanges = {})
         }
     }
-}
+

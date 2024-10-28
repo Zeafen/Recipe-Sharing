@@ -64,7 +64,6 @@ import com.receipts.receipt_sharing.domain.response.RecipeResult
 import com.receipts.receipt_sharing.ui.ErrorInfoPage
 import com.receipts.receipt_sharing.ui.recipe.RecipeCard
 import com.receipts.receipt_sharing.ui.shimmerEffect
-import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -262,7 +261,7 @@ fun CreatorConfigPage(
                                             contentColor = MaterialTheme.colorScheme.primary,
                                             disabledContentColor = MaterialTheme.colorScheme.onSurface,
                                         ),
-                                        onClick = { /*TODO*/ }) {
+                                        onClick = { onGoToFollowers() }) {
                                         Text(
                                             modifier = Modifier
                                                 .padding(vertical = 4.dp, horizontal = 8.dp),
@@ -374,81 +373,79 @@ fun CreatorConfigPage(
 @Preview
 @Composable
 private fun Preview() {
-    RecipeSharing_theme {
-        Surface {
-            CreatorConfigPage(state = CreatorPageState(
-                creator = RecipeResult.Succeed(
-                    CreatorRequest(
-                        userID = "",
-                        nickname = "",
-                        imageUrl = ""
-                    ),
+    Surface {
+        CreatorConfigPage(state = CreatorPageState(
+            creator = RecipeResult.Succeed(
+                CreatorRequest(
+                    userID = "",
+                    nickname = "",
+                    imageUrl = ""
                 ),
-                creatorName = "Some name to test",
-                recipes = RecipeResult.Succeed(
-                    listOf(
-
-                        Recipe(
-                            "",
-                            "",
-                            "",
-                            "Long name",
-                            "qweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqwe",
-                            emptyList(),
-                            emptyList()
-                        ),
-                        Recipe(
-                            "",
-                            "",
-                            "",
-                            "Long name",
-                            "qweqweqweqweqweqwe",
-                            emptyList(),
-                            emptyList()
-                        ),
-                        Recipe(
-                            "",
-                            "",
-                            "",
-                            "Long name",
-                            "qweqweqweqweqweqwe",
-                            emptyList(),
-                            emptyList()
-                        ),
-                        Recipe(
-                            "",
-                            "",
-                            "",
-                            "Long name",
-                            "qweqweqweqweqweqwe",
-                            emptyList(),
-                            emptyList()
-                        ),
-                        Recipe(
-                            "",
-                            "",
-                            "",
-                            "Long name",
-                            "qweqweqweqweqweqwe",
-                            emptyList(),
-                            emptyList()
-                        ),
-                        Recipe(
-                            "",
-                            "",
-                            "",
-                            "Long name",
-                            "qweqweqweqweqweqwe",
-                            emptyList(),
-                            emptyList()
-                        ),
-                    )
-                )
             ),
-                onEvent = {},
-                onOpenMenu = {},
-                onGoToAddRecipePage = {},
-                onGoToFollowers = {})
-        }
+            creatorName = "Some name to test",
+            recipes = RecipeResult.Succeed(
+                listOf(
+
+                    Recipe(
+                        "",
+                        "",
+                        "",
+                        "Long name",
+                        "qweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqwe",
+                        emptyList(),
+                        emptyList()
+                    ),
+                    Recipe(
+                        "",
+                        "",
+                        "",
+                        "Long name",
+                        "qweqweqweqweqweqwe",
+                        emptyList(),
+                        emptyList()
+                    ),
+                    Recipe(
+                        "",
+                        "",
+                        "",
+                        "Long name",
+                        "qweqweqweqweqweqwe",
+                        emptyList(),
+                        emptyList()
+                    ),
+                    Recipe(
+                        "",
+                        "",
+                        "",
+                        "Long name",
+                        "qweqweqweqweqweqwe",
+                        emptyList(),
+                        emptyList()
+                    ),
+                    Recipe(
+                        "",
+                        "",
+                        "",
+                        "Long name",
+                        "qweqweqweqweqweqwe",
+                        emptyList(),
+                        emptyList()
+                    ),
+                    Recipe(
+                        "",
+                        "",
+                        "",
+                        "Long name",
+                        "qweqweqweqweqweqwe",
+                        emptyList(),
+                        emptyList()
+                    ),
+                )
+            )
+        ),
+            onEvent = {},
+            onOpenMenu = {},
+            onGoToAddRecipePage = {},
+            onGoToFollowers = {})
     }
 }
