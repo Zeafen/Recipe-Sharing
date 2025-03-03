@@ -1,4 +1,4 @@
-package com.receipts.receipt_sharing.ui
+package com.receipts.receipt_sharing.ui.infoPages
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

@@ -1,4 +1,4 @@
-package com.receipts.receipt_sharing.ui
+package com.receipts.receipt_sharing.ui.dialogs
 
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -33,6 +33,7 @@ import androidx.wear.compose.material.Text
 import com.receipts.receipt_sharing.R
 import com.receipts.receipt_sharing.domain.recipes.Ingredient
 import com.receipts.receipt_sharing.domain.recipes.Measure
+import com.receipts.receipt_sharing.ui.SwipeableSelection
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
 
 @Composable

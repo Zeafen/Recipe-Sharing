@@ -1,4 +1,4 @@
-package com.receipts.receipt_sharing.domain.helpers
+package com.receipts.receipt_sharing.data.helpers
 
 import android.content.Context
 import android.content.pm.PackageManager

@@ -1,4 +1,4 @@
-package com.receipts.receipt_sharing.ui.recipe
+package com.receipts.receipt_sharing.presentation.recipes
 
 import com.receipts.receipt_sharing.domain.recipes.Ingredient
 import com.receipts.receipt_sharing.domain.recipes.Recipe

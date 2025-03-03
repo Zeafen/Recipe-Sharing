@@ -1,4 +1,4 @@
-package com.receipts.receipt_sharing.ui
+package com.receipts.receipt_sharing.ui.effects
 
 import androidx.annotation.FloatRange
 import androidx.compose.foundation.background

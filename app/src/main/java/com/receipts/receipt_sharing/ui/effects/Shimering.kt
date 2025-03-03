@@ -1,4 +1,4 @@
-package com.receipts.receipt_sharing.ui
+package com.receipts.receipt_sharing.ui.effects
 
 import android.annotation.SuppressLint
 import androidx.compose.animation.core.animateFloat
@@ -17,7 +17,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.IntSize
-import androidx.compose.ui.unit.dp
 
 @SuppressLint("InvalidColorHexValue")
 fun Modifier.shimmerEffect(durationInMillis: Int = 1500) : Modifier = composed {

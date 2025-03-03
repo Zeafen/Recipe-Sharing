@@ -1,4 +1,4 @@
-package com.receipts.receipt_sharing.domain.helpers
+package com.receipts.receipt_sharing.data.helpers
 
 import android.content.Context
 import android.net.Uri
@@ -26,7 +26,7 @@ class FileHelper private constructor(private val applicationContext: Context) {
         private var _instance : FileHelper? = null
 
         fun get() : FileHelper {
-            return _instance?:throw NotImplementedError();
+            return _instance ?:throw NotImplementedError();
         }
 
         fun createInstance(applicationContext : Context){

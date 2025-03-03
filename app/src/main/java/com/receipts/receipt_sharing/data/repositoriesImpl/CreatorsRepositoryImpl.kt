@@ -2,21 +2,40 @@ package com.receipts.receipt_sharing.data.repositoriesImpl
 
 import com.receipts.receipt_sharing.domain.CreatorRequest
 import com.receipts.receipt_sharing.domain.apiServices.RecipesAPIService
-import com.receipts.receipt_sharing.domain.repositories.CreatorsRepository
+import com.receipts.receipt_sharing.domain.repositories.ICreatorsRepository
 import com.receipts.receipt_sharing.domain.response.RecipeResult
 import retrofit2.HttpException
 
-class CreatorsRepositoryImpl (
+class ICreatorsRepositoryImpl (
     private val api : RecipesAPIService
-) : CreatorsRepository {
+) : ICreatorsRepository {
     override suspend fun getCreators(token: String): RecipeResult<List<CreatorRequest>> {
         return try {
             val result = api.getCreators(token)
             RecipeResult.Succeed(result)
-        } catch (e: HttpException) {
+        } catch(e : HttpException){
+            RecipeResult.Error(e.response()?.message()?:e.message())
+        } catch (e : Exception){
             RecipeResult.Error(e.message)
-        } catch (e: Exception) {
-            e.printStackTrace()
+        }
+    }
+
+    override suspend fun getFollowersCount(token: String): RecipeResult<Long> {
+        return try {
+            RecipeResult.Succeed(api.getFollowersCount(token))
+        } catch(e : HttpException){
+            RecipeResult.Error(e.response()?.message()?:e.message())
+        } catch (e : Exception){
+            RecipeResult.Error(e.message)
+        }
+    }
+
+    override suspend fun getCreatorFollowersCount(token: String, creatorID: String): RecipeResult<Long> {
+        return try {
+            RecipeResult.Succeed(api.getCreatorFollowersCount(token, creatorID))
+        } catch(e : HttpException){
+            RecipeResult.Error(e.response()?.message()?:e.message())
+        } catch (e : Exception){
             RecipeResult.Error(e.message)
         }
     }
@@ -28,10 +47,9 @@ class CreatorsRepositoryImpl (
         return try {
             val result = api.getCreatorsByName(token, nickname)
             RecipeResult.Succeed(result)
-        } catch (e: HttpException) {
-            RecipeResult.Error(e.message)
-        } catch (e: Exception) {
-            e.printStackTrace()
+        } catch(e : HttpException){
+            RecipeResult.Error(e.response()?.message()?:e.message())
+        } catch (e : Exception){
             RecipeResult.Error(e.message)
         }
     }
@@ -43,9 +61,9 @@ class CreatorsRepositoryImpl (
         return try {
             val result = api.getCreatorById(token, creatorId)
             RecipeResult.Succeed(result)
-        } catch (e: HttpException) {
-            RecipeResult.Error(e.message)
-        } catch (e: Exception) {
+        } catch(e : HttpException){
+            RecipeResult.Error(e.response()?.message()?:e.message())
+        } catch (e : Exception){
             RecipeResult.Error(e.message)
         }
     }
@@ -54,9 +72,9 @@ class CreatorsRepositoryImpl (
         return try {
             val result = api.getFollows(token)
             RecipeResult.Succeed(result)
-        } catch (e: HttpException) {
-            RecipeResult.Error(e.message)
-        } catch (e: Exception) {
+        } catch(e : HttpException){
+            RecipeResult.Error(e.response()?.message()?:e.message())
+        } catch (e : Exception){
             RecipeResult.Error(e.message)
         }
     }
@@ -65,9 +83,9 @@ class CreatorsRepositoryImpl (
         return try {
             val result = api.getFollowers(token)
             RecipeResult.Succeed(result)
-        } catch (e: HttpException) {
-            RecipeResult.Error(e.message)
-        } catch (e: Exception) {
+        } catch(e : HttpException){
+            RecipeResult.Error(e.response()?.message()?:e.message())
+        } catch (e : Exception){
             RecipeResult.Error(e.message)
         }
     }
@@ -79,9 +97,9 @@ class CreatorsRepositoryImpl (
         return try {
             val result = api.getFollowsByName(token, name)
             RecipeResult.Succeed(result)
-        } catch (e: HttpException) {
-            RecipeResult.Error(e.message)
-        } catch (e: Exception) {
+        } catch(e : HttpException){
+            RecipeResult.Error(e.response()?.message()?:e.message())
+        } catch (e : Exception){
             RecipeResult.Error(e.message)
         }
     }
@@ -90,9 +108,9 @@ class CreatorsRepositoryImpl (
         return try {
             val result = api.getUserInfo(token)
             RecipeResult.Succeed(result)
-        } catch (e: HttpException) {
-            RecipeResult.Error(e.message)
-        } catch (e: Exception) {
+        } catch(e : HttpException){
+            RecipeResult.Error(e.response()?.message()?:e.message())
+        } catch (e : Exception){
             RecipeResult.Error(e.message)
         }
     }
@@ -104,9 +122,9 @@ class CreatorsRepositoryImpl (
         return try {
             val result = api.getCreatorFollowers(token, creatorID)
             RecipeResult.Succeed(result)
-        } catch (e: HttpException) {
-            RecipeResult.Error(e.message)
-        } catch (e: Exception) {
+        } catch(e : HttpException){
+            RecipeResult.Error(e.response()?.message()?:e.message())
+        } catch (e : Exception){
             RecipeResult.Error(e.message)
         }
     }
@@ -115,9 +133,9 @@ class CreatorsRepositoryImpl (
         return try {
             api.addToFollows(token, creatorID)
             RecipeResult.Succeed()
-        } catch (e: HttpException) {
-            RecipeResult.Error(e.message)
-        } catch (e: Exception) {
+        } catch(e : HttpException){
+            RecipeResult.Error(e.response()?.message()?:e.message())
+        } catch (e : Exception){
             RecipeResult.Error(e.message)
         }
     }
@@ -126,9 +144,9 @@ class CreatorsRepositoryImpl (
         return try {
             api.removeFromFollows(token, creatorID)
             RecipeResult.Succeed()
-        } catch (e: HttpException) {
-            RecipeResult.Error(e.message)
-        } catch (e: Exception) {
+        } catch(e : HttpException){
+            RecipeResult.Error(e.response()?.message()?:e.message())
+        } catch (e : Exception){
             RecipeResult.Error(e.message)
         }
     }
@@ -136,9 +154,9 @@ class CreatorsRepositoryImpl (
     override suspend fun doesFollow(token: String, creatorID: String): RecipeResult<Boolean> {
         return try {
             RecipeResult.Succeed(api.doesFollow(token, creatorID))
-        } catch (e: HttpException) {
-            RecipeResult.Error(e.message)
-        } catch (e: Exception) {
+        } catch(e : HttpException){
+            RecipeResult.Error(e.response()?.message()?:e.message())
+        } catch (e : Exception){
             RecipeResult.Error(e.message)
         }
     }
@@ -147,9 +165,9 @@ class CreatorsRepositoryImpl (
         return try {
             api.updateCreator(token, request)
             RecipeResult.Succeed()
-        } catch (e: HttpException) {
-            RecipeResult.Error(e.message)
-        } catch (e: Exception) {
+        } catch(e : HttpException){
+            RecipeResult.Error(e.response()?.message()?:e.message())
+        } catch (e : Exception){
             RecipeResult.Error(e.message)
         }
     }

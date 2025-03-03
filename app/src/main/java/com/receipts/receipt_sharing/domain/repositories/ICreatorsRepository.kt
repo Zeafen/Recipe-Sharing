@@ -11,9 +11,11 @@ interface CreatorsRepository {
     suspend fun getCreatorById(token : String, creatorId : String) : RecipeResult<CreatorRequest>
 
     suspend fun getFollows(token : String) : RecipeResult<List<CreatorRequest>>
+    suspend fun getFollowersCount(token : String) : RecipeResult<Long>
     suspend fun getFollowsByName(token : String, name : String) : RecipeResult<List<CreatorRequest>>
     suspend fun getFollowers(token : String) : RecipeResult<List<CreatorRequest>>
     suspend fun getCreatorFollowers(token : String, creatorID: String) : RecipeResult<List<CreatorRequest>>
+    suspend fun getCreatorFollowersCount(token : String, creatorID : String) : RecipeResult<Long>
 
     suspend fun addToFollows(token : String, creatorID : String) : RecipeResult<Unit>
     suspend fun removeFromFollows(token : String, creatorID : String) : RecipeResult<Unit>
