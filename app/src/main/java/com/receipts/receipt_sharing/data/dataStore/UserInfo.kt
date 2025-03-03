@@ -6,5 +6,6 @@ import kotlinx.serialization.Serializable
 data class UserInfo(
     val userName : String = "",
     val token : String? = null,
-    val imageUrl : String? = null
+    val imageUrl : String? = null,
+    val lastSelectedPageInd : Int = -1
 )

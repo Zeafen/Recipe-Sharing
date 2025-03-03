@@ -1,9 +1,9 @@
 package com.receipts.receipt_sharing.data.repositoriesImpl
 
 import com.receipts.receipt_sharing.domain.FilterRequest
+import com.receipts.receipt_sharing.domain.apiServices.RecipesAPIService
 import com.receipts.receipt_sharing.domain.repositories.IFiltersRepository
 import com.receipts.receipt_sharing.domain.response.RecipeResult
-import com.receipts.receipt_sharing.domain.apiServices.RecipesAPIService
 import retrofit2.HttpException
 
 class FiltersRepositoryImpl(
@@ -12,8 +12,9 @@ class FiltersRepositoryImpl(
     override suspend fun GetCategories(token: String): RecipeResult<List<String>> {
         return try {
             RecipeResult.Succeed(api.getCategories(token))
-        }
-        catch (e : HttpException){
+        } catch(e : HttpException){
+            RecipeResult.Error(e.response()?.message()?:e.message())
+        } catch (e : Exception){
             RecipeResult.Error(e.message)
         }
     }
@@ -24,8 +25,9 @@ class FiltersRepositoryImpl(
     ): RecipeResult<List<String>> {
         return try {
             RecipeResult.Succeed(api.getFiltersByCategory(token, category))
-        }
-        catch (e : HttpException) {
+        } catch(e : HttpException){
+            RecipeResult.Error(e.response()?.message()?:e.message())
+        } catch (e : Exception){
             RecipeResult.Error(e.message)
         }
     }
@@ -33,8 +35,9 @@ class FiltersRepositoryImpl(
     override suspend fun getCategorizedFilters(token: String): RecipeResult<Map<String, List<String>>> {
         return try {
             RecipeResult.Succeed(api.getCategorizedFilters(token))
-        }
-        catch (e : HttpException) {
+        } catch(e : HttpException){
+            RecipeResult.Error(e.response()?.message()?:e.message())
+        } catch (e : Exception){
             RecipeResult.Error(e.message)
         }
     }
@@ -42,8 +45,9 @@ class FiltersRepositoryImpl(
     override suspend fun getFiltersByRecipe(token: String, id: String): RecipeResult<List<String>> {
         return try {
             RecipeResult.Succeed(api.getFiltersByRecipe(token, id))
-        }
-        catch (e : HttpException) {
+        } catch(e : HttpException){
+            RecipeResult.Error(e.response()?.message()?:e.message())
+        } catch (e : Exception){
             RecipeResult.Error(e.message)
         }
     }
@@ -56,8 +60,9 @@ class FiltersRepositoryImpl(
         return try {
             api.attachFiltersToRecipe(token, FilterRequest(recipeID, filters))
             RecipeResult.Succeed()
-        }
-        catch (e : HttpException) {
+        } catch(e : HttpException){
+            RecipeResult.Error(e.response()?.message()?:e.message())
+        } catch (e : Exception){
             RecipeResult.Error(e.message)
         }
     }
@@ -70,11 +75,9 @@ class FiltersRepositoryImpl(
         return try {
             api.removeFiltersFromRecipe(token, FilterRequest(recipeID, filters))
             RecipeResult.Succeed()
-        }
-        catch (e : HttpException){
-            RecipeResult.Error(e.message)
-        } catch (e: Exception) {
-            e.printStackTrace()
+        } catch(e : HttpException){
+            RecipeResult.Error(e.response()?.message()?:e.message())
+        } catch (e : Exception){
             RecipeResult.Error(e.message)
         }
     }
@@ -83,11 +86,9 @@ class FiltersRepositoryImpl(
         return try {
             api.clearRecipeFilters(token, recipeID)
             RecipeResult.Succeed()
-        }
-        catch (e : HttpException){
-            RecipeResult.Error(e.message)
-        } catch (e: Exception) {
-            e.printStackTrace()
+        } catch(e : HttpException){
+            RecipeResult.Error(e.response()?.message()?:e.message())
+        } catch (e : Exception){
             RecipeResult.Error(e.message)
         }
     }

@@ -11,7 +11,7 @@ import java.io.File
 import java.io.IOException
 
 
-class IRecipesRepositoryImpl (
+class RecipesRepositoryImpl (
     private val api : RecipesAPIService,
 ) : IRecipesRepository {
 
@@ -289,96 +289,6 @@ class IRecipesRepositoryImpl (
     ): RecipeResult<Unit> {
         return try {
             api.removeFromFavorites(token, receiptID)
-            RecipeResult.Succeed()
-        } catch(e : HttpException){
-            RecipeResult.Error(e.response()?.message()?:e.message())
-        } catch (e : Exception){
-            RecipeResult.Error(e.message)
-        }
-    }
-
-    //
-    override suspend fun getBasket(token: String): RecipeResult<List<Recipe>> {
-        return try {
-            RecipeResult.Succeed(api.getBasket(token))
-        } catch(e : HttpException){
-            RecipeResult.Error(e.response()?.message()?:e.message())
-        } catch (e : Exception){
-            RecipeResult.Error(e.message)
-        }
-    }
-
-
-    override suspend fun getBasketByName(
-        token: String,
-        name: String
-    ): RecipeResult<List<Recipe>> {
-        return try {
-            RecipeResult.Succeed(api.getBasketByName(token, name))
-        } catch(e : HttpException){
-            RecipeResult.Error(e.response()?.message()?:e.message())
-        } catch (e : Exception){
-            RecipeResult.Error(e.message)
-        }
-    }
-
-    override suspend fun getFilteredBasket(
-        token: String,
-        filters: List<String>
-    ): RecipeResult<List<Recipe>> {
-        return try {
-            RecipeResult.Succeed(api.getFilteredBasket(token, filters))
-        } catch(e : HttpException){
-            RecipeResult.Error(e.response()?.message()?:e.message())
-        } catch (e : Exception){
-            RecipeResult.Error(e.message)
-        }
-    }
-
-    override suspend fun getFilteredBasketByName(
-        token: String,
-        name: String,
-        filters: List<String>
-    ): RecipeResult<List<Recipe>> {
-        return try {
-            RecipeResult.Succeed(api.getFilteredBasketByName(token, name, filters))
-        } catch(e : HttpException){
-            RecipeResult.Error(e.response()?.message()?:e.message())
-        } catch (e : Exception){
-            RecipeResult.Error(e.message)
-        }
-    }
-
-    override suspend fun isRecipeInBasket(
-        token: String,
-        receiptID: String
-    ): RecipeResult<Boolean> {
-        return try {
-            RecipeResult.Succeed(api.getIsInBasket(token, receiptID))
-        } catch(e : HttpException){
-            RecipeResult.Error(e.response()?.message()?:e.message())
-        } catch (e : Exception){
-            RecipeResult.Error(e.message)
-        }
-    }
-
-    override suspend fun addToBasket(token: String, receiptID: String): RecipeResult<Unit> {
-        return try {
-            api.addToBasket(token, receiptID)
-            RecipeResult.Succeed()
-        } catch(e : HttpException){
-            RecipeResult.Error(e.response()?.message()?:e.message())
-        } catch (e : Exception){
-            RecipeResult.Error(e.message)
-        }
-    }
-
-    override suspend fun removeFromBasket(
-        token: String,
-        receiptID: String
-    ): RecipeResult<Unit> {
-        return try {
-            api.removeFromBasket(token, receiptID)
             RecipeResult.Succeed()
         } catch(e : HttpException){
             RecipeResult.Error(e.response()?.message()?:e.message())

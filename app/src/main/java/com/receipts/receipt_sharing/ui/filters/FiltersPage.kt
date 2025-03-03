@@ -28,7 +28,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.receipts.receipt_sharing.R
-import com.receipts.receipt_sharing.ui.SwipeableSelectionItem
+import com.receipts.receipt_sharing.ui.effects.SwipeableSelectionItem
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
 
 

@@ -3,7 +3,7 @@ import com.receipts.receipt_sharing.domain.recipes.Recipe
 import com.receipts.receipt_sharing.domain.response.RecipeResult
 import java.io.File
 
-interface RecipesRepository {
+interface IRecipesRepository {
 
     suspend fun uploadRecipeImage(token : String, imageFile : File) : RecipeResult<String>
     suspend fun uploadCreatorImage(token : String, imageFile : File) : RecipeResult<String>
@@ -108,17 +108,4 @@ interface RecipesRepository {
         token : String,
         receiptID : String
     ) : RecipeResult<Unit>
-
-    suspend fun getBasket(token: String): RecipeResult<List<Recipe>>
-    suspend fun getFilteredBasket(token: String, filters: List<String>): RecipeResult<List<Recipe>>
-    suspend fun getFilteredBasketByName(
-        token: String,
-        name: String,
-        filters: List<String>
-    ): RecipeResult<List<Recipe>>
-
-    suspend fun isRecipeInBasket(token: String, receiptID: String): RecipeResult<Boolean>
-    suspend fun addToBasket(token: String, receiptID: String): RecipeResult<Unit>
-    suspend fun removeFromBasket(token: String, receiptID: String): RecipeResult<Unit>
-    suspend fun getBasketByName(token: String, name: String): RecipeResult<List<Recipe>>
 }

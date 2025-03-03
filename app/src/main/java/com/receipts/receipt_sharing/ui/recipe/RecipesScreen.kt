@@ -55,11 +55,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.receipts.receipt_sharing.R
-import com.receipts.receipt_sharing.data.viewModels.RecipesScreenEvent
 import com.receipts.receipt_sharing.domain.recipes.Recipe
 import com.receipts.receipt_sharing.domain.response.RecipeResult
-import com.receipts.receipt_sharing.ui.ErrorInfoPage
-import com.receipts.receipt_sharing.ui.shimmerEffect
+import com.receipts.receipt_sharing.presentation.recipes.CellsAmount
+import com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent
+import com.receipts.receipt_sharing.presentation.recipes.RecipesScreenState
+import com.receipts.receipt_sharing.ui.effects.shimmerEffect
+import com.receipts.receipt_sharing.ui.infoPages.ErrorInfoPage
 
 
 @Composable
@@ -72,7 +74,7 @@ fun ColumnAmountDropDownMenu(modifier: Modifier = Modifier,
         onDismissRequest = onDismissRequest) {
         CellsAmount.entries.forEach { cell ->
             DropdownMenuItem(text = {
-                Text(text = cell.name)
+                Text(stringResource(cell.nameRes))
             },
                 onClick = {
                     onSelectSize(cell)
@@ -325,12 +327,13 @@ fun RecipesScreen(
 
 @Composable
 @Preview
-fun RecipesScreenPreview() {
+private fun RecipesScreenPreview() {
     var opem by remember {
         mutableStateOf(false)
     }
     var state by remember {
-        mutableStateOf(RecipesScreenState(
+        mutableStateOf(
+            RecipesScreenState(
             recipes = RecipeResult.Succeed(
                 listOf(
                     Recipe(
@@ -389,7 +392,8 @@ fun RecipesScreenPreview() {
             savedFilters =
             listOf(
             )
-        ))
+        )
+        )
     }
 
         Surface {
@@ -400,7 +404,7 @@ fun RecipesScreenPreview() {
             RecipesScreen(state = state,
                 onEvent = {
                     if (it is RecipesScreenEvent.SetSearchName)
-                        state = state.copy(searchString = it.receiptName)
+                        state = state.copy(searchString = it.recipeName)
                     else if(it is RecipesScreenEvent.SetCellsAmount)
                         state = state.copy(cellsCount = it.cellsAmount)
                     else if(it is RecipesScreenEvent.SetFilters)

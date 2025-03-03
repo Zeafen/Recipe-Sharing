@@ -1,9 +1,17 @@
 package com.receipts.receipt_sharing.ui.auth
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -31,26 +39,32 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.receipts.receipt_sharing.R
-import com.receipts.receipt_sharing.data.viewModels.AuthEvent
+import com.receipts.receipt_sharing.data.helpers.PasswordChecker
 import com.receipts.receipt_sharing.domain.response.AuthResult
-import com.receipts.receipt_sharing.ui.ErrorInfoPage
+import com.receipts.receipt_sharing.presentation.auth.AuthEvent
+import com.receipts.receipt_sharing.presentation.auth.AuthPageState
+import com.receipts.receipt_sharing.ui.infoPages.ErrorInfoPage
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
     modifier: Modifier = Modifier,
-    onGotoRegister : () -> Unit,
-    state : AuthPageState,
+    state: AuthPageState,
     onEvent: (AuthEvent) -> Unit,
-    onOpenMenu : () -> Unit,
-    onAuthorizationFinished : () -> Unit
+    onOpenMenu: () -> Unit,
+    onAuthorizationFinished: () -> Unit,
+    onGotoRegister: () -> Unit,
+    onGoToChangePassword : () -> Unit,
 ) {
     Scaffold(
         modifier = modifier,
@@ -82,9 +96,12 @@ fun LoginScreen(
             is AuthResult.Authorized -> {
                 onAuthorizationFinished()
             }
-            is AuthResult.Error -> ErrorInfoPage(modifier = Modifier
-                .padding(it),
-                errorInfo = state.result.data?: stringResource(id = R.string.unknown_error_txt)) {
+
+            is AuthResult.Error -> ErrorInfoPage(
+                modifier = Modifier
+                    .padding(it),
+                errorInfo = state.result.data ?: stringResource(id = R.string.unknown_error_txt)
+            ) {
                 onEvent(AuthEvent.ClearData)
             }
 
@@ -104,6 +121,7 @@ fun LoginScreen(
                     )
                 }
             }
+
             is AuthResult.Unauthorized -> {
                 Column(
                     modifier = Modifier
@@ -113,17 +131,129 @@ fun LoginScreen(
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+
                     OutlinedTextField(modifier = Modifier
-                        .padding(vertical = 8.dp),
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp, horizontal = 12.dp),
+                        maxLines = 1,
+                        singleLine = true,
                         value = state.login,
-                        label = { Text(text = stringResource(R.string.login_enter_str)) },
-                        onValueChange = { onEvent(AuthEvent.SetLogin(it)) })
+                        visualTransformation = if (!state.showPassword) PasswordVisualTransformation('*') else VisualTransformation.None,
+                        onValueChange = { onEvent(AuthEvent.SetLogin(it)) },
+                        leadingIcon = {
+                            Icon(
+                                painter = painterResource(R.drawable.person_ic),
+                                contentDescription = null
+                            )
+                        },
+                        isError = state.login.isEmpty(),
+                        supportingText = {
+                            AnimatedVisibility(visible = state.login.isEmpty(),
+                                enter = slideInVertically(spring(stiffness = Spring.StiffnessMediumLow)) { -it } + fadeIn(
+                                    spring(stiffness = Spring.StiffnessLow)
+                                ),
+                                exit = slideOutVertically(spring(stiffness = Spring.StiffnessMediumLow)) { it } + fadeOut(
+                                    spring(stiffness = Spring.StiffnessLow)
+                                )
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.empty_field_error),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.W400,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            }
+                        },
+                        label = {
+                            Text(
+                                text = stringResource(
+                                    R.string.login_enter_str
+                                )
+                            )
+                        }
+                    )
                     OutlinedTextField(modifier = Modifier
-                        .padding(vertical = 8.dp),
-                        value = state.password,
-                        visualTransformation = PasswordVisualTransformation('*'),
-                        label = { Text(text = stringResource(R.string.password_enter_str)) },
-                        onValueChange = { onEvent(AuthEvent.SetPassword(it)) })
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp, horizontal = 12.dp),
+                    maxLines = 1,
+                    singleLine = true,
+                    value = state.password,
+                    visualTransformation = if (!state.showPassword) PasswordVisualTransformation('*') else VisualTransformation.None,
+                    onValueChange = { onEvent(AuthEvent.SetPassword(it)) },
+                    trailingIcon = {
+                        IconButton(
+                            onClick = { onEvent(AuthEvent.SetShowPassword(!state.showPassword)) }
+                        ) {
+                            Icon(
+                                painter = painterResource(
+                                    if (state.showPassword) R.drawable.hide_ic
+                                    else R.drawable.show_ic
+                                ),
+                                contentDescription = null
+                            )
+                        }
+                    },
+                    leadingIcon = {
+                        Icon(
+                            painter = painterResource(R.drawable.passw_ic),
+                            contentDescription = null
+                        )
+                    },
+                    isError = !state.passwordOK,
+                    supportingText = {
+                        AnimatedVisibility(visible = !state.passwordOK,
+                            enter = slideInVertically(spring(stiffness = Spring.StiffnessMediumLow)) { -it } + fadeIn(
+                                spring(stiffness = Spring.StiffnessLow)
+                            ),
+                            exit = slideOutVertically(spring(stiffness = Spring.StiffnessMediumLow)) { it } + fadeOut(
+                                spring(stiffness = Spring.StiffnessLow)
+                            )
+                        ) {
+                            Text(
+                                text = when {
+                                    state.password.length < PasswordChecker.MinLength -> stringResource(
+                                        R.string.incorrect_length_least_error,
+                                        PasswordChecker.MinLength
+                                    )
+
+                                    state.password.count { it.isDigit() } < PasswordChecker.NumbersLeastCount -> stringResource(
+                                        R.string.must_contain_least_numbers_error,
+                                        PasswordChecker.NumbersLeastCount
+                                    )
+
+                                    state.password.count { it.isLetter() } < PasswordChecker.LettersLeastCount -> stringResource(
+                                        R.string.must_contain_least_letters_error,
+                                        PasswordChecker.LettersLeastCount
+                                    )
+
+                                    PasswordChecker.HasSpecials && !state.password.contains("[!\"#\$%&'()*+,-./:;\\\\<=>?@\\[\\]^_`{|}~]".toRegex()) -> stringResource(
+                                        R.string.must_contain_specials_error
+                                    )
+
+                                    PasswordChecker.HasUpperCase && !state.password.contains("[A-Z]".toRegex()) -> stringResource(
+                                        R.string.must_contain_uppercase
+                                    )
+
+                                    PasswordChecker.HasLowerCase && !state.password.contains("[a-z]".toRegex()) -> stringResource(
+                                        R.string.must_contain_lowercase
+                                    )
+
+                                    else -> ""
+                                },
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.W400,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    },
+                    label = {
+                        Text(
+                            text = stringResource(
+                                R.string.password_enter_str
+                            )
+                        )
+                    }
+                )
                     Button(modifier = Modifier
                         .fillMaxWidth()
                         .padding(start = 24.dp, end = 24.dp, top = 12.dp),
@@ -131,15 +261,31 @@ fun LoginScreen(
                         onClick = { onEvent(AuthEvent.ConfirmLogin) }) {
                         Text(text = stringResource(R.string.login_confirm_str))
                     }
-                    Text(
-                        modifier = Modifier
-                            .alpha(0.3f)
-                            .clickable {
-                                onGotoRegister()
-                            },
-                        text = stringResource(R.string.register_confirm_str),
-                        style = MaterialTheme.typography.titleMedium
-                    )
+                    Row(modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            modifier = Modifier
+                                .alpha(0.3f)
+                                .clickable {
+                                    onGoToChangePassword()
+                                },
+                            text = stringResource(R.string.forgot_password_lbl),
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Text(
+                            modifier = Modifier
+                                .alpha(0.3f)
+                                .clickable {
+                                    onGotoRegister()
+                                },
+                            text = stringResource(R.string.register_confirm_str),
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
                 }
             }
         }
@@ -152,17 +298,20 @@ private fun Preview() {
     RecipeSharing_theme(darkTheme = true) {
         Surface {
             var state by remember {
-                mutableStateOf(AuthPageState(
-                    result = AuthResult.Unauthorized()
-                ))
+                mutableStateOf(
+                    AuthPageState(
+                        result = AuthResult.Unauthorized()
+                    )
+                )
             }
             LoginScreen(onGotoRegister = { /*TODO*/ }, state = state,
                 onEvent = {
-                          if(it is AuthEvent.SetPassword)
-                              state = state.copy(password = it.password)
+                    if (it is AuthEvent.SetPassword)
+                        state = state.copy(password = it.password)
                 },
                 onOpenMenu = {},
-                onAuthorizationFinished = {})
+                onAuthorizationFinished = {},
+                onGoToChangePassword = {})
         }
     }
 }

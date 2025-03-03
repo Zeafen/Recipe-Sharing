@@ -1,9 +1,11 @@
 package com.receipts.receipt_sharing.data.repositoriesImpl
 
+import com.receipts.receipt_sharing.domain.apiServices.RecipesAPIService
+import com.receipts.receipt_sharing.domain.creators.ChangePasswRequest
 import com.receipts.receipt_sharing.domain.repositories.IAuthRepository
 import com.receipts.receipt_sharing.domain.request.AuthRequest
 import com.receipts.receipt_sharing.domain.response.AuthResult
-import com.receipts.receipt_sharing.domain.apiServices.RecipesAPIService
+import com.receipts.receipt_sharing.domain.response.RecipeResult
 import retrofit2.HttpException
 
 class AuthRepositoryImpl(
@@ -20,6 +22,37 @@ class AuthRepositoryImpl(
         catch (e : Exception){
             e.printStackTrace()
             AuthResult.Error(e.message)
+        }
+    }
+
+    override suspend fun sendCode(email: String): RecipeResult<Unit> {
+        return try {
+            api.sendCode(email)
+            RecipeResult.Succeed()
+        }
+        catch (e : HttpException){
+            e.printStackTrace()
+            RecipeResult.Error(e.message)
+        }
+        catch (e : Exception){
+            e.printStackTrace()
+            RecipeResult.Error(e.message)
+        }
+
+    }
+
+    override suspend fun updatePassword(request: ChangePasswRequest): RecipeResult<Unit> {
+        return try {
+            api.updatePassword(request)
+            RecipeResult.Succeed()
+        }
+        catch (e : HttpException){
+            e.printStackTrace()
+            RecipeResult.Error(e.message)
+        }
+        catch (e : Exception){
+            e.printStackTrace()
+            RecipeResult.Error(e.message)
         }
     }
 

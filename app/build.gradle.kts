@@ -1,9 +1,9 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.devtools.ksp)
-    alias(libs.plugins.google.dagger.hilt.android)
-    alias(libs.plugins.jetbrains.kotlin.plugin.serialization)
+    alias(libs.plugins.jetbrains.serialization)
 }
 
 android {
@@ -62,6 +62,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.graphics.shapes)
 
     implementation(libs.androidx.work.runtime.ktx)
 
@@ -71,12 +72,6 @@ dependencies {
     implementation(libs.com.converter.gson)
     implementation(libs.io.coil.compose)
 
-    //Dagger-hilt
-    implementation(libs.com.hilt.android)
-    implementation(libs.androidx.compose.material)
-    implementation(libs.androidx.hilt.navigation.compose)
-    ksp(libs.com.hilt.android.compiler)
-    ksp(libs.com.hilt.compiler)
 
     //Serialization
     implementation(libs.org.kotlinx.serialization.json)
@@ -93,6 +88,7 @@ dependencies {
     //compose navigation
     implementation(libs.androidx.nigation.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.compose.material)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

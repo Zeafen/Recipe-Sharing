@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -32,8 +34,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import androidx.wear.compose.material.Button
-import androidx.wear.compose.material.ButtonDefaults
 import com.receipts.receipt_sharing.R
 import com.receipts.receipt_sharing.domain.recipes.Step
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
@@ -114,7 +114,7 @@ fun StepConfigureDialog(
                     .padding(horizontal = 8.dp, vertical = 12.dp)
                     .weight(1f),
                     colors = ButtonDefaults.buttonColors(
-                        backgroundColor = MaterialTheme.colorScheme.secondary,
+                        containerColor = MaterialTheme.colorScheme.secondary,
                         contentColor = MaterialTheme.colorScheme.onSecondary
                     ),
                     shape = RoundedCornerShape(16.dp),
@@ -125,19 +125,19 @@ fun StepConfigureDialog(
                             )
                         )
                     }) {
-                    androidx.wear.compose.material.Text(style = MaterialTheme.typography.titleSmall,
+                    Text(style = MaterialTheme.typography.titleSmall,
                         text = stringResource(id = R.string.save_changes_str))
                 }
                 Button(modifier = Modifier
                     .weight(1f)
                     .padding(horizontal = 8.dp, vertical = 12.dp),
                     colors = ButtonDefaults.buttonColors(
-                        backgroundColor = MaterialTheme.colorScheme.error,
+                        containerColor   = MaterialTheme.colorScheme.error,
                         contentColor = MaterialTheme.colorScheme.onError
                     ),
                     shape = RoundedCornerShape(16.dp),
                     onClick = onDismissRequest) {
-                    androidx.wear.compose.material.Text(style = MaterialTheme.typography.titleSmall,
+                    Text(style = MaterialTheme.typography.titleSmall,
                         text = stringResource(id = R.string.cancel_changes_str))
                 }
             }

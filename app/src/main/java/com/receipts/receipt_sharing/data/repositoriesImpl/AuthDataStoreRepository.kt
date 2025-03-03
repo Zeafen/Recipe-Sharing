@@ -2,13 +2,11 @@ package com.receipts.receipt_sharing.data.repositoriesImpl
 
 import android.content.Context
 import androidx.datastore.dataStore
-import androidx.datastore.preferences.core.stringPreferencesKey
 import com.receipts.receipt_sharing.data.dataStore.CreatorsMapSerializer
 import com.receipts.receipt_sharing.data.dataStore.UserInfoSerializer
 
 
 data object PreferencesConsts{
-    val TOKEN_KEY = stringPreferencesKey("jwt-token")
     const val AUTH_PREFERENCE_NAME = "user-info.json"
     const val CREATORS_PREFERENCE_NAME = "creators-amount.json"
 

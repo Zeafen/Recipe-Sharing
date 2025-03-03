@@ -55,14 +55,15 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.receipts.receipt_sharing.R
-import com.receipts.receipt_sharing.domain.CreatorRequest
+import com.receipts.receipt_sharing.domain.creators.CreatorRequest
+import com.receipts.receipt_sharing.domain.apiServices.UnsafeImageLoader
 import com.receipts.receipt_sharing.domain.recipes.Recipe
 import com.receipts.receipt_sharing.domain.response.RecipeResult
-import com.receipts.receipt_sharing.domain.apiServices.UnsafeImageLoader
-import com.receipts.receipt_sharing.data.viewModels.CreatorPageEvent
-import com.receipts.receipt_sharing.ui.ErrorInfoPage
+import com.receipts.receipt_sharing.presentation.creators.CreatorPageEvent
+import com.receipts.receipt_sharing.presentation.creators.CreatorPageState
+import com.receipts.receipt_sharing.ui.effects.shimmerEffect
+import com.receipts.receipt_sharing.ui.infoPages.ErrorInfoPage
 import com.receipts.receipt_sharing.ui.recipe.RecipeCard
-import com.receipts.receipt_sharing.ui.shimmerEffect
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -99,11 +100,7 @@ fun CreatorPage(modifier: Modifier = Modifier,
                 },
                 actions = {
                     IconButton(onClick = {
-                        onEvent(
-                            if (state.follows)
-                                CreatorPageEvent.RemoveFromFollows
-                            else CreatorPageEvent.AddToFollows
-                        )
+                        onEvent(CreatorPageEvent.ChangeFollows)
                     }) {
                         Image(
                             painter = painterResource(
@@ -194,7 +191,7 @@ fun CreatorPage(modifier: Modifier = Modifier,
                             ,
                         ) {
                             item {
-                                if (state.imageUrl.isNullOrEmpty())
+                                if (state.creator.data.imageUrl.isEmpty())
                                     Image(
                                         modifier = Modifier
                                             .fillMaxWidth()
@@ -238,11 +235,7 @@ fun CreatorPage(modifier: Modifier = Modifier,
                                         .padding(start = 24.dp, end = 4.dp, bottom = 24.dp)
                                         .clip(RoundedCornerShape(16.dp))
                                         .clickable {
-                                            onEvent(
-                                                if (state.follows)
-                                                    CreatorPageEvent.RemoveFromFollows
-                                                else CreatorPageEvent.AddToFollows
-                                            )
+                                            onEvent(CreatorPageEvent.ChangeFollows)
                                         },
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
@@ -257,7 +250,7 @@ fun CreatorPage(modifier: Modifier = Modifier,
                                             .padding(vertical = 4.dp, horizontal = 8.dp),
                                         text = stringResource(
                                             id = R.string.follow_button_txt,
-                                            state.followers
+                                            state.followersCount
                                         ),
                                         style = MaterialTheme.typography.titleLarge
                                     )
@@ -371,9 +364,10 @@ private fun CreatorInfoPreview() {
     RecipeSharing_theme {
         Surface {
             var state by remember {
-                mutableStateOf(CreatorPageState(
+                mutableStateOf(
+                    CreatorPageState(
                     creator = RecipeResult.Succeed(
-                        CreatorRequest("", "Very Very Very Very Very Very long name", "")
+                        CreatorRequest("", "Very Very Very Very Very Very long name", "","")
                     ),
                     recipes = RecipeResult.Succeed(
                         listOf(
@@ -432,7 +426,8 @@ private fun CreatorInfoPreview() {
                                 emptyList()
                             ),
                         )
-                    )))
+                    ))
+                )
             }
 
             CreatorPage(state = state,

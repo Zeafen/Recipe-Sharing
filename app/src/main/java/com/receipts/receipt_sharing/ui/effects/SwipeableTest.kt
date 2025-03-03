@@ -105,7 +105,7 @@ fun rememberSwipeableSelectionState(initialValue : Int = 0) = rememberSaveable(s
     SwipeableSelectionState(initialValue)
 }
 
-@OptIn(ExperimentalWearMaterialApi::class)
+@OptIn(ExperimentalWearMaterialApi::class, ExperimentalWearMaterialApi::class)
 @Composable
 fun <T> SwipeableSelection(
     modifier : Modifier = Modifier,
@@ -130,6 +130,7 @@ fun <T> SwipeableSelection(
         state.lastSelectedIndex = it
         true
     }
+
     val sizePx = with(LocalDensity.current) { itemHeight.toPx() }
     val anchors = remember(items) {
         val anchors = mutableMapOf<Float, Int>()

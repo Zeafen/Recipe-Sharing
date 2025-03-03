@@ -1,5 +1,6 @@
 package com.receipts.receipt_sharing.ui.recipe
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -14,7 +15,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
@@ -33,6 +33,10 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -42,30 +46,37 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.receipts.receipt_sharing.R
-import com.receipts.receipt_sharing.data.viewModels.RecipePageEvent
 import com.receipts.receipt_sharing.domain.apiServices.UnsafeImageLoader
 import com.receipts.receipt_sharing.domain.recipes.Ingredient
 import com.receipts.receipt_sharing.domain.recipes.Measure
 import com.receipts.receipt_sharing.domain.recipes.Recipe
 import com.receipts.receipt_sharing.domain.recipes.Step
 import com.receipts.receipt_sharing.domain.response.RecipeResult
-import com.receipts.receipt_sharing.ui.ErrorInfoPage
-import com.receipts.receipt_sharing.ui.shimmerEffect
+import com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent
+import com.receipts.receipt_sharing.presentation.recipes.RecipePageState
+import com.receipts.receipt_sharing.ui.effects.shimmerEffect
+import com.receipts.receipt_sharing.ui.infoPages.ErrorInfoPage
+import com.receipts.receipt_sharing.ui.recipe.steps.StepsRows
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecipePage(
-    modifier : Modifier = Modifier,
-    state : RecipePageState,
-    onOpenMenu : () -> Unit,
-    onEvent : (RecipePageEvent) -> Unit,
-    onReloadData : () -> Unit,
-    onGoToFilteredScreen : (String) -> Unit
+    modifier: Modifier = Modifier,
+    state: RecipePageState,
+    onOpenMenu: () -> Unit,
+    onEvent: (RecipePageEvent) -> Unit,
+    onReloadData: () -> Unit,
+    onGoToFilteredScreen: (String) -> Unit
 ) {
     val refreshState = rememberPullToRefreshState()
 
@@ -84,53 +95,39 @@ fun RecipePage(
 
                 ),
                 title = {
-                    when (state.recipe) {
-                        is RecipeResult.Downloading -> Box(
-                            modifier = Modifier
-                                .padding(vertical = 12.dp, horizontal = 8.dp)
-                                .fillMaxWidth()
-                                .height(32.dp)
-                                .alpha(0.3f)
-                                .shimmerEffect()
-                        )
-
-                        is RecipeResult.Error -> Text(
-                            modifier = Modifier
-                                .wrapContentHeight()
-                                .padding(start = 8.dp),
-                            text = stringResource(R.string.error_info_title),
-                            style = MaterialTheme.typography.headlineLarge
-                        )
-
-                        is RecipeResult.Succeed -> Text(
-                            modifier = Modifier
-                                .wrapContentHeight()
-                                .padding(start = 8.dp),
-                            text = state.recipe.data?.recipeName
-                                ?: stringResource(R.string.no_recipe),
-                            style = MaterialTheme.typography.headlineLarge
-                        )
-                    }
+                    Text(
+                        modifier = Modifier
+                            .padding(start = 8.dp),
+                        text = stringResource(R.string.recipe_page_title),
+                        style = MaterialTheme.typography.headlineLarge,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        letterSpacing = TextUnit(0.1f, TextUnitType.Em),
+                        fontWeight = FontWeight.W400
+                    )
                 },
                 actions = {
-                    IconButton(onClick = {
-                        if (state.recipe.data != null) {
-                            onEvent(
-                                if (state.isFavorite)
-                                    RecipePageEvent.RemoveFromFavourites(state.recipe.data.recipeID)
-                                else
-                                    RecipePageEvent.AddToFavourites(state.recipe.data.recipeID)
+                    if (state.own)
+                        IconButton(onClick = {
+                            onEvent(RecipePageEvent.EditRecord)
+                        }) {
+                            Image(
+                                painter = painterResource(R.drawable.edit_ic),
+                                contentDescription = ""
                             )
                         }
-                    }) {
-                        Image(
-                            painter = painterResource(
-                                if (state.isFavorite) R.drawable.in_favorite_ic
-                                else R.drawable.not_in_favorite_ic
-                            ),
-                            contentDescription = ""
-                        )
-                    }
+                    else
+                        IconButton(onClick = {
+                            onEvent(RecipePageEvent.ChangeIsFavorite)
+                        }) {
+                            Image(
+                                painter = painterResource(
+                                    if (state.isFavorite) R.drawable.in_favorite_ic
+                                    else R.drawable.not_in_favorite_ic
+                                ),
+                                contentDescription = ""
+                            )
+                        }
                 })
         },
     ) {
@@ -223,7 +220,7 @@ fun RecipePage(
                                 .background(MaterialTheme.colorScheme.surface),
                         ) {
                             item {
-                                if (state.recipe.data.imageUrl.isNullOrEmpty())
+                                if (state.imageUrl.data.isNullOrEmpty())
                                     Image(
                                         modifier = Modifier
                                             .fillMaxWidth()
@@ -238,13 +235,27 @@ fun RecipePage(
                                             .fillMaxWidth()
                                             .padding(8.dp),
                                         model = ImageRequest.Builder(LocalContext.current)
-                                            .data(state.recipe.data.imageUrl)
+                                            .data(state.imageUrl.data)
                                             .crossfade(true)
                                             .build(),
                                         imageLoader = UnsafeImageLoader.getInstance(),
                                         contentScale = ContentScale.Fit,
                                         contentDescription = "",
                                     )
+                            }
+                            item {
+                                Text(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(start = 8.dp, bottom = 12.dp, top = 8.dp),
+                                    text = state.recipeName,
+                                    textAlign = TextAlign.Start,
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    letterSpacing = TextUnit(0.1f, TextUnitType.Em),
+                                    fontWeight = FontWeight.W400
+                                )
                             }
                             item {
                                 LazyVerticalStaggeredGrid(
@@ -255,7 +266,6 @@ fun RecipePage(
                                 ) {
                                     when (state.filters) {
                                         is RecipeResult.Downloading -> {
-
                                         }
 
                                         is RecipeResult.Error -> {
@@ -295,6 +305,15 @@ fun RecipePage(
                                                                         horizontal = 12.dp
                                                                     ),
                                                                 text = it,
+                                                                style = MaterialTheme.typography.titleMedium,
+                                                                maxLines = 1,
+                                                                overflow = TextOverflow.Ellipsis,
+                                                                textAlign = TextAlign.Center,
+                                                                fontWeight = FontWeight.W400,
+                                                                letterSpacing = TextUnit(
+                                                                    0.15f,
+                                                                    TextUnitType.Em
+                                                                )
                                                             )
                                                         }
                                                     }
@@ -313,7 +332,6 @@ fun RecipePage(
                                     }
                                 }
                             }
-
                             item {
                                 Text(
                                     modifier = Modifier
@@ -324,11 +342,12 @@ fun RecipePage(
                                             bottom = 12.dp
                                         ),
                                     style = MaterialTheme.typography.bodyLarge,
-                                    text = state.recipe.data.description
-                                        ?: stringResource(R.string.no_description)
+                                    text = state.recipeDescription.ifEmpty { stringResource(R.string.no_description) },
+                                    fontWeight = FontWeight.W400,
+                                    letterSpacing = TextUnit(2f, TextUnitType.Sp),
                                 )
                             }
-                            items(state.recipe.data.ingredients) {
+                            items(state.ingredients) {
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -353,7 +372,7 @@ fun RecipePage(
                                 StepsRows(
                                     modifier = Modifier
                                         .padding(horizontal = 4.dp, vertical = 8.dp),
-                                    steps = state.recipe.data.steps
+                                    steps = state.steps
                                 )
                             }
                         }
@@ -365,77 +384,156 @@ fun RecipePage(
 @Composable
 fun IngredientCell(
     modifier: Modifier = Modifier,
-    ingredient : Ingredient
-){
-    Row(modifier = modifier,
+    ingredient: Ingredient
+) {
+    Row(
+        modifier = modifier,
         horizontalArrangement = Arrangement.Start
     ) {
-        Text(modifier = Modifier
-            .alpha(0.6f)
-            .padding(start = 12.dp, end = 8.dp)
-            .align(Alignment.CenterVertically),
-            text = ingredient.name)
-        Text(modifier = Modifier
-            .alpha(0.4f)
-            .padding(start = 12.dp, end = 8.dp)
-            .align(Alignment.CenterVertically),
-            text = "${ingredient.amount}${stringResource(ingredient.measureType.shortName)}")
+        Text(
+            modifier = Modifier
+                .alpha(0.6f)
+                .padding(start = 12.dp, end = 8.dp)
+                .align(Alignment.CenterVertically),
+            text = ingredient.name,
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.W300,
+            textAlign = TextAlign.Center,
+            letterSpacing = TextUnit(1.5f, TextUnitType.Sp)
+        )
+        Text(
+            modifier = Modifier
+                .alpha(0.4f)
+                .padding(start = 12.dp, end = 8.dp)
+                .align(Alignment.CenterVertically),
+            text = "${ingredient.amount}${stringResource(ingredient.measureType.shortName)}",
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.W300,
+            textAlign = TextAlign.Center,
+            letterSpacing = TextUnit(1.5f, TextUnitType.Sp)
+        )
     }
 }
 
 @Preview
 @Composable
 private fun ReceiptPagePreview() {
-        RecipePage(state = RecipePageState(
-            recipe = RecipeResult.Succeed(
-                Recipe(
-                    recipeID = "",
-                    creatorID = "",
-                    imageUrl = "",
-                    recipeName = "Extra mayonnaise",
-                    description = "Lorem ipsum dolor sit amet",
-                    ingredients = listOf(
-                        Ingredient("Mayonaise1", 100L, Measure.Millilitres),
-                        Ingredient("Mayonaise2", 100L, Measure.Millilitres),
-                        Ingredient("Mayonaise3", 100L, Measure.Millilitres),
-                        Ingredient("Mayonaise4", 100L, Measure.Millilitres),
-                    ),
-                    steps = listOf(
-                        Step("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse sit amet est varius, tempor tortor non, pellentesque mi. Praesent accumsan facilisis urna nec semper. Proin gravida consectetur augue. Nullam pharetra nulla at malesuada consequat. Donec eu tortor vitae risus laoreet mollis nec in ipsum. Donec sem erat, rhoncus a iaculis at, accumsan eget nisl. Nulla hendrerit dui in quam rutrum, id ultricies urna facilisis. Fusce urna augue, maximus at tortor pellentesque, laoreet auctor tortor. Maecenas ut eros enim. Donec faucibus venenatis semper. Pellentesque laoreet metus blandit arcu venenatis auctor ac non arcu.\n" +
-                                "\n" +
-                                "Phasellus nulla leo, condimentum in est et, ornare tincidunt neque. Morbi lectus velit, cursus quis pharetra sed, semper rhoncus felis. Pellentesque volutpat ipsum vitae mattis sodales. Proin mattis nulla velit, ac venenatis nisi euismod ut. Sed non imperdiet neque. Sed lacinia libero erat. Vestibulum id pellentesque tellus, at suscipit nulla. Duis ut erat interdum, laoreet nibh ut, lobortis est.", 123123123L),
-                        Step("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse sit amet est varius, tempor tortor non, pellentesque mi. Praesent accumsan facilisis urna nec semper. Proin gravida consectetur augue. Nullam pharetra nulla at malesuada consequat. Donec eu tortor vitae risus laoreet mollis nec in ipsum. Donec sem erat, rhoncus a iaculis at, accumsan eget nisl. Nulla hendrerit dui in quam rutrum, id ultricies urna facilisis. Fusce urna augue, maximus at tortor pellentesque, laoreet auctor tortor. Maecenas ut eros enim. Donec faucibus venenatis semper. Pellentesque laoreet metus blandit arcu venenatis auctor ac non arcu.\n" +
-                                "\n" +
-                                "Phasellus nulla leo, condimentum in est et, ornare tincidunt neque. Morbi lectus velit, cursus quis pharetra sed, semper rhoncus felis. Pellentesque volutpat ipsum vitae mattis sodales. Proin mattis nulla velit, ac venenatis nisi euismod ut. Sed non imperdiet neque. Sed lacinia libero erat. Vestibulum id pellentesque tellus, at suscipit nulla. Duis ut erat interdum, laoreet nibh ut, lobortis est.", 123123123L),
-                        Step("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse sit amet est varius, tempor tortor non, pellentesque mi. Praesent accumsan facilisis urna nec semper. Proin gravida consectetur augue. Nullam pharetra nulla at malesuada consequat. Donec eu tortor vitae risus laoreet mollis nec in ipsum. Donec sem erat, rhoncus a iaculis at, accumsan eget nisl. Nulla hendrerit dui in quam rutrum, id ultricies urna facilisis. Fusce urna augue, maximus at tortor pellentesque, laoreet auctor tortor. Maecenas ut eros enim. Donec faucibus venenatis semper. Pellentesque laoreet metus blandit arcu venenatis auctor ac non arcu.\n" +
-                                "\n" +
-                                "Phasellus nulla leo, condimentum in est et, ornare tincidunt neque. Morbi lectus velit, cursus quis pharetra sed, semper rhoncus felis. Pellentesque volutpat ipsum vitae mattis sodales. Proin mattis nulla velit, ac venenatis nisi euismod ut. Sed non imperdiet neque. Sed lacinia libero erat. Vestibulum id pellentesque tellus, at suscipit nulla. Duis ut erat interdum, laoreet nibh ut, lobortis est.", 123123123L),
-                        Step("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse sit amet est varius, tempor tortor non, pellentesque mi. Praesent accumsan facilisis urna nec semper. Proin gravida consectetur augue. Nullam pharetra nulla at malesuada consequat. Donec eu tortor vitae risus laoreet mollis nec in ipsum. Donec sem erat, rhoncus a iaculis at, accumsan eget nisl. Nulla hendrerit dui in quam rutrum, id ultricies urna facilisis. Fusce urna augue, maximus at tortor pellentesque, laoreet auctor tortor. Maecenas ut eros enim. Donec faucibus venenatis semper. Pellentesque laoreet metus blandit arcu venenatis auctor ac non arcu.\n" +
-                                "\n" +
-                                "Phasellus nulla leo, condimentum in est et, ornare tincidunt neque. Morbi lectus velit, cursus quis pharetra sed, semper rhoncus felis. Pellentesque volutpat ipsum vitae mattis sodales. Proin mattis nulla velit, ac venenatis nisi euismod ut. Sed non imperdiet neque. Sed lacinia libero erat. Vestibulum id pellentesque tellus, at suscipit nulla. Duis ut erat interdum, laoreet nibh ut, lobortis est.", 123123123L),
+    var state by remember {
+        mutableStateOf(
+            RecipePageState(
+                recipe = RecipeResult.Succeed(
+                    Recipe(
+                        recipeID = "",
+                        creatorID = "",
+                        imageUrl = "",
+                        recipeName = "Extra mayonnaise",
+                        description = "Lorem ipsum dolor sit amet",
+                        ingredients = listOf(
+                            Ingredient("Mayonaise1", 100L, Measure.Millilitres),
+                            Ingredient("Mayonaise2", 100L, Measure.Millilitres),
+                            Ingredient("Mayonaise3", 100L, Measure.Millilitres),
+                            Ingredient("Mayonaise4", 100L, Measure.Millilitres),
+                        ),
+                        steps = listOf(
+                            Step(
+                                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse sit amet est varius, tempor tortor non, pellentesque mi. Praesent accumsan facilisis urna nec semper. Proin gravida consectetur augue. Nullam pharetra nulla at malesuada consequat. Donec eu tortor vitae risus laoreet mollis nec in ipsum. Donec sem erat, rhoncus a iaculis at, accumsan eget nisl. Nulla hendrerit dui in quam rutrum, id ultricies urna facilisis. Fusce urna augue, maximus at tortor pellentesque, laoreet auctor tortor. Maecenas ut eros enim. Donec faucibus venenatis semper. Pellentesque laoreet metus blandit arcu venenatis auctor ac non arcu.\n" +
+                                        "\n" +
+                                        "Phasellus nulla leo, condimentum in est et, ornare tincidunt neque. Morbi lectus velit, cursus quis pharetra sed, semper rhoncus felis. Pellentesque volutpat ipsum vitae mattis sodales. Proin mattis nulla velit, ac venenatis nisi euismod ut. Sed non imperdiet neque. Sed lacinia libero erat. Vestibulum id pellentesque tellus, at suscipit nulla. Duis ut erat interdum, laoreet nibh ut, lobortis est.",
+                                123123123L
+                            ),
+                            Step(
+                                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse sit amet est varius, tempor tortor non, pellentesque mi. Praesent accumsan facilisis urna nec semper. Proin gravida consectetur augue. Nullam pharetra nulla at malesuada consequat. Donec eu tortor vitae risus laoreet mollis nec in ipsum. Donec sem erat, rhoncus a iaculis at, accumsan eget nisl. Nulla hendrerit dui in quam rutrum, id ultricies urna facilisis. Fusce urna augue, maximus at tortor pellentesque, laoreet auctor tortor. Maecenas ut eros enim. Donec faucibus venenatis semper. Pellentesque laoreet metus blandit arcu venenatis auctor ac non arcu.\n" +
+                                        "\n" +
+                                        "Phasellus nulla leo, condimentum in est et, ornare tincidunt neque. Morbi lectus velit, cursus quis pharetra sed, semper rhoncus felis. Pellentesque volutpat ipsum vitae mattis sodales. Proin mattis nulla velit, ac venenatis nisi euismod ut. Sed non imperdiet neque. Sed lacinia libero erat. Vestibulum id pellentesque tellus, at suscipit nulla. Duis ut erat interdum, laoreet nibh ut, lobortis est.",
+                                123123123L
+                            ),
+                            Step(
+                                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse sit amet est varius, tempor tortor non, pellentesque mi. Praesent accumsan facilisis urna nec semper. Proin gravida consectetur augue. Nullam pharetra nulla at malesuada consequat. Donec eu tortor vitae risus laoreet mollis nec in ipsum. Donec sem erat, rhoncus a iaculis at, accumsan eget nisl. Nulla hendrerit dui in quam rutrum, id ultricies urna facilisis. Fusce urna augue, maximus at tortor pellentesque, laoreet auctor tortor. Maecenas ut eros enim. Donec faucibus venenatis semper. Pellentesque laoreet metus blandit arcu venenatis auctor ac non arcu.\n" +
+                                        "\n" +
+                                        "Phasellus nulla leo, condimentum in est et, ornare tincidunt neque. Morbi lectus velit, cursus quis pharetra sed, semper rhoncus felis. Pellentesque volutpat ipsum vitae mattis sodales. Proin mattis nulla velit, ac venenatis nisi euismod ut. Sed non imperdiet neque. Sed lacinia libero erat. Vestibulum id pellentesque tellus, at suscipit nulla. Duis ut erat interdum, laoreet nibh ut, lobortis est.",
+                                123123123L
+                            ),
+                            Step(
+                                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse sit amet est varius, tempor tortor non, pellentesque mi. Praesent accumsan facilisis urna nec semper. Proin gravida consectetur augue. Nullam pharetra nulla at malesuada consequat. Donec eu tortor vitae risus laoreet mollis nec in ipsum. Donec sem erat, rhoncus a iaculis at, accumsan eget nisl. Nulla hendrerit dui in quam rutrum, id ultricies urna facilisis. Fusce urna augue, maximus at tortor pellentesque, laoreet auctor tortor. Maecenas ut eros enim. Donec faucibus venenatis semper. Pellentesque laoreet metus blandit arcu venenatis auctor ac non arcu.\n" +
+                                        "\n" +
+                                        "Phasellus nulla leo, condimentum in est et, ornare tincidunt neque. Morbi lectus velit, cursus quis pharetra sed, semper rhoncus felis. Pellentesque volutpat ipsum vitae mattis sodales. Proin mattis nulla velit, ac venenatis nisi euismod ut. Sed non imperdiet neque. Sed lacinia libero erat. Vestibulum id pellentesque tellus, at suscipit nulla. Duis ut erat interdum, laoreet nibh ut, lobortis est.",
+                                123123123L
+                            ),
+                        )
                     )
-                )
-            ),
-            filters = RecipeResult.Succeed(
-                listOf(
-                    "One",
-                    "Two",
-                    "Three",
-                    "Four",
-                    "Five",
-                    "Six",
-                    "One",
-                    "Two",
-                    "Three",
-                    "Four",
-                    "Five",
-                    "Six",
-                )
-            ),
-            isFavorite = true
-        ),
-            onOpenMenu = {},
-            onEvent = {},
-            onReloadData = {},
-            onGoToFilteredScreen = {})
+                ),
+                recipeName = "Extra Mayonnaise",
+                recipeDescription = "Lorem ipsum dolor sit amet",
+                own = true,
+                ingredients = listOf(
+                    Ingredient("Mayonaise1", 100L, Measure.Millilitres),
+                    Ingredient("Mayonaise2", 100L, Measure.Millilitres),
+                    Ingredient("Mayonaise3", 100L, Measure.Millilitres),
+                    Ingredient("Mayonaise4", 100L, Measure.Millilitres),
+                ),
+                steps = listOf(
+                    Step(
+                        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse sit amet est varius, tempor tortor non, pellentesque mi. Praesent accumsan facilisis urna nec semper. Proin gravida consectetur augue. Nullam pharetra nulla at malesuada consequat. Donec eu tortor vitae risus laoreet mollis nec in ipsum. Donec sem erat, rhoncus a iaculis at, accumsan eget nisl. Nulla hendrerit dui in quam rutrum, id ultricies urna facilisis. Fusce urna augue, maximus at tortor pellentesque, laoreet auctor tortor. Maecenas ut eros enim. Donec faucibus venenatis semper. Pellentesque laoreet metus blandit arcu venenatis auctor ac non arcu.\n" +
+                                "\n" +
+                                "Phasellus nulla leo, condimentum in est et, ornare tincidunt neque. Morbi lectus velit, cursus quis pharetra sed, semper rhoncus felis. Pellentesque volutpat ipsum vitae mattis sodales. Proin mattis nulla velit, ac venenatis nisi euismod ut. Sed non imperdiet neque. Sed lacinia libero erat. Vestibulum id pellentesque tellus, at suscipit nulla. Duis ut erat interdum, laoreet nibh ut, lobortis est.",
+                        123123123L
+                    ),
+                    Step(
+                        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse sit amet est varius, tempor tortor non, pellentesque mi. Praesent accumsan facilisis urna nec semper. Proin gravida consectetur augue. Nullam pharetra nulla at malesuada consequat. Donec eu tortor vitae risus laoreet mollis nec in ipsum. Donec sem erat, rhoncus a iaculis at, accumsan eget nisl. Nulla hendrerit dui in quam rutrum, id ultricies urna facilisis. Fusce urna augue, maximus at tortor pellentesque, laoreet auctor tortor. Maecenas ut eros enim. Donec faucibus venenatis semper. Pellentesque laoreet metus blandit arcu venenatis auctor ac non arcu.\n" +
+                                "\n" +
+                                "Phasellus nulla leo, condimentum in est et, ornare tincidunt neque. Morbi lectus velit, cursus quis pharetra sed, semper rhoncus felis. Pellentesque volutpat ipsum vitae mattis sodales. Proin mattis nulla velit, ac venenatis nisi euismod ut. Sed non imperdiet neque. Sed lacinia libero erat. Vestibulum id pellentesque tellus, at suscipit nulla. Duis ut erat interdum, laoreet nibh ut, lobortis est.",
+                        123123123L
+                    ),
+                    Step(
+                        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse sit amet est varius, tempor tortor non, pellentesque mi. Praesent accumsan facilisis urna nec semper. Proin gravida consectetur augue. Nullam pharetra nulla at malesuada consequat. Donec eu tortor vitae risus laoreet mollis nec in ipsum. Donec sem erat, rhoncus a iaculis at, accumsan eget nisl. Nulla hendrerit dui in quam rutrum, id ultricies urna facilisis. Fusce urna augue, maximus at tortor pellentesque, laoreet auctor tortor. Maecenas ut eros enim. Donec faucibus venenatis semper. Pellentesque laoreet metus blandit arcu venenatis auctor ac non arcu.\n" +
+                                "\n" +
+                                "Phasellus nulla leo, condimentum in est et, ornare tincidunt neque. Morbi lectus velit, cursus quis pharetra sed, semper rhoncus felis. Pellentesque volutpat ipsum vitae mattis sodales. Proin mattis nulla velit, ac venenatis nisi euismod ut. Sed non imperdiet neque. Sed lacinia libero erat. Vestibulum id pellentesque tellus, at suscipit nulla. Duis ut erat interdum, laoreet nibh ut, lobortis est.",
+                        123123123L
+                    ),
+                    Step(
+                        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse sit amet est varius, tempor tortor non, pellentesque mi. Praesent accumsan facilisis urna nec semper. Proin gravida consectetur augue. Nullam pharetra nulla at malesuada consequat. Donec eu tortor vitae risus laoreet mollis nec in ipsum. Donec sem erat, rhoncus a iaculis at, accumsan eget nisl. Nulla hendrerit dui in quam rutrum, id ultricies urna facilisis. Fusce urna augue, maximus at tortor pellentesque, laoreet auctor tortor. Maecenas ut eros enim. Donec faucibus venenatis semper. Pellentesque laoreet metus blandit arcu venenatis auctor ac non arcu.\n" +
+                                "\n" +
+                                "Phasellus nulla leo, condimentum in est et, ornare tincidunt neque. Morbi lectus velit, cursus quis pharetra sed, semper rhoncus felis. Pellentesque volutpat ipsum vitae mattis sodales. Proin mattis nulla velit, ac venenatis nisi euismod ut. Sed non imperdiet neque. Sed lacinia libero erat. Vestibulum id pellentesque tellus, at suscipit nulla. Duis ut erat interdum, laoreet nibh ut, lobortis est.",
+                        123123123L
+                    ),
+                ),
+                filters = RecipeResult.Succeed(
+                    listOf(
+                        "One",
+                        "Two",
+                        "Three",
+                        "Four",
+                        "Five",
+                        "Six",
+                        "One",
+                        "Two",
+                        "Three",
+                        "Four",
+                        "Five",
+                        "Six",
+                    )
+                ),
+                isFavorite = true
+            )
+        )
     }
+    AnimatedContent(targetState = state.isEditingRecord) { tgS ->
+        if (!tgS)
+            RecipePage(state = state,
+                onOpenMenu = {},
+                onEvent = {
+                    if (it is RecipePageEvent.EditRecord)
+                        state = state.copy(isEditingRecord = true)
+                },
+                onReloadData = {},
+                onGoToFilteredScreen = {})
+        else RecipeConfigPage(state = state,
+            onEvent = {
+                if (it is RecipePageEvent.DiscardChanges)
+                    state = state.copy(isEditingRecord = false)
+            },
+            onOpenMenu = {},
+            onReloadData = {},
+            onGoToFilters = {})
+    }
+}

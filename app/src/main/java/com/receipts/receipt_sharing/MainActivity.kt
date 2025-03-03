@@ -1,5 +1,6 @@
 package com.receipts.receipt_sharing
 
+import NavigationRoutes
 import android.Manifest
 import android.os.Build
 import android.os.Bundle
@@ -7,6 +8,8 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -28,12 +31,11 @@ import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -42,58 +44,54 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
 import androidx.navigation.toRoute
-import androidx.work.Constraints
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.NetworkType
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkManager
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.receipts.receipt_sharing.data.AnnouncementWorker
+import com.receipts.RecipesApplication
 import com.receipts.receipt_sharing.data.dataStore.UserInfo
 import com.receipts.receipt_sharing.data.repositoriesImpl.authDataStore
-import com.receipts.receipt_sharing.data.viewModels.AuthEvent
-import com.receipts.receipt_sharing.data.viewModels.AuthViewModel
-import com.receipts.receipt_sharing.data.viewModels.CreatorPageEvent
-import com.receipts.receipt_sharing.data.viewModels.CreatorPageViewModel
-import com.receipts.receipt_sharing.data.viewModels.CreatorsScreenEvent
-import com.receipts.receipt_sharing.data.viewModels.CreatorsScreenViewModel
-import com.receipts.receipt_sharing.data.viewModels.RecipePageEvent
-import com.receipts.receipt_sharing.data.viewModels.RecipePageViewModel
-import com.receipts.receipt_sharing.data.viewModels.RecipesScreenEvent
-import com.receipts.receipt_sharing.data.viewModels.RecipesScreenViewModel
 import com.receipts.receipt_sharing.domain.apiServices.UnsafeImageLoader
-import com.receipts.receipt_sharing.domain.helpers.isPermissionsGranted
 import com.receipts.receipt_sharing.domain.response.AuthResult
+import com.receipts.receipt_sharing.presentation.auth.AuthEvent
+import com.receipts.receipt_sharing.presentation.auth.AuthViewModel
+import com.receipts.receipt_sharing.presentation.creators.CreatorPageEvent
+import com.receipts.receipt_sharing.presentation.creators.CreatorPageViewModel
+import com.receipts.receipt_sharing.presentation.creators.CreatorsScreenEvent
+import com.receipts.receipt_sharing.presentation.creators.CreatorsScreenViewModel
+import com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent
+import com.receipts.receipt_sharing.presentation.creators.ProfileViewModel
+import com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent
+import com.receipts.receipt_sharing.presentation.recipes.RecipePageViewModel
+import com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent
+import com.receipts.receipt_sharing.presentation.recipes.RecipesScreenViewModel
+import com.receipts.receipt_sharing.presentation.reviews.ReviewPageEvent
+import com.receipts.receipt_sharing.presentation.reviews.ReviewPageViewModel
+import com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent
+import com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenViewModel
+import com.receipts.receipt_sharing.ui.auth.ForgotPasswordPage
 import com.receipts.receipt_sharing.ui.auth.LoginScreen
 import com.receipts.receipt_sharing.ui.auth.RegisterScreen
-import com.receipts.receipt_sharing.ui.creators.CreatorConfigPage
-import com.receipts.receipt_sharing.ui.creators.CreatorPage
-import com.receipts.receipt_sharing.ui.creators.CreatorsScreen
+import com.receipts.receipt_sharing.ui.creators.profile.CreatorConfigPage
 import com.receipts.receipt_sharing.ui.filters.FiltersPage
-import com.receipts.receipt_sharing.ui.recipe.RecipeConfigPage
-import com.receipts.receipt_sharing.ui.recipe.RecipePage
-import com.receipts.receipt_sharing.ui.recipe.RecipesScreen
+import com.receipts.receipt_sharing.ui.reviews.ReviewPage
+import com.receipts.receipt_sharing.ui.reviews.ReviewsScreen
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import kotlinx.serialization.Serializable
-import java.util.concurrent.TimeUnit
 
 data class RecipeNavigationItem(
-    val route : NavigationRoutes,
-    val nameID : Int,
-    val iconID : Int)
+    val route: NavigationRoutes,
+    val nameID: Int,
+    val iconID: Int
+)
 
 
-@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    @OptIn(ExperimentalSharedTransitionApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         ActivityCompat.requestPermissions(
@@ -108,16 +106,13 @@ class MainActivity : ComponentActivity() {
             0
         )
 
+
         enableEdgeToEdge()
         setContent {
             val navController = rememberNavController()
             val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
             val context = LocalContext.current
             val scope = rememberCoroutineScope()
-            val userState by context.authDataStore.data.collectAsState(initial = UserInfo())
-            var selectedPage by rememberSaveable {
-                androidx.compose.runtime.mutableIntStateOf(-1)
-            }
             val navItems = listOf(
                 RecipeNavigationItem(
                     NavigationRoutes.Recipes.RecipesFolder,
@@ -156,6 +151,7 @@ class MainActivity : ComponentActivity() {
                     ModalNavigationDrawer(modifier = Modifier.padding(it),
                         drawerState = drawerState,
                         drawerContent = {
+                            val userState by context.authDataStore.data.collectAsState(initial = UserInfo())
                             ModalDrawerSheet(modifier = Modifier) {
                                 if (userState.token.isNullOrEmpty()) {
                                     Column(
@@ -172,15 +168,15 @@ class MainActivity : ComponentActivity() {
                                         }
                                     }
                                 } else {
-                                    if(userState.imageUrl.isNullOrEmpty())
-                                    Image(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .heightIn(min = 100.dp, max = 200.dp),
-                                        painter = painterResource(id = R.drawable.no_image),
-                                        contentDescription = "",
-                                        contentScale = ContentScale.Crop
-                                    )
+                                    if (userState.imageUrl.isNullOrEmpty())
+                                        Image(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .heightIn(min = 100.dp, max = 200.dp),
+                                            painter = painterResource(id = R.drawable.no_image),
+                                            contentDescription = "",
+                                            contentScale = ContentScale.Crop
+                                        )
                                     else
                                         AsyncImage(
                                             modifier = Modifier
@@ -212,12 +208,16 @@ class MainActivity : ComponentActivity() {
                                                     contentDescription = ""
                                                 )
                                             },
-                                            selected = selectedPage == it,
+                                            selected = userState.lastSelectedPageInd == it,
                                             onClick = {
                                                 try {
                                                     navController.popBackStack()
                                                     navController.navigate(navItems[it].route)
-                                                    selectedPage = it
+                                                    scope.launch {
+                                                        context.authDataStore.updateData { uf ->
+                                                            uf.copy(lastSelectedPageInd = it)
+                                                        }
+                                                    }
                                                 } catch (e: Exception) {
                                                     Toast.makeText(
                                                         context,
@@ -235,426 +235,379 @@ class MainActivity : ComponentActivity() {
                                         )
                                         HorizontalDivider()
                                     }
-
                                 }
                             }
                         }
                     ) {
-                        NavHost(
-                            navController = navController,
-                            startDestination = NavigationRoutes.Auth.AuthFolder
-                        ) {
-                            navigation<NavigationRoutes.Auth.AuthFolder>(
-                                startDestination = NavigationRoutes.Auth.TryAuthorizePage)
-                            {
-                                composable<NavigationRoutes.Auth.RegisterPage> {
-                                    val parentEntry =
-                                        remember { navController.getBackStackEntry<NavigationRoutes.Auth.AuthFolder>() }
-                                    val VM =
-                                        hiltViewModel<AuthViewModel>(parentEntry)
-                                    val state by VM.state.collectAsState()
-                                    RegisterScreen(
-                                        onGotoLogin = {
-                                            navController.navigate(NavigationRoutes.Auth.AuthorizePage)
-                                                      },
-                                        state = state,
-                                        onEvent = VM::onEvent,
-                                        onOpenMenu = {
-                                            scope.launch {
-                                                drawerState.apply {
-                                                    if (drawerState.isOpen) drawerState.close()
-                                                    else drawerState.open()
+                        SharedTransitionLayout {
+                            NavHost(
+                                navController = navController,
+                                startDestination = NavigationRoutes.Auth.AuthFolder
+                            ) {
+                                navigation<NavigationRoutes.Auth.AuthFolder>(
+                                    startDestination = NavigationRoutes.Auth.TryAuthorizePage
+                                )
+                                {
+                                    composable<NavigationRoutes.Auth.RegisterPage> {
+                                        val parentEntry =
+                                            remember { navController.getBackStackEntry<NavigationRoutes.Auth.AuthFolder>() }
+                                        val VM = viewModel<AuthViewModel>(
+                                            viewModelStoreOwner = parentEntry,
+                                            factory = RecipesApplication.appModule.authVMFactory
+                                        )
+                                        val state by VM.state.collectAsState()
+                                        RegisterScreen(
+                                            onGotoLogin = {
+                                                navController.navigate(NavigationRoutes.Auth.AuthorizePage)
+                                            },
+                                            state = state,
+                                            onEvent = VM::onEvent,
+                                            onOpenMenu = {
+                                                scope.launch {
+                                                    drawerState.apply {
+                                                        if (drawerState.isOpen) drawerState.close()
+                                                        else drawerState.open()
+                                                    }
                                                 }
-                                            }
-                                        },
-                                        onAuthorizationFinished = {
-                                            navController.navigate(NavigationRoutes.Recipes.RecipesFolder)
-                                        })
-                                }
-                                composable<NavigationRoutes.Auth.AuthorizePage> {
-                                    val parentEntry =
-                                        remember { navController.getBackStackEntry<NavigationRoutes.Auth.AuthFolder>() }
-                                    val authVm =
-                                        hiltViewModel<AuthViewModel>(parentEntry)
-                                    val state by authVm.state.collectAsState()
-
-                                    LoginScreen(
-                                        onGotoRegister = { navController.navigate(NavigationRoutes.Auth.RegisterPage) },
-                                        state = state,
-                                        onEvent = authVm::onEvent,
-                                        onOpenMenu = {
-                                            scope.launch {
-                                                drawerState.apply {
-                                                    if (drawerState.isOpen) drawerState.close()
-                                                    else drawerState.open()
-                                                }
-                                            }
-                                        },
-                                        onAuthorizationFinished = {
-                                            navController.navigate(
-                                                NavigationRoutes.Recipes.RecipesFolder
+                                            },
+                                            onAuthorizationFinished = {
+                                                navController.navigate(NavigationRoutes.Recipes.RecipesFolder)
+                                            })
+                                    }
+                                    composable<NavigationRoutes.Auth.AuthorizePage> {
+                                        val parentEntry =
+                                            remember { navController.getBackStackEntry<NavigationRoutes.Auth.AuthFolder>() }
+                                        val authVm =
+                                            viewModel<AuthViewModel>(
+                                                parentEntry,
+                                                factory = RecipesApplication.appModule.authVMFactory
                                             )
-                                        })
-                                }
-                                composable<NavigationRoutes.Auth.TryAuthorizePage> {
-                                    val parentEntry =
-                                        remember { navController.getBackStackEntry<NavigationRoutes.Auth.AuthFolder>() }
-                                    val authVm =
-                                        hiltViewModel<AuthViewModel>(parentEntry)
-                                    val state by authVm.state.collectAsState()
+                                        val state by authVm.state.collectAsState()
 
-                                    when(state.result){
-                                        is AuthResult.Authorized -> {
-                                            navController.popBackStack()
-                                            navController.navigate(NavigationRoutes.Recipes.RecipesFolder)
-                                        }
-                                        is AuthResult.Error -> {
-                                            navController.popBackStack()
-                                            navController.navigate(NavigationRoutes.Auth.AuthorizePage)
-                                            authVm.onEvent(AuthEvent.ClearData)
-                                            Toast.makeText(context, R.string.token_expired, Toast.LENGTH_SHORT).show()
-                                        }
-                                        is AuthResult.Loading -> {
-                                            Column(
-                                                modifier = Modifier
-                                                    .fillMaxSize()
-                                                    .background(MaterialTheme.colorScheme.surface),
-                                                verticalArrangement = Arrangement.Center,
-                                                horizontalAlignment = Alignment.CenterHorizontally
-                                            ) {
-                                                CircularProgressIndicator(
-                                                    modifier = Modifier
-                                                        .size(84.dp),
-                                                    strokeWidth = 8.dp
+                                        LoginScreen(
+                                            onGotoRegister = {
+                                                navController.navigate(
+                                                    NavigationRoutes.Auth.RegisterPage
                                                 )
+                                            },
+                                            state = state,
+                                            onEvent = authVm::onEvent,
+                                            onOpenMenu = {
+                                                scope.launch {
+                                                    drawerState.apply {
+                                                        if (drawerState.isOpen) drawerState.close()
+                                                        else drawerState.open()
+                                                    }
+                                                }
+                                            },
+                                            onAuthorizationFinished = {
+                                                navController.navigate(
+                                                    NavigationRoutes.Recipes.RecipesFolder
+                                                )
+                                            },
+                                            onGoToChangePassword = {
+                                                navController.navigate(NavigationRoutes.Auth.ForgotPasswordPage)
+                                            })
+                                    }
+                                    composable<NavigationRoutes.Auth.ForgotPasswordPage> {
+                                        val parentEntry = remember {
+                                            navController.getBackStackEntry<NavigationRoutes.Auth.AuthFolder>()
+                                        }
+                                        val viewModel: AuthViewModel = viewModel(
+                                            viewModelStoreOwner = parentEntry,
+                                            factory = RecipesApplication.appModule.authVMFactory
+                                        )
+                                        LaunchedEffect(Unit) {
+                                            viewModel.onEvent(AuthEvent.ClearData)
+                                        }
+                                        val state by viewModel.state.collectAsState()
+
+                                        LaunchedEffect(state.infoMessage) {
+                                            if (!state.infoMessage.isNullOrEmpty()) {
+                                                Toast.makeText(
+                                                    context,
+                                                    state.infoMessage,
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                                viewModel.onEvent(AuthEvent.ClearMessage)
                                             }
                                         }
-                                        is AuthResult.Unauthorized -> {
-                                            navController.popBackStack()
-                                            navController.navigate(NavigationRoutes.Auth.RegisterPage)
+
+                                        ForgotPasswordPage(
+                                            state = state,
+                                            onEvent = viewModel::onEvent,
+                                            onGoBackClick = { navController.navigateUp() }
+                                        )
+                                    }
+                                    composable<NavigationRoutes.Auth.TryAuthorizePage> {
+                                        val parentEntry =
+                                            remember { navController.getBackStackEntry<NavigationRoutes.Auth.AuthFolder>() }
+                                        val authVm =
+                                            viewModel<AuthViewModel>(
+                                                parentEntry,
+                                                factory = RecipesApplication.appModule.authVMFactory
+                                            )
+                                        val state by authVm.state.collectAsState()
+
+                                        when (state.result) {
+                                            is AuthResult.Authorized -> {
+                                                navController.popBackStack()
+                                                navController.navigate(NavigationRoutes.Recipes.RecipesFolder)
+                                            }
+
+                                            is AuthResult.Error -> {
+                                                navController.popBackStack()
+                                                navController.navigate(NavigationRoutes.Auth.AuthorizePage)
+                                                authVm.onEvent(AuthEvent.ClearData)
+                                                Toast.makeText(
+                                                    context,
+                                                    R.string.token_expired,
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+
+                                            is AuthResult.Loading -> {
+                                                Column(
+                                                    modifier = Modifier
+                                                        .fillMaxSize()
+                                                        .background(MaterialTheme.colorScheme.surface),
+                                                    verticalArrangement = Arrangement.Center,
+                                                    horizontalAlignment = Alignment.CenterHorizontally
+                                                ) {
+                                                    CircularProgressIndicator(
+                                                        modifier = Modifier
+                                                            .size(84.dp),
+                                                        strokeWidth = 8.dp
+                                                    )
+                                                }
+                                            }
+
+                                            is AuthResult.Unauthorized -> {
+                                                navController.popBackStack()
+                                                navController.navigate(NavigationRoutes.Auth.RegisterPage)
+                                            }
                                         }
                                     }
                                 }
-                            }
-                            navigation<NavigationRoutes.Creators.CreatorsFolder>(startDestination = NavigationRoutes.Creators.CreatorsScreen) {
-                                composable<NavigationRoutes.Creators.CreatorsScreen> {
-                                    val parentEntry =
-                                        remember { navController.getBackStackEntry<NavigationRoutes.Creators.CreatorsFolder>() }
-                                    val creatorsVM =
-                                        hiltViewModel<CreatorsScreenViewModel>(parentEntry)
-                                    val creatorVM = hiltViewModel<CreatorPageViewModel>(parentEntry)
-                                    val state by creatorsVM.state.collectAsState()
-
-                                    if(state.followsLoaded)
-                                        creatorsVM.onEvent(CreatorsScreenEvent.LoadData)
-
-                                    CreatorsScreen(
-                                        state = state,
-                                        onOpenMenu = {
-                                            scope.launch {
-                                                drawerState.apply {
-                                                    if (drawerState.isOpen) drawerState.close()
-                                                    else drawerState.open()
-                                                }
-                                            }
-                                        },
-                                        onGoToCreatorPage = {
-                                            creatorVM.onEvent(CreatorPageEvent.LoadCreator(it))
-                                            navController.navigate(
-                                                NavigationRoutes.Creators.CreatorPage(
-                                                    it
-                                                )
+                                navigation<NavigationRoutes.Creators.CreatorsFolder>(
+                                    startDestination = NavigationRoutes.Creators.CreatorsScreen
+                                ) {
+                                    composable<NavigationRoutes.Creators.CreatorsScreen> {
+                                        val parentEntry =
+                                            remember { navController.getBackStackEntry<NavigationRoutes.Creators.CreatorsFolder>() }
+                                        val creatorsVM =
+                                            viewModel<CreatorsScreenViewModel>(
+                                                parentEntry,
+                                                factory = RecipesApplication.appModule.creatorsScreenVMFactory
                                             )
-                                        },
-                                        onEvent = creatorsVM::onEvent
-                                    )
+                                        val state by creatorsVM.state.collectAsState()
+
+                                        LaunchedEffect(Unit) {
+                                            creatorsVM.onEvent(CreatorsScreenEvent.LoadData)
+                                        }
+
+                                        com.receipts.receipt_sharing.ui.creators.shared.CreatorsScreen(
+                                            state = state,
+                                            sharedTransitionScope = this@SharedTransitionLayout,
+                                            animatedVisibility = this,
+                                            onOpenMenu = {
+                                                scope.launch {
+                                                    drawerState.apply {
+                                                        if (drawerState.isOpen) drawerState.close()
+                                                        else drawerState.open()
+                                                    }
+                                                }
+                                            },
+                                            onGoToCreatorPage = {
+                                                navController.navigate(
+                                                    NavigationRoutes.Creators.CreatorPage(
+                                                        it
+                                                    )
+                                                )
+                                            },
+                                            onEvent = creatorsVM::onEvent
+                                        )
+                                    }
+                                    composable<NavigationRoutes.Creators.CreatorPage> {
+                                        val parentEntry =
+                                            remember { navController.getBackStackEntry<NavigationRoutes.Creators.CreatorsFolder>() }
+                                        val args =
+                                            it.toRoute<NavigationRoutes.Creators.CreatorPage>().creatorID
+                                        val creatorVm =
+                                            viewModel<CreatorPageViewModel>(
+                                                parentEntry,
+                                                factory = RecipesApplication.appModule.creatorPageVMFactory
+                                            )
+                                        LaunchedEffect(Unit) {
+                                            creatorVm.onEvent(CreatorPageEvent.LoadCreator(args))
+                                        }
+
+                                        val state by creatorVm.state.collectAsState()
+
+                                        com.receipts.receipt_sharing.ui.creators.shared.CreatorPage(
+                                            state = state,
+                                            sharedTransitionScope = this@SharedTransitionLayout,
+                                            animatedVisibility = this,
+                                            onGoBack = {
+                                                navController.navigateUp()
+                                            },
+                                            onEvent = creatorVm::onEvent,
+                                            onGoToCreatorRecipes = {
+                                                navController.popBackStack()
+                                                navController.navigate(
+                                                    NavigationRoutes.Recipes.CreatorRecipesScreen(
+                                                        it
+                                                    )
+                                                )
+                                            },
+                                            onReloadData = {
+                                                creatorVm.onEvent(
+                                                    CreatorPageEvent.LoadCreator(
+                                                        args
+                                                    )
+                                                )
+                                            },
+                                            onGoToRecipe = {
+                                                navController.navigate(
+                                                    NavigationRoutes.Recipes.RecipePage(
+                                                        it
+                                                    )
+                                                )
+                                            }
+                                        )
+                                    }
+                                    composable<NavigationRoutes.Creators.FollowsScreen> {
+                                        val parentEntry =
+                                            remember { navController.getBackStackEntry<NavigationRoutes.Creators.CreatorsFolder>() }
+                                        val creatorsVm =
+                                            viewModel<CreatorsScreenViewModel>(
+                                                parentEntry,
+                                                factory = RecipesApplication.appModule.creatorsScreenVMFactory
+                                            )
+                                        val state by creatorsVm.state.collectAsState()
+
+                                        LaunchedEffect(Unit) {
+                                            creatorsVm.onEvent(CreatorsScreenEvent.LoadFollows)
+                                        }
+
+                                        com.receipts.receipt_sharing.ui.creators.shared.CreatorsScreen(
+                                            state = state,
+                                            sharedTransitionScope = this@SharedTransitionLayout,
+                                            animatedVisibility = this,
+                                            onOpenMenu = {
+                                                scope.launch {
+                                                    drawerState.apply {
+                                                        if (drawerState.isOpen) drawerState.close()
+                                                        else drawerState.open()
+                                                    }
+                                                }
+                                            },
+                                            onEvent = creatorsVm::onEvent,
+                                            onGoToCreatorPage = {
+                                                navController.navigate(
+                                                    NavigationRoutes.Creators.CreatorPage(
+                                                        it
+                                                    )
+                                                )
+                                            }
+                                        )
+                                    }
+                                    composable<NavigationRoutes.Creators.UserInfoPage> {
+                                        val parentEntry =
+                                            remember { navController.getBackStackEntry<NavigationRoutes.Creators.CreatorsFolder>() }
+
+                                        val profileVM = viewModel<ProfileViewModel>(
+                                            parentEntry,
+                                            factory = RecipesApplication.appModule.profilePageVMFactory
+                                        )
+
+                                        val state by profileVM.state.collectAsState()
+
+                                        LaunchedEffect(Unit) {
+                                            profileVM.onEvent(ProfilePageEvent.LoadUserInfo)
+                                        }
+
+                                        CreatorConfigPage(
+                                            state = state,
+                                            onEvent = profileVM::onEvent,
+                                            onOpenMenu = {
+                                                scope.launch {
+                                                    drawerState.apply {
+                                                        if (drawerState.isOpen)
+                                                            drawerState.close()
+                                                        else drawerState.open()
+                                                    }
+                                                }
+                                            },
+                                            onLogOut = {
+                                                navController.popBackStack()
+                                                navController.navigate(NavigationRoutes.Auth.AuthFolder)
+                                            })
+                                    }
+                                    composable<NavigationRoutes.Creators.FollowersScreen> {
+                                        val parentEntry =
+                                            remember { navController.getBackStackEntry<NavigationRoutes.Creators.CreatorsFolder>() }
+                                        val creatorsVM =
+                                            viewModel<CreatorsScreenViewModel>(
+                                                parentEntry,
+                                                factory = RecipesApplication.appModule.creatorsScreenVMFactory
+                                            )
+                                        LaunchedEffect(Unit) {
+                                            creatorsVM.onEvent(CreatorsScreenEvent.LoadFollowers())
+                                        }
+
+                                        val state by creatorsVM.state.collectAsState()
+                                        com.receipts.receipt_sharing.ui.creators.shared.CreatorsScreen(
+                                            state = state,
+                                            sharedTransitionScope = this@SharedTransitionLayout,
+                                            animatedVisibility = this,
+                                            onOpenMenu = {
+                                                scope.launch {
+                                                    drawerState.apply {
+                                                        if (drawerState.isOpen)
+                                                            drawerState.close()
+                                                        else drawerState.open()
+                                                    }
+                                                }
+                                            },
+                                            onGoToCreatorPage = {
+                                                navController.navigate(
+                                                    NavigationRoutes.Creators.CreatorPage(
+                                                        it
+                                                    )
+                                                )
+                                            },
+                                            onEvent = creatorsVM::onEvent
+                                        )
+                                    }
                                 }
-                                composable<NavigationRoutes.Creators.CreatorPage> {
-                                    val parentEntry =
-                                        remember { navController.getBackStackEntry<NavigationRoutes.Creators.CreatorsFolder>() }
-                                    val args =
-                                        it.toRoute<NavigationRoutes.Creators.CreatorPage>().creatorID
-                                    val creatorVm =
-                                        hiltViewModel<CreatorPageViewModel>(parentEntry)
-                                    val state by creatorVm.state.collectAsState()
 
-                                    CreatorPage(
-                                        state = state,
-                                        onOpenMenu = {
-                                            scope.launch {
-                                                drawerState.apply {
-                                                    if (drawerState.isOpen) drawerState.close()
-                                                    else drawerState.open()
-                                                }
-                                            }
-                                        },
-                                        onEvent = creatorVm::onEvent,
-                                        onGoToCreatorRecipes = {
-                                            navController.popBackStack()
-                                            navController.navigate(
-                                                NavigationRoutes.Recipes.CreatorRecipesScreen(
-                                                    it
-                                                )
+                                navigation<NavigationRoutes.Recipes.RecipesFolder>(startDestination = NavigationRoutes.Recipes.RecipesScreen) {
+                                    composable<NavigationRoutes.Recipes.CreatorRecipesScreen> {
+                                        val args =
+                                            it.toRoute<NavigationRoutes.Recipes.CreatorRecipesScreen>().creatorID
+                                        val parentEntry =
+                                            remember { navController.getBackStackEntry<NavigationRoutes.Recipes.RecipesFolder>() }
+                                        val recipesScreenVm =
+                                            viewModel<RecipesScreenViewModel>(
+                                                parentEntry,
+                                                factory = RecipesApplication.appModule.recipesScreenVMFactory
                                             )
-                                        },
-                                        onReloadData = {
-                                            creatorVm.onEvent(
-                                                CreatorPageEvent.LoadCreator(
+                                        val state by recipesScreenVm.state.collectAsState()
+
+                                        LaunchedEffect(Unit) {
+                                            recipesScreenVm.onEvent(
+                                                RecipesScreenEvent.LoadCreatorsRecipes(
                                                     args
                                                 )
                                             )
                                         }
-                                    )
-                                }
-                                composable<NavigationRoutes.Creators.FollowsScreen> {
-                                    val parentEntry =
-                                        remember { navController.getBackStackEntry<NavigationRoutes.Creators.CreatorsFolder>() }
-                                    val creatorVM = hiltViewModel<CreatorPageViewModel>(parentEntry)
-                                    val creatorsVm =
-                                        hiltViewModel<CreatorsScreenViewModel>(parentEntry)
-                                    val state by creatorsVm.state.collectAsState()
 
-                                    if(!state.followsLoaded)
-                                        creatorsVm.onEvent(CreatorsScreenEvent.LoadFollows)
-
-                                    CreatorsScreen(
-                                        state = state,
-                                        onOpenMenu = {
-                                            scope.launch {
-                                                drawerState.apply {
-                                                    if (drawerState.isOpen) drawerState.close()
-                                                    else drawerState.open()
-                                                }
-                                            }
-                                        },
-                                        onEvent = creatorsVm::onEvent,
-                                        onGoToCreatorPage = {
-                                            creatorVM.onEvent(CreatorPageEvent.LoadCreator(it))
-                                            navController.navigate(
-                                                NavigationRoutes.Creators.CreatorPage(
-                                                    it
-                                                )
-                                            )
-                                        }
-                                    )
-                                }
-                                composable<NavigationRoutes.Creators.UserInfoPage> {
-                                    val parentEntry =
-                                        remember { navController.getBackStackEntry<NavigationRoutes.Creators.CreatorsFolder>() }
-
-                                    val creatorVM = hiltViewModel<CreatorPageViewModel>(parentEntry)
-                                    val creatorsVM =
-                                        hiltViewModel<CreatorsScreenViewModel>(parentEntry)
-
-                                    val state by creatorVM.state.collectAsState()
-
-                                    if (!state.userInfoLoaded)
-                                        creatorVM.onEvent(CreatorPageEvent.LoadUserInfo)
-
-                                    CreatorConfigPage(
-                                        state = state,
-                                        onEvent = creatorVM::onEvent,
-                                        onOpenMenu = {
-                                            scope.launch {
-                                                drawerState.apply {
-                                                    if (drawerState.isOpen)
-                                                        drawerState.close()
-                                                    else drawerState.open()
-                                                }
-                                            }
-                                        },
-                                        onGoToAddRecipePage = {
-                                            navController.popBackStack()
-                                            navController.navigate(NavigationRoutes.Recipes.RecipeAddingPage)
-                                        },
-                                        onGoToFollowers = {
-                                            creatorsVM.onEvent(CreatorsScreenEvent.LoadFollowers())
-                                            navController.navigate(NavigationRoutes.Creators.FollowersScreen)
-                                        })
-                                }
-                                composable<NavigationRoutes.Creators.FollowersScreen> {
-                                    val parentEntry =
-                                        remember { navController.getBackStackEntry<NavigationRoutes.Creators.CreatorsFolder>() }
-                                    val creatorsVM =
-                                        hiltViewModel<CreatorsScreenViewModel>(parentEntry)
-                                    val creatorVM = hiltViewModel<CreatorPageViewModel>(parentEntry)
-                                    val state by creatorsVM.state.collectAsState()
-                                    CreatorsScreen(
-                                        state = state,
-                                        onOpenMenu = {
-                                            scope.launch {
-                                                drawerState.apply {
-                                                    if (drawerState.isOpen)
-                                                        drawerState.close()
-                                                    else drawerState.open()
-                                                }
-                                            }
-                                        },
-                                        onGoToCreatorPage = {
-                                            creatorVM.onEvent(CreatorPageEvent.LoadCreator(it))
-                                            navController.navigate(
-                                                NavigationRoutes.Creators.CreatorPage(
-                                                    it
-                                                )
-                                            )
-                                        },
-                                        onEvent = creatorsVM::onEvent
-                                    )
-                                }
-                            }
-
-                            navigation<NavigationRoutes.Recipes.RecipesFolder>(startDestination = NavigationRoutes.Recipes.RecipesScreen) {
-
-                                composable<NavigationRoutes.Recipes.CreatorRecipesScreen> {
-                                    val args = it.toRoute<NavigationRoutes.Recipes.CreatorRecipesScreen>().creatorID
-                                    val parentEntry =
-                                        remember { navController.getBackStackEntry<NavigationRoutes.Recipes.RecipesFolder>() }
-                                    val recipesScreenVm =
-                                        hiltViewModel<RecipesScreenViewModel>(parentEntry)
-                                    val recipeVM =
-                                        hiltViewModel<RecipePageViewModel>(parentEntry)
-                                    val state by recipesScreenVm.state.collectAsState()
-                                    if(!state.creatorLoaded)
-                                        recipesScreenVm.onEvent(RecipesScreenEvent.LoadCreatorsRecipes(args))
-
-                                    RecipesScreen(
-                                        state = state,
-                                        onEvent = recipesScreenVm::onEvent,
-                                        onOpenMenu = {
-                                            scope.launch {
-                                                drawerState.apply {
-                                                    if (drawerState.isOpen) drawerState.close()
-                                                    else drawerState.open()
-                                                }
-                                            }
-                                        },
-                                        onGoToAddRecipe = {
-                                            recipeVM.onEvent(RecipePageEvent.ClearData)
-                                            navController.navigate(NavigationRoutes.Recipes.RecipeAddingPage)
-                                        },
-                                        onGoToRecipe = {
-                                            recipeVM.onEvent(RecipePageEvent.LoadRecipe(it))
-                                            navController.navigate(NavigationRoutes.Recipes.RecipePage(it))
-                                        },
-                                        onGoToFilters = {
-                                            recipesScreenVm.onEvent(RecipesScreenEvent.LoadFilters)
-                                            navController.navigate(NavigationRoutes.Recipes.FiltersSelection(false))
-                                        }
-                                    )
-
-
-                                }
-
-                                composable<NavigationRoutes.Recipes.FiltersSelection> {
-                                    val isRecipePage = it.toRoute<NavigationRoutes.Recipes.FiltersSelection>().isRecipePage
-                                    val parentEntry =
-                                        remember { navController.getBackStackEntry<NavigationRoutes.Recipes.RecipesFolder>() }
-                                    val recipesScreenVm =
-                                        hiltViewModel<RecipesScreenViewModel>(parentEntry)
-                                    val recipesPageVM = hiltViewModel<RecipePageViewModel>(parentEntry)
-                                    val state by recipesScreenVm.state.collectAsState()
-
-                                    FiltersPage(categorizedItems = state.filters,
-                                        onFiltersConfirmed = {
-                                            if(isRecipePage)
-                                                recipesPageVM.onEvent(RecipePageEvent.SetFilters(it))
-                                            else
-                                                recipesScreenVm.onEvent(RecipesScreenEvent.SetFilters(it))
-                                            navController.navigateUp()
-                                        },
-                                        onCancelChanges = {
-                                            navController.navigateUp() })
-                                }
-                                composable<NavigationRoutes.Recipes.RecipesScreen> {
-                                    val parentEntry =
-                                        remember { navController.getBackStackEntry<NavigationRoutes.Recipes.RecipesFolder>() }
-                                    val recipePVM: RecipePageViewModel = hiltViewModel(parentEntry)
-                                    val recipesVM =
-                                        hiltViewModel<RecipesScreenViewModel>(parentEntry)
-                                    val state by recipesVM.state.collectAsState()
-                                    RecipesScreen(
-                                        state = state,
-                                        onEvent = recipesVM::onEvent,
-                                        onOpenMenu = {
-                                            scope.launch {
-                                                drawerState.apply {
-                                                    if (drawerState.isOpen) drawerState.close()
-                                                    else drawerState.open()
-                                                }
-                                            }
-                                        },
-                                        onGoToAddRecipe = {
-                                            recipePVM.onEvent(RecipePageEvent.ClearData)
-                                            navController.navigate(NavigationRoutes.Recipes.RecipeAddingPage)
-                                        },
-                                        onGoToRecipe = {
-                                            recipePVM.onEvent(RecipePageEvent.LoadRecipe(it))
-                                            navController.navigate(
-                                                NavigationRoutes.Recipes.RecipePage(
-                                                    it
-                                                )
-                                            )
-                                        },
-                                        onGoToFilters = {
-                                            recipesVM.onEvent(RecipesScreenEvent.LoadFilters)
-                                            navController.navigate(NavigationRoutes.Recipes.FiltersSelection(false))
-                                        }
-                                    )
-                                }
-                                composable<NavigationRoutes.Recipes.OwnRecipesScreen> {
-                                    val parentEntry =
-                                        remember { navController.getBackStackEntry<NavigationRoutes.Recipes.RecipesFolder>() }
-                                    val recipePVM: RecipePageViewModel = hiltViewModel(parentEntry)
-                                    val recipesVM =
-                                        hiltViewModel<RecipesScreenViewModel>(parentEntry)
-                                    val state by recipesVM.state.collectAsState()
-
-                                    if(!state.creatorLoaded)
-                                        recipesVM.onEvent(RecipesScreenEvent.LoadOwnData)
-
-                                    RecipesScreen(
-                                        state = state,
-                                        onEvent = recipesVM::onEvent,
-                                        onOpenMenu = {
-                                            scope.launch {
-                                                drawerState.apply {
-                                                    if (drawerState.isOpen) drawerState.close()
-                                                    else drawerState.open()
-                                                }
-                                            }
-                                        },
-                                        onGoToAddRecipe = {
-                                            recipePVM.onEvent(RecipePageEvent.ClearData)
-                                            navController.navigate(NavigationRoutes.Recipes.RecipeAddingPage)
-                                        },
-                                        onGoToRecipe = {
-                                            recipePVM.onEvent(RecipePageEvent.LoadRecipe(it))
-                                            navController.navigate(
-                                                NavigationRoutes.Recipes.RecipePage(
-                                                    it
-                                                )
-                                            )
-                                        },
-                                        onGoToFilters = {
-                                            recipesVM.onEvent(RecipesScreenEvent.LoadFilters)
-                                            navController.navigate(NavigationRoutes.Recipes.FiltersSelection(false))
-                                        }
-                                    )
-                                }
-
-                                composable<NavigationRoutes.Recipes.RecipePage> {
-                                    val args =
-                                        it.toRoute<NavigationRoutes.Recipes.RecipePage>().recipeID
-                                    val parentEntry =
-                                        remember { navController.getBackStackEntry<NavigationRoutes.Recipes.RecipesFolder>() }
-                                    val recipePVM: RecipePageViewModel = hiltViewModel(parentEntry)
-                                    val recipesScreenVM =
-                                        hiltViewModel<RecipesScreenViewModel>(parentEntry)
-                                    val state by recipePVM.state.collectAsState()
-                                    when (state.own) {
-                                        true -> RecipeConfigPage(
+                                        com.receipts.receipt_sharing.ui.recipe.shared.RecipesScreen(
                                             state = state,
-                                            onEvent = recipePVM::onEvent,
+                                            sharedTransitionScope = this@SharedTransitionLayout,
+                                            animatedVisibility = this,
+                                            onEvent = recipesScreenVm::onEvent,
                                             onOpenMenu = {
                                                 scope.launch {
                                                     drawerState.apply {
@@ -663,121 +616,381 @@ class MainActivity : ComponentActivity() {
                                                     }
                                                 }
                                             },
-                                            onReloadData = {
-                                                recipePVM.onEvent(
-                                                    RecipePageEvent.LoadRecipe(
-                                                        args
+                                            onGoToAddRecipe = {
+                                                navController.navigate(NavigationRoutes.Recipes.RecipeAddingPage)
+                                            },
+                                            onGoToRecipe = {
+                                                navController.navigate(
+                                                    NavigationRoutes.Recipes.RecipePage(
+                                                        it
                                                     )
                                                 )
-                                            },
-                                            onConfigCompleted = {
-                                                recipesScreenVM.onEvent(RecipesScreenEvent.LoadData)
-                                                navController.navigate(NavigationRoutes.Recipes.RecipesScreen)
                                             },
                                             onGoToFilters = {
-                                                recipesScreenVM.onEvent(RecipesScreenEvent.LoadFilters)
-                                                navController.navigate(NavigationRoutes.Recipes.FiltersSelection(true))
-                                            },
-                                            onDiscardChanges = {
-                                                navController.navigateUp()
-                                            })
-
-                                        false -> RecipePage(
-                                            state = state,
-                                            onOpenMenu = {
-                                                scope.launch {
-                                                    drawerState.apply {
-                                                        if (drawerState.isOpen) drawerState.close()
-                                                        else drawerState.open()
-                                                    }
-                                                }
-                                            },
-                                            onEvent = recipePVM::onEvent,
-                                            onReloadData = {
-                                                recipePVM.onEvent(
-                                                    RecipePageEvent.LoadRecipe(
-                                                        args
+                                                navController.navigate(
+                                                    NavigationRoutes.Recipes.FiltersSelection(
+                                                        false
                                                     )
                                                 )
                                             },
-                                            onGoToFilteredScreen = {
-                                                recipesScreenVM.onEvent(RecipesScreenEvent.SetFilters(
-                                                    listOf(it)))
-                                                navController.navigate(NavigationRoutes.Recipes.RecipesScreen)
+                                            onReloadPage = {
+                                                recipesScreenVm.onEvent(
+                                                    RecipesScreenEvent.LoadCreatorsRecipes(args)
+                                                )
                                             }
                                         )
                                     }
-                                }
-                                composable<NavigationRoutes.Recipes.RecipeAddingPage> {
-                                    val parentEntry =
-                                        remember { navController.getBackStackEntry<NavigationRoutes.Recipes.RecipesFolder>() }
-                                    val recipeVm =
-                                        hiltViewModel<RecipePageViewModel>(parentEntry)
-                                    val recipesScreenVM =
-                                        hiltViewModel<RecipesScreenViewModel>(parentEntry)
-                                    val state by recipeVm.state.collectAsState()
-                                    RecipeConfigPage(modifier = Modifier.fillMaxSize(),
-                                        state = state,
-                                        onEvent = recipeVm::onEvent,
-                                        onOpenMenu = {
-                                            scope.launch {
-                                                drawerState.apply {
-                                                    if (drawerState.isOpen) drawerState.close()
-                                                    else drawerState.open()
+                                    composable<NavigationRoutes.Recipes.FiltersSelection> {
+                                        val isRecipePage =
+                                            it.toRoute<NavigationRoutes.Recipes.FiltersSelection>().isRecipePage
+                                        val parentEntry =
+                                            remember { navController.getBackStackEntry<NavigationRoutes.Recipes.RecipesFolder>() }
+                                        val recipesScreenVm =
+                                            viewModel<RecipesScreenViewModel>(
+                                                parentEntry,
+                                                factory = RecipesApplication.appModule.recipesScreenVMFactory
+                                            )
+                                        val recipesPageVM =
+                                            viewModel<RecipePageViewModel>(
+                                                parentEntry,
+                                                factory = RecipesApplication.appModule.recipePageVMFactory
+                                            )
+                                        LaunchedEffect(Unit) {
+                                            recipesScreenVm.onEvent(RecipesScreenEvent.LoadFilters)
+                                        }
+
+                                        val state by recipesScreenVm.state.collectAsState()
+
+
+                                        FiltersPage(categorizedItems = state.filters,
+                                            onFiltersConfirmed = {
+                                                if (isRecipePage)
+                                                    recipesPageVM.onEvent(
+                                                        RecipePageEvent.SetFilters(
+                                                            it
+                                                        )
+                                                    )
+                                                else
+                                                    recipesScreenVm.onEvent(
+                                                        RecipesScreenEvent.SetFilters(
+                                                            it
+                                                        )
+                                                    )
+                                                navController.navigateUp()
+                                            },
+                                            onCancelChanges = {
+                                                navController.navigateUp()
+                                            })
+                                    }
+                                    composable<NavigationRoutes.Recipes.RecipesScreen> {
+                                        val parentEntry =
+                                            remember { navController.getBackStackEntry<NavigationRoutes.Recipes.RecipesFolder>() }
+                                        val recipesVM =
+                                            viewModel<RecipesScreenViewModel>(
+                                                parentEntry,
+                                                factory = RecipesApplication.appModule.recipesScreenVMFactory
+                                            )
+                                        LaunchedEffect(Unit) {
+                                            recipesVM.onEvent(RecipesScreenEvent.LoadData)
+                                        }
+                                        val state by recipesVM.state.collectAsState()
+
+
+                                        com.receipts.receipt_sharing.ui.recipe.shared.RecipesScreen(
+                                            state = state,
+                                            sharedTransitionScope = this@SharedTransitionLayout,
+                                            animatedVisibility = this,
+                                            onEvent = recipesVM::onEvent,
+                                            onOpenMenu = {
+                                                scope.launch {
+                                                    drawerState.apply {
+                                                        if (drawerState.isOpen) drawerState.close()
+                                                        else drawerState.open()
+                                                    }
                                                 }
+                                            },
+                                            onGoToAddRecipe = {
+                                                navController.navigate(NavigationRoutes.Recipes.RecipeAddingPage)
+                                            },
+                                            onGoToRecipe = {
+                                                navController.navigate(
+                                                    NavigationRoutes.Recipes.RecipePage(
+                                                        it
+                                                    )
+                                                )
+                                            },
+                                            onGoToFilters = {
+                                                navController.navigate(
+                                                    NavigationRoutes.Recipes.FiltersSelection(
+                                                        false
+                                                    )
+                                                )
+                                            },
+                                            onReloadPage = {
+                                                recipesVM.onEvent(RecipesScreenEvent.LoadData)
                                             }
-                                        },
-                                        onReloadData = { recipeVm.onEvent(RecipePageEvent.ClearData) },
-                                        onConfigCompleted = {
-                                            navController.navigateUp()
-                                        },
-                                        onGoToFilters = {
-                                            recipesScreenVM.onEvent(RecipesScreenEvent.LoadFilters)
-                                            navController.navigate(NavigationRoutes.Recipes.FiltersSelection(true))
-                                        },
-                                        onDiscardChanges = {
-                                            recipeVm.onEvent(RecipePageEvent.ClearData)
-                                            navController.navigateUp()
-                                        })
-                                }
-                                composable<NavigationRoutes.Recipes.FavoritesPage> {
-                                    val parentEntry =
-                                        remember { navController.getBackStackEntry<NavigationRoutes.Recipes.RecipesFolder>() }
-                                    val recipesVM =
-                                        hiltViewModel<RecipesScreenViewModel>(parentEntry)
-                                    val recipeVM =
-                                        hiltViewModel<RecipePageViewModel>(parentEntry)
-                                    val state by recipesVM.state.collectAsState()
-                                    if (!state.favoritesLoaded)
-                                        recipesVM.onEvent(RecipesScreenEvent.LoadFavorites)
-                                    RecipesScreen(
-                                        state = state,
-                                        onEvent = recipesVM::onEvent,
-                                        onOpenMenu = {
-                                            scope.launch {
-                                                drawerState.apply {
-                                                    if (drawerState.isOpen) drawerState.close()
-                                                    else drawerState.open()
+                                        )
+                                    }
+                                    composable<NavigationRoutes.Recipes.OwnRecipesScreen> {
+                                        val parentEntry =
+                                            remember { navController.getBackStackEntry<NavigationRoutes.Recipes.RecipesFolder>() }
+                                        val recipesVM =
+                                            viewModel<RecipesScreenViewModel>(
+                                                parentEntry,
+                                                factory = RecipesApplication.appModule.recipesScreenVMFactory
+                                            )
+                                        val state by recipesVM.state.collectAsState()
+
+                                        LaunchedEffect(Unit) {
+                                            recipesVM.onEvent(RecipesScreenEvent.LoadOwnData)
+                                        }
+
+                                        com.receipts.receipt_sharing.ui.recipe.shared.RecipesScreen(
+                                            state = state,
+                                            onEvent = recipesVM::onEvent,
+                                            sharedTransitionScope = this@SharedTransitionLayout,
+                                            animatedVisibility = this,
+                                            onOpenMenu = {
+                                                scope.launch {
+                                                    drawerState.apply {
+                                                        if (drawerState.isOpen) drawerState.close()
+                                                        else drawerState.open()
+                                                    }
                                                 }
+                                            },
+                                            onGoToAddRecipe = {
+                                                navController.navigate(NavigationRoutes.Recipes.RecipeAddingPage)
+                                            },
+                                            onGoToRecipe = {
+                                                navController.navigate(
+                                                    NavigationRoutes.Recipes.RecipePage(
+                                                        it
+                                                    )
+                                                )
+                                            },
+                                            onGoToFilters = {
+                                                navController.navigate(
+                                                    NavigationRoutes.Recipes.FiltersSelection(
+                                                        false
+                                                    )
+                                                )
+                                            },
+                                            onReloadPage = {
+                                                recipesVM.onEvent(RecipesScreenEvent.LoadOwnData)
                                             }
-                                        },
-                                        onGoToAddRecipe = {
-                                            recipeVM.onEvent(RecipePageEvent.ClearData)
-                                            navController.navigate(NavigationRoutes.Recipes.RecipeAddingPage)
-                                        },
-                                        onGoToRecipe = {
-                                            recipeVM.onEvent(RecipePageEvent.LoadRecipe(it))
-                                            navController.navigate(
-                                                NavigationRoutes.Recipes.RecipePage(
-                                                    it
+                                        )
+                                    }
+                                    composable<NavigationRoutes.Recipes.RecipePage> {
+                                        val args =
+                                            it.toRoute<NavigationRoutes.Recipes.RecipePage>().recipeID
+                                        val parentEntry =
+                                            remember { navController.getBackStackEntry<NavigationRoutes.Recipes.RecipesFolder>() }
+                                        val recipePVM: RecipePageViewModel = viewModel(
+                                            parentEntry,
+                                            factory = RecipesApplication.appModule.recipePageVMFactory
+                                        )
+                                        LaunchedEffect(Unit) {
+                                            recipePVM.onEvent(RecipePageEvent.LoadRecipe(args))
+                                        }
+                                        val state by recipePVM.state.collectAsState()
+
+
+                                        com.receipts.receipt_sharing.ui.recipe.shared.RecipeConfigPage(
+                                            sharedTransitionScope = this@SharedTransitionLayout,
+                                            animatedVisibility = this,
+                                            state = state,
+                                            onEvent = recipePVM::onEvent,
+                                            onGoBack = {
+                                                navController.navigateUp()
+                                            },
+                                            onReloadData = {
+                                                recipePVM.onEvent(
+                                                    RecipePageEvent.LoadRecipe(
+                                                        args
+                                                    )
+                                                )
+                                            },
+                                            onGoToPostReview = {
+                                                navController.navigate(
+                                                    NavigationRoutes.Recipes.ReviewPage(args)
+                                                )
+                                            },
+                                            onGoToReviews = {
+                                                navController.navigate(
+                                                    NavigationRoutes.Recipes.ReviewsScreen(args)
+                                                )
+                                            },
+                                            onGoToFilters = {
+                                                navController.navigate(
+                                                    NavigationRoutes.Recipes.FiltersSelection(true)
+                                                )
+                                            }
+                                        )
+                                    }
+                                    composable<NavigationRoutes.Recipes.RecipeAddingPage> {
+                                        val parentEntry =
+                                            remember { navController.getBackStackEntry<NavigationRoutes.Recipes.RecipesFolder>() }
+                                        val recipeVm =
+                                            viewModel<RecipePageViewModel>(
+                                                parentEntry,
+                                                factory = RecipesApplication.appModule.recipePageVMFactory
+                                            )
+                                        LaunchedEffect(Unit) {
+                                            recipeVm.onEvent(RecipePageEvent.ClearRecipeData)
+                                        }
+                                        val state by recipeVm.state.collectAsState()
+
+
+                                        com.receipts.receipt_sharing.ui.recipe.shared.RecipeConfigPage(
+                                            sharedTransitionScope = this@SharedTransitionLayout,
+                                            animatedVisibility = this,
+                                            state = state,
+                                            onEvent = recipeVm::onEvent,
+                                            onGoBack = {
+                                                navController.navigateUp()
+                                            },
+                                            onReloadData = {
+                                                recipeVm.onEvent(RecipePageEvent.ClearRecipeData)
+                                            },
+                                            onGoToPostReview = {
+                                                Toast.makeText(
+                                                    this@MainActivity,
+                                                    R.string.recipe_is_creating,
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            },
+                                            onGoToReviews = {
+                                                Toast.makeText(
+                                                    this@MainActivity,
+                                                    R.string.recipe_is_creating,
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            },
+                                            onGoToFilters = {
+                                                navController.navigate(
+                                                    NavigationRoutes.Recipes.FiltersSelection(true)
+                                                )
+                                            }
+                                        )
+                                    }
+                                    composable<NavigationRoutes.Recipes.FavoritesPage> {
+                                        val parentEntry =
+                                            remember { navController.getBackStackEntry<NavigationRoutes.Recipes.RecipesFolder>() }
+                                        val recipesVM =
+                                            viewModel<RecipesScreenViewModel>(
+                                                parentEntry,
+                                                factory = RecipesApplication.appModule.recipesScreenVMFactory
+                                            )
+                                        LaunchedEffect(Unit) {
+                                            recipesVM.onEvent(RecipesScreenEvent.LoadFavorites)
+                                        }
+                                        val state by recipesVM.state.collectAsState()
+
+                                        com.receipts.receipt_sharing.ui.recipe.shared.RecipesScreen(
+                                            state = state,
+                                            sharedTransitionScope = this@SharedTransitionLayout,
+                                            animatedVisibility = this,
+                                            onEvent = recipesVM::onEvent,
+                                            onOpenMenu = {
+                                                scope.launch {
+                                                    drawerState.apply {
+                                                        if (drawerState.isOpen) drawerState.close()
+                                                        else drawerState.open()
+                                                    }
+                                                }
+                                            },
+                                            onGoToAddRecipe = {
+                                                navController.navigate(NavigationRoutes.Recipes.RecipeAddingPage)
+                                            },
+                                            onGoToRecipe = {
+                                                navController.navigate(
+                                                    NavigationRoutes.Recipes.RecipePage(
+                                                        it
+                                                    )
+                                                )
+                                            },
+                                            onGoToFilters = {
+                                                navController.navigate(
+                                                    NavigationRoutes.Recipes.FiltersSelection(
+                                                        false
+                                                    )
+                                                )
+                                            },
+                                            onReloadPage = { recipesVM.onEvent(RecipesScreenEvent.LoadFavorites) }
+                                        )
+                                    }
+                                    composable<NavigationRoutes.Recipes.ReviewsScreen> {
+                                        val args =
+                                            it.toRoute<NavigationRoutes.Recipes.ReviewsScreen>()
+                                        val parentEntry = remember {
+                                            navController.getBackStackEntry<NavigationRoutes.Recipes.ReviewsScreen>()
+                                        }
+                                        val reviewsScreenVM = viewModel<ReviewsScreenViewModel>(
+                                            viewModelStoreOwner = parentEntry,
+                                            factory = RecipesApplication.appModule.reviewsScreenVMFactory
+                                        )
+
+                                        LaunchedEffect(Unit) {
+                                            reviewsScreenVM.onEvent(
+                                                ReviewsScreenEvent.LoadReviews(
+                                                    args.recipeID
                                                 )
                                             )
-                                        },
-                                        onGoToFilters = {
-                                            recipesVM.onEvent(RecipesScreenEvent.LoadFilters)
-                                            navController.navigate(NavigationRoutes.Recipes.FiltersSelection(false))
                                         }
-                                    )
+
+                                        val state by reviewsScreenVM.state.collectAsState()
+
+                                        ReviewsScreen(
+                                            state = state,
+                                            onEvent = reviewsScreenVM::onEvent,
+                                            onGoBack = { navController.navigateUp() },
+                                            onReloadPage = {
+                                                reviewsScreenVM.onEvent(
+                                                    ReviewsScreenEvent.LoadReviews(
+                                                        args.recipeID
+                                                    )
+                                                )
+                                            },
+                                            onEditClick = {
+                                                navController.navigate(
+                                                    NavigationRoutes.Recipes.ReviewPage(
+                                                        args.recipeID
+                                                    )
+                                                )
+                                            }
+                                        )
+                                    }
+                                    composable<NavigationRoutes.Recipes.ReviewPage> {
+                                        val args = it.toRoute<NavigationRoutes.Recipes.ReviewPage>()
+                                        val parentEntry = remember {
+                                            navController.getBackStackEntry<NavigationRoutes.Recipes.ReviewPage>()
+                                        }
+                                        val reviewPageVM = viewModel<ReviewPageViewModel>(
+                                            viewModelStoreOwner = parentEntry,
+                                            factory = RecipesApplication.appModule.reviewPageVMFactory
+                                        )
+                                        LaunchedEffect(Unit) {
+                                            reviewPageVM.onEvent(
+                                                ReviewPageEvent.LoadReviewByRecipe(
+                                                    args.recipeID
+                                                )
+                                            )
+                                        }
+
+                                        val state by reviewPageVM.state.collectAsState()
+                                        ReviewPage(
+                                            state = state,
+                                            onEvent = reviewPageVM::onEvent,
+                                            onGoBack = { navController.navigateUp() },
+                                            onRefresh = {
+                                                reviewPageVM.onEvent(
+                                                    ReviewPageEvent.LoadReviewByRecipe(
+                                                        args.recipeID
+                                                    )
+                                                )
+                                            }
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -785,95 +998,5 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-    }
-    private fun startWorker() {
-            val constraints = Constraints.Builder()
-                .setRequiredNetworkType(NetworkType.CONNECTED)
-                .build()
-            val workRequest = PeriodicWorkRequestBuilder<AnnouncementWorker>(2, TimeUnit.HOURS)
-                .setConstraints(constraints)
-                .build()
-        if (isPermissionsGranted(
-                applicationContext,
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-                    listOf(
-                        Manifest.permission.POST_NOTIFICATIONS,
-                        Manifest.permission.INTERNET
-                    )
-                else listOf(Manifest.permission.INTERNET)
-            )) {
-                WorkManager.getInstance(applicationContext).enqueueUniquePeriodicWork(
-                    AnnouncementWorker.WORK_NAME,
-                    ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE,
-                    workRequest
-                )
-            }
-        else  WorkManager.getInstance(applicationContext).cancelUniqueWork(AnnouncementWorker.WORK_NAME)
-    }
-}
-
-
-
-sealed class NavigationRoutes{
-
-    sealed class Auth : NavigationRoutes() {
-        @Serializable
-        data object AuthFolder : Auth()
-
-        @Serializable
-        data object RegisterPage : Auth()
-
-        @Serializable
-        data object AuthorizePage : Auth()
-
-        @Serializable
-        data object TryAuthorizePage : Auth()
-    }
-
-    sealed class Creators : NavigationRoutes(){
-        @Serializable
-        data object CreatorsFolder : Creators()
-
-        @Serializable
-        data object CreatorsScreen : Creators()
-
-        @Serializable
-        data object FollowsScreen : Creators()
-
-        @Serializable
-        data object FollowersScreen : Creators()
-
-        @Serializable
-        data object UserInfoPage : Creators()
-
-        @Serializable
-        data class CreatorPage(val creatorID : String) : Creators()
-    }
-    sealed class Recipes : NavigationRoutes(){
-        @Serializable
-        data object RecipesFolder : Recipes()
-
-        @Serializable
-        data object FavoritesPage : Recipes()
-
-        @Serializable
-        data object RecipesScreen : Recipes()
-
-        @Serializable
-        data object OwnRecipesScreen : Recipes()
-
-        @Serializable
-        data class   FiltersSelection(
-            val isRecipePage : Boolean = false
-        ) : Recipes()
-
-        @Serializable
-        data class CreatorRecipesScreen(val creatorID : String) : Recipes()
-
-        @Serializable
-        data class RecipePage(val recipeID : String) : Recipes()
-
-        @Serializable
-        data object RecipeAddingPage : Recipes()
     }
 }

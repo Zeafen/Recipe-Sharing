@@ -1,14 +1,13 @@
-package com.receipts.receipt_sharing.data.viewModels
+package com.receipts.receipt_sharing.presentation.creators
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.receipts.receipt_sharing.domain.CreatorRequest
 import com.receipts.receipt_sharing.data.repositoriesImpl.AuthDataStoreRepository
-import com.receipts.receipt_sharing.data.repositoriesImpl.CreatorsRepositoryImpl
+import com.receipts.receipt_sharing.domain.creators.CreatorRequest
+import com.receipts.receipt_sharing.domain.repositories.ICreatorsRepository
 import com.receipts.receipt_sharing.domain.response.RecipeResult
-import com.receipts.receipt_sharing.ui.creators.CreatorsScreenState
-import dagger.hilt.android.lifecycle.HiltViewModel
+import com.receipts.receipt_sharing.presentation.recipes.CellsAmount
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
@@ -16,12 +15,10 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-@HiltViewModel
-class CreatorsScreenViewModel @Inject constructor(
-    private val creatorsRepo : CreatorsRepositoryImpl,
-): ViewModel() {
+class CreatorsScreenViewModel(
+    private val creatorsRepo: ICreatorsRepository,
+) : ViewModel() {
 
     private val authDataStore = AuthDataStoreRepository.get()
 
@@ -40,9 +37,9 @@ class CreatorsScreenViewModel @Inject constructor(
     }
 
     fun onEvent(event: CreatorsScreenEvent) {
-        when (event) {
-            CreatorsScreenEvent.LoadData -> {
-                viewModelScope.launch {
+        viewModelScope.launch {
+            when (event) {
+                CreatorsScreenEvent.LoadData -> {
                     _state.update {
                         it.copy(followsLoaded = false)
                     }
@@ -51,13 +48,13 @@ class CreatorsScreenViewModel @Inject constructor(
                         RecipeResult.Downloading()
                     }
                     _creators.update {
-                        token?.let { creatorsRepo.getCreators(token) } ?: RecipeResult.Error()
+                        token?.let {
+                            creatorsRepo.getCreators(it)
+                        }?:RecipeResult.Error("Unauthorized")
                     }
                 }
-            }
 
-            CreatorsScreenEvent.LoadFollows -> {
-                viewModelScope.launch {
+                CreatorsScreenEvent.LoadFollows -> {
                     _state.update {
                         it.copy(followsLoaded = true)
                     }
@@ -70,12 +67,10 @@ class CreatorsScreenViewModel @Inject constructor(
                             creatorsRepo.getFollows(token)
                         } ?: RecipeResult.Error()
                     }
-                    Log.i("follows_loading", _creators.value.data?.toString()?:"nothing here")
+                    Log.i("follows_loading", _creators.value.data?.toString() ?: "nothing here")
                 }
-            }
 
-            is CreatorsScreenEvent.SetSearchName -> {
-                viewModelScope.launch {
+                is CreatorsScreenEvent.SetSearchName -> {
                     val token = authDataStore.authDataStoreFlow.first().token
                     _state.update {
                         it.copy(searchedName = event.searchString)
@@ -85,14 +80,13 @@ class CreatorsScreenViewModel @Inject constructor(
                     }
                     _creators.update {
                         token?.let {
-                            if (event.searchString.isEmpty()){
-                                if(state.value.followsLoaded)
+                            if (event.searchString.isEmpty()) {
+                                if (state.value.followsLoaded)
                                     creatorsRepo.getFollows(it)
                                 else
                                     creatorsRepo.getCreators(token)
-                            }
-                            else{
-                                if(state.value.followsLoaded)
+                            } else {
+                                if (state.value.followsLoaded)
                                     creatorsRepo.getFollowsByName(it, event.searchString)
                                 else
                                     creatorsRepo.getCreatorsByName(token, event.searchString)
@@ -100,10 +94,8 @@ class CreatorsScreenViewModel @Inject constructor(
                         } ?: RecipeResult.Error()
                     }
                 }
-            }
 
-            is CreatorsScreenEvent.LoadFollowers -> {
-                viewModelScope.launch {
+                is CreatorsScreenEvent.LoadFollowers -> {
                     _state.update {
                         it.copy(followsLoaded = true)
                     }
@@ -114,21 +106,34 @@ class CreatorsScreenViewModel @Inject constructor(
                         }
                         _creators.update {
                             token?.let {
-                                if(event.creatorID.isNullOrEmpty())
+                                if (event.creatorID.isNullOrEmpty())
                                     creatorsRepo.getFollowers(it)
                                 else creatorsRepo.getCreatorFollowers(it, event.creatorID)
                             } ?: RecipeResult.Error()
                         }
                     }
                 }
+                is CreatorsScreenEvent.SetOpenSearchString -> _state.update {
+                    it.copy(openSearchString = event.openSearchString)
+                }
+
+                is CreatorsScreenEvent.SetCellsAmount -> _state.update {
+                    it.copy(cellsAmount = event.cellsAmount)
+                }
+                is CreatorsScreenEvent.SetOpenSelectCellsAmountDialog -> _state.update {
+                    it.copy(openCellsAmountSelect = event.openDialog)
+                }
             }
         }
     }
 }
 
-sealed class CreatorsScreenEvent{
-    data object LoadData : CreatorsScreenEvent()
-    data object LoadFollows : CreatorsScreenEvent()
-    data class LoadFollowers(val creatorID : String? = null) : CreatorsScreenEvent()
-    data class SetSearchName(val searchString : String) : CreatorsScreenEvent()
+sealed interface CreatorsScreenEvent {
+    data object LoadData : CreatorsScreenEvent
+    data object LoadFollows : CreatorsScreenEvent
+    data class LoadFollowers(val creatorID: String? = null) : CreatorsScreenEvent
+    data class SetSearchName(val searchString: String) : CreatorsScreenEvent
+    data class SetOpenSearchString(val openSearchString: Boolean) : CreatorsScreenEvent
+    data class SetOpenSelectCellsAmountDialog(val openDialog : Boolean) : CreatorsScreenEvent
+    data class SetCellsAmount(val cellsAmount : CellsAmount) : CreatorsScreenEvent
 }

@@ -1,9 +1,14 @@
 package com.receipts.receipt_sharing.domain.apiServices
 
-import com.receipts.receipt_sharing.domain.CreatorRequest
 import com.receipts.receipt_sharing.domain.FilterRequest
+import com.receipts.receipt_sharing.domain.creators.ChangePasswRequest
+import com.receipts.receipt_sharing.domain.creators.CreatorRequest
+import com.receipts.receipt_sharing.domain.creators.EmailConfirmRequest
+import com.receipts.receipt_sharing.domain.creators.ProfileRequest
 import com.receipts.receipt_sharing.domain.recipes.Recipe
 import com.receipts.receipt_sharing.domain.request.AuthRequest
+import com.receipts.receipt_sharing.domain.reviews.OrderRequest
+import com.receipts.receipt_sharing.domain.reviews.RecipeReview
 import okhttp3.MultipartBody
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -30,6 +35,15 @@ interface RecipesAPIService {
     @GET("auth/authorize")
     suspend fun authorize(
         @Header("Authorization") token : String
+    )
+
+    @GET("auth/code")
+    suspend fun sendCode(
+        @Query("email") email : String
+    )
+    @POST("auth/password")
+    suspend fun updatePassword(
+        @Body request : ChangePasswRequest
     )
 
     @Multipart
@@ -65,9 +79,21 @@ interface RecipesAPIService {
         @Body requested : List<String>
     ) : List<Recipe>
 
-    @GET("Favorites/{id}")
+    @GET("Favorites/isinfavorite/{id}")
     suspend fun getIsFavorite(@Header("Authorization") token : String,
                               @Path("id") receiptID : String) : Boolean
+
+    @POST("Favorites")
+    suspend fun addToFavorites(
+        @Header("Authorization") token : String,
+        @Query("id") id : String
+    )
+
+    @DELETE("Favorites/{id}")
+    suspend fun removeFromFavorites(
+        @Header("Authorization") token : String,
+        @Path("id") id : String
+    )
 
     @GET("Recipes/own/{id}")
     suspend fun getOwn(@Header("Authorization") token : String,
@@ -100,6 +126,13 @@ interface RecipesAPIService {
         @Header("Authorization") token : String,
         @Path("id") creatorID : String
     ) : List<Recipe>
+
+    @GET("Recipes/bycreator/{id}/count")
+    suspend fun getRecipesCountByCreator(
+        @Header("Authorization") token : String,
+        @Path("id") creatorID : String
+    ) : Long
+
     @GET("Recipes/bycreator/{id}/byname")
     suspend fun getRecipesByCreatorByName(
         @Header("Authorization") token : String,
@@ -144,16 +177,29 @@ interface RecipesAPIService {
         @Body receipt : Recipe
     )
 
-    @POST("Favorites")
-    suspend fun addToFavorites(
+    //Email
+
+    @POST("Email/set")
+    suspend fun setEmail(
         @Header("Authorization") token : String,
-        @Query("id") id : String
+        @Query("email") email : String
     )
-    @DELETE("Favorites/{id}")
-    suspend fun removeFromFavorites(
+    @POST("Email/setcode")
+    suspend fun setEmailGetCode(
         @Header("Authorization") token : String,
-        @Path("id") id : String
+        @Query("email") email : String
     )
+    @GET("Email/code")
+    suspend fun getCode(
+        @Header("Authorization") token : String
+    )
+    @POST("Email/confirm")
+    suspend fun confirmEmail(
+        @Header("Authorization") token : String,
+        @Body request : EmailConfirmRequest
+    )
+
+
 
     //Follows and creators
     @GET("Creators")
@@ -170,7 +216,13 @@ interface RecipesAPIService {
     @PUT("Creators")
     suspend fun updateCreator(
         @Header("Authorization") token : String,
-        @Body request : CreatorRequest
+        @Body request : ProfileRequest
+    )
+
+    @PUT("Creators/password")
+    suspend fun updatePassword(
+        @Header("Authorization") token : String,
+        @Body request : ChangePasswRequest
     )
 
     @GET("Creators/byname")
@@ -182,7 +234,7 @@ interface RecipesAPIService {
     @GET("Creators/self")
     suspend fun getUserInfo(
         @Header("Authorization") token : String
-    ) : CreatorRequest
+    ) : ProfileRequest
 
     @GET("Follows")
     suspend fun getFollows(
@@ -197,11 +249,28 @@ interface RecipesAPIService {
         @Header("Authorization") token : String
     ) : List<CreatorRequest>
 
-    @GET("Follows/self/{id}")
+    @GET("Follows/self/count")
+    suspend fun getFollowersCount(
+        @Header("Authorization") token : String
+    ) : Long
+
+    @GET("Follows/{id}")
     suspend fun getCreatorFollowers(
         @Header("Authorization") token : String,
         @Path("id") id : String
     ) : List<CreatorRequest>
+
+    @GET("Follows/{id}/count")
+    suspend fun getCreatorFollowersCount(
+        @Header("Authorization") token : String,
+        @Path("id") id : String
+    ) : Long
+
+    @GET("Follows/bycreator/{id}/count")
+    suspend fun getCreatorFollowsCount(
+        @Header("Authorization") token : String,
+        @Path("id") id : String
+    ) : Long
 
     @POST("Follows")
     suspend fun addToFollows(
@@ -215,7 +284,7 @@ interface RecipesAPIService {
         @Path("id") creatorID : String
         )
 
-    @GET("Follows/{id}")
+    @GET("Follows/isfollow/{id}")
     suspend fun doesFollow(
         @Header("Authorization") token : String,
         @Path("id") creatorID : String
@@ -255,6 +324,97 @@ interface RecipesAPIService {
     @DELETE("Filters/{id}")
     suspend fun clearRecipeFilters(
         @Header("Authorization") token : String,
+        @Path("id") id : String
+    )
+
+
+    //Reviews
+
+    @GET("Reviews/byrecipe/{id}")
+    suspend fun getReviewsByRecipe(
+        @Header("Authorize") token : String,
+        @Path("id") id : String
+    ) : List<RecipeReview>
+
+    @POST("Reviews/byrecipe/{id}/ordered")
+    suspend fun getOrderedReviewsByRecipe(
+        @Header("Authorize") token : String,
+        @Path("id") id : String,
+        @Body request : OrderRequest
+    ) : List<RecipeReview>
+
+    @GET("Reviews/byrecipe/{id}/own")
+    suspend fun getOwnReviewsByRecipe(
+        @Header("Authorize") token : String,
+        @Path("id") id : String
+    ) : RecipeReview?
+
+
+    @GET("Reviews/byrecipe/{id}/count")
+    suspend fun getReviewsCountByRecipe(
+        @Header("Authorize") token : String,
+        @Path("id") id : String
+    ) : Long
+
+    @GET("Reviews/byrecipe/{id}/rating")
+    suspend fun getRecipeRating(
+        @Header("Authorize") token : String,
+        @Path("id") id : String
+    ) : Double
+
+    @GET("Reviews/byrecipe/{id}/negative")
+    suspend fun getPositiveReviewsByRecipe(
+        @Header("Authorize") token : String,
+        @Path("id") id : String
+    ) : List<RecipeReview>
+
+    @POST("Reviews/byrecipe/{id}/negative/ordered")
+    suspend fun getOrderedNegReviewsByRecipe(
+        @Header("Authorize") token : String,
+        @Path("id") id : String,
+        @Body request : OrderRequest
+    ) : List<RecipeReview>
+
+    @GET("Reviews/byrecipe/{id}/positive")
+    suspend fun getNegativeReviewsByRecipe(
+        @Header("Authorize") token : String,
+        @Path("id") id : String
+    ) : List<RecipeReview>
+
+    @POST("Reviews/byrecipe/{id}/positive/ordered")
+    suspend fun getOrderedPosReviewsByRecipe(
+        @Header("Authorize") token : String,
+        @Path("id") id : String,
+        @Body request : OrderRequest
+    ) : List<RecipeReview>
+
+    @GET("Reviews/{id}")
+    suspend fun getReviewByID(
+        @Header("Authorize") token : String,
+        @Path("id") id : String
+    ) : RecipeReview
+
+    @GET("Reviews/isown/{id}")
+    suspend fun getIsOwnReview(
+        @Header("Authorize") token : String,
+        @Path("id") id : String
+    ) : Boolean
+
+    @POST("Review")
+    suspend fun postReview(
+        @Header("Authorize") token : String,
+        @Body reviewRequest : RecipeReview
+    )
+
+    @PUT("Review")
+    suspend fun updateReview(
+        @Header("Authorize") token : String,
+        @Body reviewRequest : RecipeReview
+    )
+
+    @DELETE("Review/{id}")
+    suspend fun deleteReview(
+        @Header("Authorize") token : String,
         @Path("id") id : String
     )
 

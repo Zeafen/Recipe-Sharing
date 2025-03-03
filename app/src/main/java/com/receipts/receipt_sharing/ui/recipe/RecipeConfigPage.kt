@@ -44,11 +44,6 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -64,17 +59,19 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.receipts.receipt_sharing.R
-import com.receipts.receipt_sharing.data.viewModels.RecipePageEvent
 import com.receipts.receipt_sharing.domain.apiServices.UnsafeImageLoader
 import com.receipts.receipt_sharing.domain.recipes.Ingredient
 import com.receipts.receipt_sharing.domain.recipes.Measure
 import com.receipts.receipt_sharing.domain.recipes.Recipe
 import com.receipts.receipt_sharing.domain.recipes.Step
 import com.receipts.receipt_sharing.domain.response.RecipeResult
-import com.receipts.receipt_sharing.ui.ErrorInfoPage
-import com.receipts.receipt_sharing.ui.IngredientConfigureDialog
-import com.receipts.receipt_sharing.ui.StepConfigureDialog
-import com.receipts.receipt_sharing.ui.shimmerEffect
+import com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent
+import com.receipts.receipt_sharing.presentation.recipes.RecipePageState
+import com.receipts.receipt_sharing.ui.infoPages.ErrorInfoPage
+import com.receipts.receipt_sharing.ui.dialogs.IngredientConfigureDialog
+import com.receipts.receipt_sharing.ui.dialogs.StepConfigureDialog
+import com.receipts.receipt_sharing.ui.recipe.steps.EditableStepsRows
+import com.receipts.receipt_sharing.ui.effects.shimmerEffect
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -84,28 +81,8 @@ fun RecipeConfigPage(
     onEvent: (RecipePageEvent) -> Unit,
     onOpenMenu: () -> Unit,
     onReloadData: () -> Unit,
-    onConfigCompleted: () -> Unit,
-    onDiscardChanges : () -> Unit,
     onGoToFilters: () -> Unit
 ) {
-    var openAddIngredientDialog by rememberSaveable {
-        mutableStateOf(false)
-    }
-    var openAddStepDialog by rememberSaveable {
-        mutableStateOf(false)
-    }
-    var isEditing by rememberSaveable {
-        mutableStateOf(false)
-    }
-    var selectedIngredient by remember {
-        mutableStateOf(Ingredient("", 0, Measure.Gram))
-    }
-    var selectedStep by remember {
-        mutableStateOf(Step("", 0))
-    }
-    var selectedIndex by remember {
-        mutableStateOf(-1)
-    }
     val photoLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
             onEvent(RecipePageEvent.SetImageUrl(uri))
@@ -154,7 +131,9 @@ fun RecipeConfigPage(
                     }
                 },
                 actions = {
-                    IconButton(onClick = onDiscardChanges) {
+                    IconButton(onClick = {
+                        onEvent(RecipePageEvent.DiscardChanges)
+                    }) {
                         Icon(Icons.Default.Clear, contentDescription = "'")
                     }
                 })
@@ -165,7 +144,6 @@ fun RecipeConfigPage(
                 .padding(vertical = 8.dp, horizontal = 12.dp),
                 onClick = {
                     onEvent(RecipePageEvent.SaveChanges)
-                    onConfigCompleted()
                 }) {
                 Text(
                     text = stringResource(R.string.save_changes_str),
@@ -241,7 +219,6 @@ fun RecipeConfigPage(
                 }
 
                 is RecipeResult.Error -> {
-
                     ErrorInfoPage(
                         errorInfo = state.recipe.info
                             ?: stringResource(id = R.string.unknown_error_txt),
@@ -251,36 +228,36 @@ fun RecipeConfigPage(
 
                 is RecipeResult.Succeed -> {
                     if (state.recipe.data != null) {
-                        if (openAddIngredientDialog)
+                        if (state.openAddIngredientDialog)
                             IngredientConfigureDialog(
-                                ingredient = selectedIngredient,
-                                onDismissRequest = { openAddIngredientDialog = false }) {
-                                openAddIngredientDialog = false
-                                onEvent(
-                                    if (isEditing && selectedIndex != -1) RecipePageEvent.UpdateIngredient(
-                                        selectedIndex,
-                                        it
-                                    )
-                                    else RecipePageEvent.AddIngredient(it)
-                                )
-                                isEditing = false
-                                selectedIndex = -1
-                            }
-                        if (openAddStepDialog)
-                            StepConfigureDialog(
-                                step = selectedStep,
-                                onDismissRequest = { openAddStepDialog = false },
-                                onSaveChanges = {
-                                    openAddStepDialog = false
-                                    onEvent(
-                                        if (isEditing && selectedIndex != -1) RecipePageEvent.UpdateStep(
-                                            selectedIndex,
-                                            it
+                                ingredient = state.selectedIngredient,
+                                onDismissRequest = {
+                                    onEvent(RecipePageEvent.CloseDialogs)
+                                },
+                                onSaveChanges = { ingr ->
+                                    if (state.selectedIngrIndex in state.ingredients.indices)
+                                        onEvent(
+                                            RecipePageEvent.UpdateIngredient(
+                                                state.selectedIngrIndex,
+                                                ingr
+                                            )
                                         )
-                                        else RecipePageEvent.AddStep(it)
+                                    else onEvent(RecipePageEvent.AddIngredient(ingr))
+                                    onEvent(RecipePageEvent.CloseDialogs)
+                                })
+                        if (state.openAddStepDialog)
+                            StepConfigureDialog(
+                                step = state.selectedStep,
+                                onDismissRequest = { onEvent(RecipePageEvent.CloseDialogs) },
+                                onSaveChanges = { step ->
+                                    onEvent(
+                                        if (state.selectedStepIndex in state.steps.indices) RecipePageEvent.UpdateStep(
+                                            state.selectedStepIndex,
+                                            step
+                                        )
+                                        else RecipePageEvent.AddStep(step)
                                     )
-                                    isEditing = false
-                                    selectedIndex = -1
+                                    onEvent(RecipePageEvent.CloseDialogs)
                                 })
 
                         LazyColumn(
@@ -457,11 +434,7 @@ fun RecipeConfigPage(
                                     )
                                     Row {
                                         IconButton(onClick = {
-                                            selectedIngredient = it
-                                            openAddIngredientDialog = true.also {
-                                                isEditing = it
-                                            }
-                                            selectedIndex = state.ingredients.indexOf(it)
+                                            onEvent(RecipePageEvent.SetSelectedIngredient(it))
                                         }) {
                                             Icon(Icons.Default.Edit, contentDescription = "")
                                         }
@@ -479,9 +452,8 @@ fun RecipeConfigPage(
                                         .fillMaxWidth()
                                         .padding(vertical = 4.dp, horizontal = 12.dp),
                                     onClick = {
-                                        openAddIngredientDialog = true
-                                        isEditing = false
-                                        selectedIngredient = Ingredient("", 0, Measure.Litres)
+                                        onEvent(RecipePageEvent.SetSelectedIngredient())
+                                        onEvent(RecipePageEvent.SetOpenIngredientConfigDialog(true))
                                     }
                                 ) {
                                     Icon(Icons.Default.Add, contentDescription = "")
@@ -495,16 +467,13 @@ fun RecipeConfigPage(
                                 EditableStepsRows(modifier = Modifier
                                     .padding(vertical = 4.dp, horizontal = 8.dp),
                                     steps = state.steps,
-                                    onAddStepClick = {
-                                        selectedStep = it
-                                        openAddStepDialog = true
-                                        isEditing = false
+                                    onAddClick = {
+                                        onEvent(RecipePageEvent.SetSelectedStep())
+                                        onEvent(RecipePageEvent.SetOpenStepConfigDialog(true))
                                     },
-                                    onUpdateClick = {
-                                        selectedStep = it
-                                        selectedIndex = state.steps.indexOf(it)
-                                        openAddStepDialog = true
-                                        isEditing = true
+                                    onEditClick = {
+                                        onEvent(RecipePageEvent.SetSelectedStep(it))
+                                        onEvent(RecipePageEvent.SetOpenStepConfigDialog(true))
                                     },
                                     onDeleteClick = {
                                         onEvent(RecipePageEvent.RemoveStep(it))
@@ -576,9 +545,7 @@ private fun ReceiptPagePreview() {
                 onEvent = {},
                 onOpenMenu = {},
                 onReloadData = {},
-                onConfigCompleted = {},
-                onGoToFilters = {},
-                onDiscardChanges = {})
+                onGoToFilters = {},)
         }
     }
 

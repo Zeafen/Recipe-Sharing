@@ -1,4 +1,4 @@
-package com.receipts.receipt_sharing.ui.recipe
+package com.receipts.receipt_sharing.ui.recipe.steps
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -9,22 +9,15 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.border
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -37,7 +30,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -88,7 +80,7 @@ fun StepRow(
                         .fillMaxWidth()
                         .clip(CircleShape)
                         .border(2.dp, Color.Gray, CircleShape)
-                        .padding(horizontal = 24.dp, vertical = 4.dp),
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
@@ -116,7 +108,7 @@ fun StepRow(
                             .fillMaxWidth()
                             .clip(CircleShape)
                             .border(2.dp, Color.Gray, CircleShape)
-                            .padding(horizontal = 24.dp, vertical = 4.dp),
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
@@ -137,137 +129,17 @@ fun StepRow(
                             letterSpacing = TextUnit(0.1f, TextUnitType.Em)
                         )
                     }
-                    Row(
+                    Text(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 8.dp, vertical = 4.dp)
-                            .alpha(0.7f)
-
-                    ) {
-                        Text(
-                            text = step.description,
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.W400,
-                            textAlign = TextAlign.Justify,
-                            letterSpacing = TextUnit(1.5f, TextUnitType.Sp)
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun EditableStepRow(
-    modifier: Modifier = Modifier,
-    stepOrder: Int,
-    step: Step,
-    onEditClick : (Step) -> Unit,
-    onDeleteClick : (Step) -> Unit
-) {
-    var openStepsState by remember {
-        mutableStateOf(false)
-    }
-    Surface(
-        modifier = modifier,
-        onClick = { openStepsState = !openStepsState }
-    ) {
-        AnimatedContent(
-            targetState = openStepsState,
-            transitionSpec = {
-                fadeIn(animationSpec = tween(150, 150)) togetherWith
-                        fadeOut(animationSpec = tween(150)) using
-                        SizeTransform { initialSize, targetSize ->
-                            if (openStepsState)
-                                keyframes {
-                                    IntSize(targetSize.width, targetSize.height) at 150
-                                    durationMillis = 300
-                                } else
-                                keyframes {
-                                    IntSize(initialSize.width, initialSize.height) at 150
-                                    durationMillis = 300
-                                }
-                        }
-            }) { targetExpanded ->
-            if (!targetExpanded)
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(CircleShape)
-                        .border(2.dp, Color.Gray, CircleShape)
-                        .padding(horizontal = 24.dp, vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = stringResource(R.string.step_order, stepOrder),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.W500,
-                        textAlign = TextAlign.Center,
-                        letterSpacing = TextUnit(0.1f, TextUnitType.Em)
+                            .alpha(0.7f),
+                        text = step.description,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.W400,
+                        textAlign = TextAlign.Justify,
+                        letterSpacing = TextUnit(1.5f, TextUnitType.Sp)
                     )
-                    Text(
-                        modifier = Modifier
-                            .alpha(0.5f),
-                        text = "${step.duration} min",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.W500,
-                        textAlign = TextAlign.Center,
-                        letterSpacing = TextUnit(0.1f, TextUnitType.Em)
-                    )
-
-                    IconButton(onClick = { onEditClick(step) }) {
-                        Icon(Icons.Default.Edit, contentDescription = "")
-                    }
-                    IconButton(onClick = { onDeleteClick(step) }) {
-                        Icon(Icons.Default.Delete, contentDescription = "")
-                    }
-
-                }
-            else {
-                Column {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(CircleShape)
-                            .border(2.dp, Color.Gray, CircleShape)
-                            .padding(horizontal = 24.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = stringResource(R.string.step_order, stepOrder),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.W500,
-                            textAlign = TextAlign.Center,
-                            letterSpacing = TextUnit(0.1f, TextUnitType.Em)
-                        )
-                        Text(
-                            modifier = Modifier
-                                .alpha(0.5f),
-                            text = "${step.duration} min",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.W500,
-                            textAlign = TextAlign.Center,
-                            letterSpacing = TextUnit(0.1f, TextUnitType.Em)
-                        )
-                    }
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 8.dp, vertical = 4.dp)
-                            .alpha(0.7f)
-
-                    ) {
-                        Text(
-                            text = step.description,
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.W400,
-                            textAlign = TextAlign.Justify,
-                            letterSpacing = TextUnit(1.5f, TextUnitType.Sp)
-                        )
-                    }
                 }
             }
         }
@@ -277,7 +149,8 @@ fun EditableStepRow(
 @Composable
 fun StepsRows(
     modifier: Modifier = Modifier,
-    steps: List<Step>
+    steps: List<Step>,
+    itemPadding : PaddingValues = PaddingValues(4.dp)
 ) {
     var showSteps by remember {
         mutableStateOf(false)
@@ -348,122 +221,10 @@ fun StepsRows(
                     }
                     repeat(steps.size) {
                         StepRow(
-                            modifier = Modifier,
+                            modifier = Modifier
+                                .padding(itemPadding),
                             stepOrder = it, step = steps[it]
                         )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun EditableStepsRows(
-    modifier: Modifier = Modifier,
-    steps: List<Step>,
-    onAddStepClick: () -> Unit,
-    onUpdateClick: (Step) -> Unit,
-    onDeleteClick: (Step) -> Unit
-) {
-    var showSteps by remember {
-        mutableStateOf(false)
-    }
-    Surface(
-        modifier = modifier,
-        onClick = { showSteps = !showSteps }
-    ) {
-        AnimatedContent(targetState = showSteps,
-            transitionSpec = {
-                fadeIn(animationSpec = tween(150, 150)) togetherWith
-                        fadeOut(animationSpec = tween(150)) using
-                        SizeTransform { initialSize, targetSize ->
-                            if (showSteps)
-                                keyframes {
-                                    IntSize(targetSize.width, targetSize.height) at 150
-                                    durationMillis = 300
-                                } else {
-                                keyframes {
-                                    IntSize(initialSize.width, initialSize.height) at 150
-                                    durationMillis = 300
-                                }
-                            }
-                        }
-            }) { stepsShown ->
-            if (!stepsShown)
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(CircleShape)
-                        .border(2.dp, Color.Gray, CircleShape)
-                        .padding(horizontal = 24.dp, vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = stringResource(R.string.instruction_string, steps.size),
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    Text(
-                        modifier = Modifier
-                            .alpha(0.5f),
-                        text = "${steps.sumOf { s -> s.duration }} min",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                }
-            else {
-                Column {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(CircleShape)
-                            .border(2.dp, Color.Gray, CircleShape)
-                            .padding(horizontal = 24.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = stringResource(R.string.instruction_string, steps.size),
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        Text(
-                            modifier = Modifier
-                                .alpha(0.5f),
-                            text = "${steps.sumOf { s -> s.duration }} min",
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                    }
-                    repeat(steps.size) {
-                        Row {
-                            StepRow(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .pointerInput(Unit) {
-                                        detectTapGestures(
-                                            onLongPress = {
-
-                                            }
-                                        )
-                                    },
-                                stepOrder = it + 1, step = steps[it]
-                            )
-
-                            IconButton(onClick = { onUpdateClick(steps[it]) }) {
-                                Icon(Icons.Default.Edit, contentDescription = "")
-                            }
-                            IconButton(onClick = { onDeleteClick(steps[it]) }) {
-                                Icon(Icons.Default.Delete, contentDescription = "")
-                            }
-                        }
-                    }
-                    OutlinedButton(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 4.dp),
-                        onClick = onAddStepClick
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = "")
-                        Text(text = stringResource(id = R.string.add_step_str))
                     }
                 }
             }
@@ -507,16 +268,7 @@ private fun StepsRowsPreview() {
         )
     }
     RecipeSharing_theme {
-
-        EditableStepsRows(steps = recipe.steps,
-            onAddStepClick = {
-            },
-            onDeleteClick = {
-                recipe = recipe.copy(
-                    steps = recipe.steps.minus(it)
-                )
-            },
-            onUpdateClick = {})
+        StepsRows(steps = recipe.steps)
     }
 }
 

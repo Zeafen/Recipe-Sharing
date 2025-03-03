@@ -11,4 +11,6 @@ data class Recipe(
     val description : String?,
     val ingredients : List<Ingredient>,
     val steps : List<Step>,
+    val currentRating : Float = 0f,
+    val reviewsCount : Long = 0L,
 )

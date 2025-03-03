@@ -1,16 +1,16 @@
 package com.receipts.receipt_sharing.ui.infoPages
 
-import androidx.compose.foundation.background
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -22,10 +22,15 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import com.receipts.receipt_sharing.R
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
@@ -33,57 +38,70 @@ import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
 @Composable
 fun ErrorInfoPage(
     modifier: Modifier = Modifier,
-    errorInfo : String,
-    onReloadPage : () -> Unit) {
-    Column(modifier = modifier
-        .fillMaxSize()
-        .then(modifier),
+    errorInfo: String,
+    onReloadPage: () -> Unit
+) {
+    Column(
+        modifier = modifier,
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Box(modifier = Modifier
-            .padding(horizontal = 16.dp)
-            .background(MaterialTheme.colorScheme.tertiaryContainer)) {
-            Column {
-                Text(
-                    modifier = Modifier
-                        .padding(vertical = 12.dp, horizontal = 16.dp),
-                    textAlign = TextAlign.Center,
-                    text = stringResource(id = R.string.error_info_title),
-                    style = MaterialTheme.typography.headlineLarge
-                )
-                Icon(modifier = Modifier
-                    .size(60.dp)
-                    .align(Alignment.CenterHorizontally),
-                    tint = MaterialTheme.colorScheme.error,
-                    imageVector = Icons.Default.Warning,
-                    contentDescription = "")
+        Image(
+            modifier = Modifier
+                .padding(horizontal = 12.dp, vertical = 8.dp)
+                .fillMaxWidth(0.8f),
+            painter = painterResource(R.drawable.error_img),
+            contentDescription = null,
+            contentScale = ContentScale.Crop
+        )
 
+        Text(
+            text = stringResource(R.string.error_info_title),
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.headlineMedium,
+            overflow = TextOverflow.Ellipsis,
+            letterSpacing = TextUnit(
+                0.1f,
+                TextUnitType.Em
+            ),
+            fontWeight = FontWeight.W500
+        )
+        LazyColumn(
+            modifier = Modifier
+                .weight(1f)
+                .padding(top = 12.dp, start = 8.dp, end = 8.dp)
+        ) {
+            item {
                 Text(
-                    modifier = Modifier
-                        .padding(vertical = 8.dp, horizontal = 12.dp)
-                        .alpha(0.9f),
                     text = errorInfo,
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.error
-                )
-                Button(modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .padding(vertical = 8.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error,
-                        contentColor = MaterialTheme.colorScheme.onError
+                    textAlign = TextAlign.Justify,
+                    style = MaterialTheme.typography.bodyLarge,
+                    overflow = TextOverflow.Ellipsis,
+                    letterSpacing = TextUnit(
+                        2f,
+                        TextUnitType.Sp
                     ),
-                    onClick = onReloadPage) {
-                    Text(
-                        style = MaterialTheme.typography.bodyLarge,
-                        text = stringResource(id = R.string.reload_page_btn_txt)
-                    )
-                }
+                    fontWeight = FontWeight.W400
+                )
             }
+        }
+        Button(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 24.dp, end = 24.dp, top = 12.dp),
+            shape = RoundedCornerShape(16.dp),
+            onClick = onReloadPage,
+        ) {
+            Icon(modifier = Modifier
+                .padding(end = 8.dp),
+                imageVector = Icons.Default.Refresh,
+                contentDescription = null
+            )
+            Text(text = stringResource(R.string.reload_page_btn_txt))
         }
     }
 }
+
 
 @Preview
 @Composable
@@ -93,11 +111,14 @@ private fun Preview() {
             var errorSolved by rememberSaveable {
                 mutableStateOf(false)
             }
-            if(!errorSolved)
-                ErrorInfoPage(modifier = Modifier
-                    .padding(vertical = 12.dp),
-                    errorInfo = "Cannot find any source of that creator") {
-                    errorSolved = ! errorSolved
+            if (!errorSolved)
+                ErrorInfoPage(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(vertical = 12.dp),
+                    errorInfo = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam eu mauris semper metus cursus rhoncus vitae vel odio. Sed iaculis aliquam nisl quis tincidunt. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus vestibulum tincidunt pharetra. Etiam ac lacus vel arcu elementum bibendum. Duis finibus orci nulla, vitae finibus lacus varius tincidunt. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Sed"
+                ) {
+                    errorSolved = !errorSolved
                 }
             else
                 Text(text = "Error solved")

@@ -1,4 +1,4 @@
-package com.receipts.receipt_sharing.domain
+package com.receipts.receipt_sharing.domain.creators
 
 import kotlinx.serialization.Serializable
 
