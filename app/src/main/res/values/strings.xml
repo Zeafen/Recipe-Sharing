@@ -1,12 +1,18 @@
 <resources>
-    <string name="app_name">Recipe Sharing</string>
-    <string name="new_recipes_notification_channel_name">Background update</string>
+    <string name="app_name" translatable="false">Recipe Sharing</string>
+    <string name="new_recipes_notification_channel_name" translatable="false">Background update</string>
+    <string name="welcome_header">Welcome, %1$s</string>
 
 <!--Enum elements names-->
     <string name="gram_name">g</string>
     <string name="kilogram_name">kg</string>
-    <string name="litre_name">l</string>
-    <string name="millilitre_name">ml</string>
+    <string name="liter_name">l</string>
+    <string name="milliliter_name">ml</string>
+
+    <string name="gram_fulname">Gram</string>
+    <string name="kilogram_fulname">Kilogram</string>
+    <string name="liter_fulname">Liter</string>
+    <string name="milliliter_fulname">Milliliter</string>
 
     <string name="recipe_info_tab">Info</string>
     <string name="recipe_tab_ingredients">Ingredients</string>
@@ -14,9 +20,21 @@
     <string name="recipe_tab_reviews">Reviews</string>
     <string name="own_reviews_lbl">Own Reviews</string>
 
+    <string name="top_publishers_lbl">Top publishers</string>
+    <string name="popular_recipes_lbl">Popular recipes</string>
+    <string name="recent_recipes_lbl">Recent recipes</string>
+
     <string name="one_column_name">One</string>
     <string name="two_column_name">Two</string>
     <string name="three_column_name">Three</string>
+
+    <string name="recipe_ordering_date">Date published</string>
+    <string name="recipe_ordering_rating">Rating</string>
+
+    <string name="small_page_size_name">Compact</string>
+    <string name="standard_page_size_name">Standard</string>
+    <string name="large_page_size_name">Large</string>
+    <string name="extra_large_page_size_name">Extra Large</string>
 
     <string name="reviews_sorting_all">All</string>
     <string name="reviews_sorting_negative">Negative only</string>
@@ -30,7 +48,7 @@
 <!--Other stuff-->
     <string name="error_info_title">Oops, something went wrong</string>
 
-
+    <string name="filters_lbl">Filters</string>
     <string name="go_to_reviews_label">All reviews</string>
     <string name="creator_recipes_count">Recipes: %1$s</string>
     <string name="step_order">Step %1$d</string>
@@ -41,8 +59,6 @@
     <string name="recipe_name_input">Recipe name</string>
     <string name="ingredient_name_input">Name</string>
     <string name="ingredient_amount_input">Amount</string>
-    <string name="save_changes_str">Confirm</string>
-    <string name="cancel_changes_str">Cancel</string>
     <string name="add_ingredient_str">Add ingredient</string>
     <string name="add_step_str">Add Step</string>
     <string name="add_txt">Add</string>
@@ -51,6 +67,7 @@
     <string name="review_configure_dialog_lbl">Rate &amp; Review</string>
     <string name="step_configure_dialog_header">Step Editing</string>
     <string name="go_to_login_str">Go to Login</string>
+    <string name="login_email_str">Login or email</string>
     <string name="login_enter_str">Login</string>
     <string name="password_enter_str">Password</string>
     <string name="password_repeat_str">Repeat Password</string>
@@ -61,6 +78,7 @@
     <string name="more_btn_text">More</string>
 
     <string name="creator_screen_header">Creators</string>
+    <string name="followers_screen_header">Followers</string>
     <string name="creator_page_header">Creator Info</string>
     <string name="profile_page_header">Profile</string>
     <string name="edit_info_lbl">Edit info</string>
@@ -71,7 +89,6 @@
     <string name="generate_lbl">Generate</string>
     <string name="email_address_lbl">Email address</string>
     <string name="change_email_address_lbl">Change Email</string>
-    <string name="settings_lbl">Settings</string>
     <string name="follow_button_txt">Follow</string>
     <string name="followers_count">Followers: %1$s</string>
     <string name="follows_count">Follows: %1$s</string>
@@ -79,15 +96,14 @@
     <string name="creator_about_me_input">About me</string>
     <string name="account_number_str">Account number: %1$s</string>
 
-    <string name="unauthorized_txt">Sign up</string>
+    <string name="unauthorized_txt">Sign in</string>
     <string name="sign_out_lbl">Sign out</string>
     <string name="recipes_page_title">Recipes</string>
+    <string name="home_page_title">Home</string>
     <string name="recipe_page_title">Recipe Info</string>
     <string name="own_recipes_page_title">Own recipes</string>
     <string name="favorites_page_title">Favorites</string>
-    <string name="basket_page_title">Basket</string>
     <string name="follows_page_title">Follows</string>
-    <string name="user_info_page_title">User Info</string>
     <string name="reload_page_btn_txt">Reload</string>
     <string name="confirm_txt">Confirm</string>
     <string name="cancel_txt">Cancel</string>
@@ -99,14 +115,17 @@
     <string name="confirm_logout_text">Confirm to log out?</string>
 
 <!--Error messages-->
+    <string name="illegal_data_format">Illegal data format</string>
     <string name="must_contain_least_numbers_error">Value must contain at least %1$d numbers</string>
     <string name="must_contain_specials_error">Value must contain specials</string>
     <string name="must_contain_least_letters_error">Value must contain at least %1$d letters</string>
     <string name="must_contain_uppercase">Value must contain upper case letters</string>
     <string name="must_contain_lowercase">Value must contain lower case letters</string>
     <string name="values_match_error">Values don`t match</string>
+    <string name="values_repeating_error">Values are repeating</string>
 
     <string name="email_not_confirmed_warning">Email hasn`t been confirmed yet</string>
+    <string name="email_format_error">This is not an email</string>
     <string name="recipe_is_creating">Recipe haven`t been created yet</string>
     <string name="new_recipes_message_title">New recipes</string>
     <string  name="empty_field_error">Do not leave this field empty</string>
@@ -115,17 +134,20 @@
     <string  name="incorrect_length_range_error">Value length must be in range %1$d…%2$d</string>
     <string  name="incorrect_length_least_error">Value length must be at least %1$d</string>
     <string  name="incorrect_words_least_error">Value must contain at least %1$d words</string>
-    <string name="new_recipes_message_text">Hey! %1$s have posted %2$d new recipes to look at. Have you seen them?!</string>
+    <string name="new_recipes_message_text" translatable="false">Hey! %1$s have posted %2$d new recipes to look at. Have you seen them?!</string>
     <string name="no_description">This recipe does not have any description</string>
     <string name="no_items">It seems that this creator haven`t published any recipe or cannot load them. Please, try again later.</string>
     <string name="no_reviews">It seems that no review have been published yet. Please, return later or try to reload the page.</string>
-    <string name="no_recipes">It seems that there isn`t at least any recipe within these searching conditions</string>
+    <string name="no_recipes">It seems that there isn`t any recipe within these searching conditions</string>
     <string name="no_recipe">Cannot find recipe</string>
+    <string name="no_creators">Oops, cannot found creators suitable for requested filters. Please, try again later.</string>
+    <string name="recipe_not_found">Cannot find information about recipe id</string>
     <string name="filters_load_error">Cannot load requested filters</string>
     <string name="no_userID">Cannot load this creator. Please try reload the page.</string>
     <string name="unknown_error_txt">Unknown error. Try to reload the page.</string>
     <string name="no_such_route">An error occurred while trying to visit this page. Please, check if you chose age correctly and try again later.</string>
     <string name="no_saved_filters">No filters applied</string>
+    <string name="no_ingredients">It seems this recipe does not have any ingredient yet.</string>
     <string name="reviews_load_error">Oops. Could not load reviews. Please, return later or try to reload the page.</string>
     <string name="token_expired">Authentication token has expired. Try to login again</string>
 </resources>

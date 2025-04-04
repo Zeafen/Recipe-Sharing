@@ -7,7 +7,6 @@ data class ProfileRequest(
     val userID : String,
     val nickname : String,
     val login : String,
-    val password : String,
     val aboutMe : String,
     val imageUrl : String,
     val email : String,

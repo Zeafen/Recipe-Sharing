@@ -1,5 +1,6 @@
 package com.receipts.receipt_sharing.ui.dialogs
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -29,21 +30,29 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.core.text.isDigitsOnly
 import com.receipts.receipt_sharing.R
 import com.receipts.receipt_sharing.domain.recipes.Step
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
 import okhttp3.internal.toLongOrDefault
 
+/**
+ * Composes email editing dialog
+ * @param step initial step value
+ * @param onSaveChanges called when user click on "Confirm" button
+ * @param onDismissRequest called when user tries to dismiss dialog
+ */
 @Composable
 fun StepConfigureDialog(
-    onDismissRequest : () -> Unit,
-    onSaveChanges : (Step) -> Unit,
-    step : Step = Step("", 0)
+    onDismissRequest: () -> Unit,
+    onSaveChanges: (Step) -> Unit,
+    step: Step = Step("", 0)
 ) {
     Dialog(onDismissRequest = onDismissRequest) {
         var stepState by remember {
@@ -52,72 +61,116 @@ fun StepConfigureDialog(
         var duration by rememberSaveable {
             mutableStateOf(step.duration.toString())
         }
+        val isError = remember(duration) {
+            duration.length !in 1..5 || !duration.isDigitsOnly() || duration.toLongOrDefault(0) <= 0
+        }
 
         Column(
             modifier = Modifier
-                .background(MaterialTheme.colorScheme.secondaryContainer)
+                .background(MaterialTheme.colorScheme.surfaceVariant)
                 .clip(RoundedCornerShape(16.dp)),
         ) {
-            Text(modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 8.dp)
-                .drawWithContent {
-                    drawContent()
-                    val contentSize = drawContext.size
-                    drawLine(
-                        brush = Brush.linearGradient(
-                            listOf(
-                                Color.DarkGray,
-                                Color.LightGray
-                            )
-                        ),
-                        start = Offset(0f, 0f),
-                        end = Offset(contentSize.width, 0f),
-                        strokeWidth = 5f
-                    )
-                    drawLine(
-                        brush = Brush.linearGradient(
-                            listOf(
-                                Color.DarkGray,
-                                Color.LightGray
-                            )
-                        ),
-                        start = Offset(0f, contentSize.height),
-                        end = Offset(contentSize.width, contentSize.height),
-                        strokeWidth = 5f
-                    )
-                },
+            Text(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 8.dp)
+                    .drawWithContent {
+                        drawContent()
+                        val contentSize = drawContext.size
+                        drawLine(
+                            brush = Brush.linearGradient(
+                                listOf(
+                                    Color.DarkGray,
+                                    Color.LightGray
+                                )
+                            ),
+                            start = Offset(0f, 0f),
+                            end = Offset(contentSize.width, 0f),
+                            strokeWidth = 5f
+                        )
+                        drawLine(
+                            brush = Brush.linearGradient(
+                                listOf(
+                                    Color.DarkGray,
+                                    Color.LightGray
+                                )
+                            ),
+                            start = Offset(0f, contentSize.height),
+                            end = Offset(contentSize.width, contentSize.height),
+                            strokeWidth = 5f
+                        )
+                    },
                 style = MaterialTheme.typography.headlineMedium,
                 textAlign = TextAlign.Center,
-                text = stringResource(id = R.string.step_configure_dialog_header))
-            OutlinedTextField(modifier = Modifier
-                .padding(vertical = 8.dp, horizontal = 12.dp),
+                text = stringResource(id = R.string.step_configure_dialog_header)
+            )
+            OutlinedTextField(
+                modifier = Modifier
+                    .padding(vertical = 8.dp, horizontal = 12.dp),
                 label = { Text(text = stringResource(R.string.step_description_str)) },
                 value = stepState.description,
-                onValueChange = { stepState = stepState.copy(description = it) },
-                singleLine = true
-                )
+                isError = stepState.description.isEmpty(),
+                supportingText = {
+                    AnimatedVisibility(stepState.description.isEmpty()) {
+                        Text(
+                            text = stringResource(R.string.empty_field_error),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.W400,
+                            color = MaterialTheme.colorScheme.error
+                        )
 
-            OutlinedTextField(modifier = Modifier
-                .padding(8.dp),
+                    }
+                },
+                maxLines = 2,
+                onValueChange = { stepState = stepState.copy(description = it) },
+            )
+
+            OutlinedTextField(
+                modifier = Modifier
+                    .padding(8.dp),
                 label = { Text(text = stringResource(R.string.step_duration_str)) },
-                keyboardOptions = KeyboardOptions(keyboardType =  KeyboardType.Number),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 value = duration,
                 onValueChange = { duration = it },
-                isError = duration.isEmpty() || duration.length >= 5)
-            Row(modifier = Modifier
-                .fillMaxWidth(),
+                isError = isError,
+                supportingText = {
+                    AnimatedVisibility(isError) {
+                        Text(
+                            text = when {
+                                duration.isEmpty() -> stringResource(R.string.empty_field_error)
+
+                                duration.length > 5 -> stringResource(
+                                    R.string.incorrect_length_range_error,
+                                    1,
+                                    5
+                                )
+
+                                else -> {
+                                    stringResource(R.string.illegal_data_format)
+                                }
+                            },
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.W400,
+                            color = MaterialTheme.colorScheme.error
+                        )
+
+                    }
+                })
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Button(modifier = Modifier
-                    .padding(horizontal = 8.dp, vertical = 12.dp)
+                    .padding(horizontal = 4.dp, vertical = 12.dp)
                     .weight(1f),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.secondary,
                         contentColor = MaterialTheme.colorScheme.onSecondary
                     ),
                     shape = RoundedCornerShape(16.dp),
+                    enabled = stepState.description.isNotEmpty() && !isError,
                     onClick = {
                         onSaveChanges(
                             stepState.copy(
@@ -125,20 +178,26 @@ fun StepConfigureDialog(
                             )
                         )
                     }) {
-                    Text(style = MaterialTheme.typography.titleSmall,
-                        text = stringResource(id = R.string.save_changes_str))
+                    Text(
+                        style = MaterialTheme.typography.titleSmall,
+                        text = stringResource(id = R.string.confirm_txt)
+                    )
                 }
-                Button(modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = 8.dp, vertical = 12.dp),
+                Button(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 4.dp, vertical = 12.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor   = MaterialTheme.colorScheme.error,
+                        containerColor = MaterialTheme.colorScheme.error,
                         contentColor = MaterialTheme.colorScheme.onError
                     ),
                     shape = RoundedCornerShape(16.dp),
-                    onClick = onDismissRequest) {
-                    Text(style = MaterialTheme.typography.titleSmall,
-                        text = stringResource(id = R.string.cancel_changes_str))
+                    onClick = onDismissRequest
+                ) {
+                    Text(
+                        style = MaterialTheme.typography.titleSmall,
+                        text = stringResource(id = R.string.cancel_txt)
+                    )
                 }
             }
         }
@@ -161,8 +220,8 @@ private fun Preview() {
                     onDismissRequest = { /*TODO*/ },
                     onSaveChanges = {},
                     step = Step(
-                        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam posuere, lorem sed tempor pulvinar, augue purus consequat mauris, ut pharetra urna ipsum vitae odio. Phasellus et urna lobortis, rhoncus nulla nec, tincidunt diam. Aenean a lorem purus. Curabitur lacinia tellus diam, vitae tincidunt urna ultricies pretium. Vestibulum ut turpis nec erat feugiat porttitor. Nulla facilisi. Donec a convallis leo. Nullam laoreet condimentum hendrerit. Quisque sit amet feugiat lectus, at iaculis massa. Suspendisse nec ipsum vitae velit finibus iaculis non eu enim. Donec suscipit, odio vitae euismod tincidunt, leo turpis ultrices diam, imperdiet interdum dui nulla vitae lacus. Nullam posuere lorem nulla, id accumsan urna malesuada quis. Donec sit amet ante eget diam finibus finibus. Aliquam molestie quis ligula dignissim sagittis.",
-                        1
+                        "lkl",
+                        12345
                     )
                 )
             }

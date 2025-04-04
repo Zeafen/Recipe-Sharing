@@ -1,11 +1,12 @@
 package com.receipts.receipt_sharing.DI
 
-import IRecipesRepository
+import RecipesRepository
 import android.content.Context
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.google.gson.GsonBuilder
+import com.receipts.receipt_sharing.data.helpers.UnsafeOkHttpClient
 import com.receipts.receipt_sharing.data.repositoriesImpl.AuthDataStoreRepository
 import com.receipts.receipt_sharing.data.repositoriesImpl.AuthRepositoryImpl
 import com.receipts.receipt_sharing.data.repositoriesImpl.CreatorsRepositoryImpl
@@ -13,49 +14,29 @@ import com.receipts.receipt_sharing.data.repositoriesImpl.FiltersRepositoryImpl
 import com.receipts.receipt_sharing.data.repositoriesImpl.RecipesRepositoryImpl
 import com.receipts.receipt_sharing.data.repositoriesImpl.ReviewsRepositoryImpl
 import com.receipts.receipt_sharing.domain.apiServices.RecipesAPIService
-import com.receipts.receipt_sharing.domain.apiServices.UnsafeOkHttpClient
-import com.receipts.receipt_sharing.domain.repositories.IAuthRepository
-import com.receipts.receipt_sharing.domain.repositories.ICreatorsRepository
-import com.receipts.receipt_sharing.domain.repositories.IFiltersRepository
-import com.receipts.receipt_sharing.domain.repositories.IReviewsRepository
+import com.receipts.receipt_sharing.domain.repositories.AuthRepository
+import com.receipts.receipt_sharing.domain.repositories.CreatorsRepository
+import com.receipts.receipt_sharing.domain.repositories.FiltersRepository
+import com.receipts.receipt_sharing.domain.repositories.ReviewsRepository
 import com.receipts.receipt_sharing.presentation.auth.AuthViewModel
-import com.receipts.receipt_sharing.presentation.creators.CreatorPageViewModel
-import com.receipts.receipt_sharing.presentation.creators.CreatorsScreenViewModel
-import com.receipts.receipt_sharing.presentation.creators.ProfileViewModel
-import com.receipts.receipt_sharing.presentation.recipes.RecipePageViewModel
-import com.receipts.receipt_sharing.presentation.recipes.RecipesScreenViewModel
-import com.receipts.receipt_sharing.presentation.reviews.ReviewPageViewModel
-import com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenViewModel
+import com.receipts.receipt_sharing.presentation.creators.creatorPage.CreatorPageViewModel
+import com.receipts.receipt_sharing.presentation.creators.creatorsScreen.CreatorsScreenViewModel
+import com.receipts.receipt_sharing.presentation.creators.profile.ProfileViewModel
+import com.receipts.receipt_sharing.presentation.home.HomePageViewModel
+import com.receipts.receipt_sharing.presentation.recipes.recipePage.RecipePageViewModel
+import com.receipts.receipt_sharing.presentation.recipes.recipesScreen.RecipesScreenViewModel
+import com.receipts.receipt_sharing.presentation.reviews.reviewPage.ReviewPageViewModel
+import com.receipts.receipt_sharing.presentation.reviews.reviewsScreen.ReviewsScreenViewModel
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.converter.scalars.ScalarsConverterFactory
 
-interface IAppModule {
-    val BASE_URL: String
-    val apiService: RecipesAPIService
-    val recipesRepo: IRecipesRepository
-    val authDataStoreRepo: AuthDataStoreRepository
-    val authRepo: IAuthRepository
-    val creatorsRepo: ICreatorsRepository
-    val filtersRepo: IFiltersRepository
-    val reviewsRepo: IReviewsRepository
-
-    val authVMFactory: ViewModelProvider.Factory
-    val creatorsScreenVMFactory: ViewModelProvider.Factory
-    val creatorPageVMFactory: ViewModelProvider.Factory
-    val profilePageVMFactory : ViewModelProvider.Factory
-    val recipesScreenVMFactory: ViewModelProvider.Factory
-    val recipePageVMFactory: ViewModelProvider.Factory
-    val reviewsVMFactory : ViewModelProvider.Factory
-    val reviewsScreenVMFactory : ViewModelProvider.Factory
-    val reviewPageVMFactory : ViewModelProvider.Factory
-}
 
 class ManualAppModule(
     private val applicationContext: Context
-) : IAppModule {
+) : AppModule {
     override val BASE_URL: String
-        get() = ""
+        get() = "https://192.168.148.103:7129/"
 
     override val apiService: RecipesAPIService
         get() {
@@ -72,23 +53,24 @@ class ManualAppModule(
                 .create(RecipesAPIService::class.java)
         }
 
-    override val recipesRepo: IRecipesRepository by lazy {
+    override val recipesRepo: RecipesRepository by lazy {
         RecipesRepositoryImpl(apiService)
     }
     override val authDataStoreRepo: AuthDataStoreRepository
         get() = AuthDataStoreRepository.get()
-    override val authRepo: IAuthRepository by lazy {
+    override val authRepo: AuthRepository by lazy {
         AuthRepositoryImpl(apiService)
     }
-    override val creatorsRepo: ICreatorsRepository by lazy {
+    override val creatorsRepo: CreatorsRepository by lazy {
         CreatorsRepositoryImpl(apiService)
     }
-    override val filtersRepo: IFiltersRepository by lazy {
+    override val filtersRepo: FiltersRepository by lazy {
         FiltersRepositoryImpl(apiService)
     }
-    override val reviewsRepo: IReviewsRepository by lazy {
+    override val reviewsRepo: ReviewsRepository by lazy {
         ReviewsRepositoryImpl(apiService)
     }
+
 
 
 
@@ -106,6 +88,15 @@ class ManualAppModule(
             }
         }
     }
+
+    override val homePageVMFactory: ViewModelProvider.Factory by lazy {
+        viewModelFactory {
+            initializer {
+                HomePageViewModel(recipesRepo, creatorsRepo)
+            }
+        }
+    }
+
     override val creatorsScreenVMFactory: ViewModelProvider.Factory by lazy {
         viewModelFactory {
             initializer {
@@ -144,7 +135,7 @@ class ManualAppModule(
     override val reviewPageVMFactory: ViewModelProvider.Factory by lazy {
         viewModelFactory {
             initializer {
-                ReviewPageViewModel(creatorsRepo, recipesRepo, reviewsRepo)
+                ReviewPageViewModel(recipesRepo, reviewsRepo)
             }
         }
     }
@@ -155,5 +146,4 @@ class ManualAppModule(
             }
         }
     }
-
 }

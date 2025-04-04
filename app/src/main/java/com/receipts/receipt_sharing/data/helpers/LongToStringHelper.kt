@@ -2,7 +2,9 @@ package com.receipts.receipt_sharing.data.helpers
 
 import java.util.Locale
 
-
+/**
+ * Converts Long value to an Alphanumeric string
+ */
 fun Long.toAmountString(): String {
     return when (this.toString().length) {
         in 1..3 -> this.toString()

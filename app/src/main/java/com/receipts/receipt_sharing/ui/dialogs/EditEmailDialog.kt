@@ -23,6 +23,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
@@ -39,6 +40,16 @@ import androidx.compose.ui.window.Dialog
 import com.receipts.receipt_sharing.R
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
 
+/**
+ * Composes email editing dialog
+ * @param email email address value
+ * @param onEnterEmail called when user enters email address
+ * @param emailCode email confirmation code value
+ * @param onEnterCode called when user enters new confirmation code
+ * @param onGenerateCodeClick called when user clicks on "Generate code" button
+ * @param onConfirmClick called when user clicks on "Confirm" button
+ * @param onDismissRequest called when user tries to dismiss dialog
+ */
 @Composable
 fun EditEmailDialog(
     email: String,
@@ -49,12 +60,15 @@ fun EditEmailDialog(
     onDismissRequest: () -> Unit,
     onConfirmClick: () -> Unit
 ) {
+    val emailOk = remember(email){
+        email.matches(Regex("[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}", RegexOption.IGNORE_CASE))
+    }
     Dialog(
         onDismissRequest = onDismissRequest
     ) {
         Column(
             modifier = Modifier
-                .background(MaterialTheme.colorScheme.secondaryContainer)
+                .background(MaterialTheme.colorScheme.surfaceVariant)
         ) {
             Text(
                 modifier = Modifier
@@ -101,9 +115,10 @@ fun EditEmailDialog(
                         contentDescription = null
                     )
                 },
-                isError = email.isEmpty(),
+                singleLine = true,
+                isError = !emailOk,
                 supportingText = {
-                    AnimatedVisibility(visible = email.isEmpty(),
+                    AnimatedVisibility(visible = !emailOk,
                         enter = slideInVertically(spring(stiffness = Spring.StiffnessMediumLow)) { -it } + fadeIn(
                             spring(stiffness = Spring.StiffnessLow)
                         ),
@@ -112,7 +127,7 @@ fun EditEmailDialog(
                         )
                     ) {
                         Text(
-                            text = stringResource(R.string.empty_field_error),
+                            text = stringResource(R.string.email_format_error),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.W400,
                             color = MaterialTheme.colorScheme.error
@@ -122,7 +137,7 @@ fun EditEmailDialog(
                 label = {
                     Text(
                         text = stringResource(
-                            R.string.email_code_lbl
+                            R.string.email_address_lbl
                         )
                     )
                 }
@@ -185,7 +200,7 @@ fun EditEmailDialog(
             ) {
                 Button(
                     modifier = Modifier
-                        .padding(horizontal = 8.dp, vertical = 12.dp)
+                        .padding(horizontal = 4.dp, vertical = 12.dp)
                         .weight(1f),
                     colors = buttonColors(
                         containerColor = MaterialTheme.colorScheme.secondary,
@@ -197,13 +212,13 @@ fun EditEmailDialog(
                 ) {
                     Text(
                         style = MaterialTheme.typography.titleSmall,
-                        text = stringResource(id = R.string.save_changes_str)
+                        text = stringResource(id = R.string.confirm_txt)
                     )
                 }
                 Button(
                     modifier = Modifier
                         .weight(1f)
-                        .padding(horizontal = 8.dp, vertical = 12.dp),
+                        .padding(horizontal = 4.dp, vertical = 12.dp),
                     colors = buttonColors(
                         containerColor = MaterialTheme.colorScheme.error,
                         contentColor = MaterialTheme.colorScheme.onError
@@ -213,7 +228,7 @@ fun EditEmailDialog(
                 ) {
                     Text(
                         style = MaterialTheme.typography.titleSmall,
-                        text = stringResource(id = R.string.cancel_changes_str)
+                        text = stringResource(id = R.string.cancel_txt)
                     )
                 }
             }

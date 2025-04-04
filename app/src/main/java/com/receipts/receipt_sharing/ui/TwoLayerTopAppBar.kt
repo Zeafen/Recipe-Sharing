@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LocalContentColor
@@ -17,12 +19,22 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.unit.dp
 import kotlin.math.max
 import kotlin.math.roundToInt
 
+/**
+ * Composes scalable two-layer app bar
+ * @param modifier Modifier applied to TwoLayerTopAppBar
+ * @param title title content
+ * @param additionalContent Under title content
+ * @param actions action icons content
+ * @param navigationIcon navigation icon content
+ * @param colors top app bar colors
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TwoLayerTopAppBar(
@@ -31,7 +43,8 @@ fun TwoLayerTopAppBar(
     additionalContent: (@Composable () -> Unit)? = null,
     actions: (@Composable RowScope.() -> Unit)? = null,
     navigationIcon: (@Composable () -> Unit)? = null,
-    colors: TopAppBarColors = TopAppBarDefaults.topAppBarColors()
+    colors: TopAppBarColors = TopAppBarDefaults.topAppBarColors(),
+    windowInsets : WindowInsets = TopAppBarDefaults.windowInsets
 ) {
     Surface {
         Layout(
@@ -93,6 +106,9 @@ fun TwoLayerTopAppBar(
 
             },
             modifier = modifier
+                .windowInsetsPadding(windowInsets)
+                // clip after padding so we don't show the title over the inset area
+                .clipToBounds()
                 .background(colors.containerColor)
         ) { measurables, constraints ->
             val navigationIconPlaceable =

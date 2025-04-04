@@ -27,6 +27,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
@@ -52,18 +53,29 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.receipts.receipt_sharing.R
-import com.receipts.receipt_sharing.domain.apiServices.UnsafeImageLoader
-import com.receipts.receipt_sharing.domain.response.RecipeResult
+import com.receipts.receipt_sharing.data.helpers.UnsafeImageLoader
+import com.receipts.receipt_sharing.domain.response.ApiResult
 import com.receipts.receipt_sharing.domain.reviews.ReviewModel
-import com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent
-import com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenState
+import com.receipts.receipt_sharing.presentation.reviews.reviewsScreen.ReviewsScreenEvent
+import com.receipts.receipt_sharing.presentation.reviews.reviewsScreen.ReviewsScreenState
+import com.receipts.receipt_sharing.ui.PageSelectionRow
 import com.receipts.receipt_sharing.ui.effects.shimmerEffect
 import com.receipts.receipt_sharing.ui.infoPages.ErrorInfoPage
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
+import java.util.Locale
 
+/**
+ * Composes reviews screen
+ * @param modifier Modifier applied to ReviewsScreen
+ * @param state state object user to control layout
+ * @param onEditClick called when user clicks on "Edit" button on own review card
+ * @param onEvent called when user interacts with ui
+ * @param onGoBack called when user clicks on "Back" navigation button
+ * @param onReloadPage called when user tries to reload screen
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun     ReviewsScreen(
+fun ReviewsScreen(
     modifier: Modifier = Modifier,
     state: ReviewsScreenState,
     onEvent: (ReviewsScreenEvent) -> Unit,
@@ -74,7 +86,14 @@ fun     ReviewsScreen(
     val refreshState = rememberPullToRefreshState()
     Scaffold(modifier = modifier,
         topBar = {
-            TopAppBar(
+            TopAppBar(modifier = Modifier
+                .clip(RoundedCornerShape(bottomStartPercent = 40, bottomEndPercent = 40)),
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    actionIconContentColor = MaterialTheme.colorScheme.secondary,
+                    navigationIconContentColor = MaterialTheme.colorScheme.secondary
+                ),
                 navigationIcon = {
                     IconButton(onClick = onGoBack) {
                         Icon(
@@ -131,7 +150,13 @@ fun     ReviewsScreen(
                         Text(
                             modifier = Modifier
                                 .alpha(0.5f),
-                            text = "4,5",
+                            text = state.reviews.data?.let {
+                                String.format(
+                                    Locale.getDefault(),
+                                    "%.1f",
+                                    (it.sumOf { review -> review.rating }.toFloat() / it.size)
+                                )
+                            } ?: "0f",
                             style = MaterialTheme.typography.bodyLarge,
                             letterSpacing = TextUnit(0.15f, TextUnitType.Em),
                             fontWeight = FontWeight.W400,
@@ -146,7 +171,7 @@ fun     ReviewsScreen(
             modifier = Modifier
                 .padding(innerPadding),
             state = refreshState,
-            isRefreshing = state.reviews is RecipeResult.Downloading,
+            isRefreshing = state.reviews is ApiResult.Downloading,
             onRefresh = onReloadPage
         ) {
             if (state.openConfirmDeleteDialog && state.ownReview.data != null)
@@ -186,7 +211,7 @@ fun     ReviewsScreen(
                             shape = CircleShape
                         ) {
                             Text(
-                                text = stringResource(R.string.cancel_changes_str),
+                                text = stringResource(R.string.cancel_txt),
                                 textAlign = TextAlign.Center,
                                 style = MaterialTheme.typography.titleLarge,
                                 letterSpacing = TextUnit(
@@ -238,7 +263,7 @@ fun     ReviewsScreen(
 
             LazyColumn {
                 when (state.ownReview) {
-                    is RecipeResult.Downloading -> item {
+                    is ApiResult.Downloading -> item {
                         Column(
                             modifier = Modifier
                                 .padding(vertical = 8.dp, horizontal = 4.dp)
@@ -282,8 +307,8 @@ fun     ReviewsScreen(
                         }
                     }
 
-                    is RecipeResult.Error -> {}
-                    is RecipeResult.Succeed ->
+                    is ApiResult.Error -> {}
+                    is ApiResult.Succeed ->
                         state.ownReview.data?.let {
                             item {
                                 Text(
@@ -302,7 +327,7 @@ fun     ReviewsScreen(
                                 )
                             }
                             item {
-                                ReviewCell(
+                                ReviewCard(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(8.dp),
@@ -346,6 +371,7 @@ fun     ReviewsScreen(
                                     modifier = Modifier
                                         .size(32.dp),
                                     painter = painterResource(id = R.drawable.filter_ic),
+                                    tint = MaterialTheme.colorScheme.secondary,
                                     contentDescription = ""
                                 )
                             }
@@ -367,7 +393,8 @@ fun     ReviewsScreen(
                                     modifier = Modifier
                                         .size(32.dp),
                                     painter = painterResource(id = R.drawable.order_ic),
-                                    contentDescription = ""
+                                    contentDescription = "",
+                                    tint = MaterialTheme.colorScheme.secondary
                                 )
                             }
                             androidx.compose.animation.AnimatedVisibility(state.openOrderingBox) {
@@ -376,7 +403,7 @@ fun     ReviewsScreen(
                                     selectedOrder = state.selectedOrdering,
                                     isAscending = state.isAscending,
                                     onDismissRequest = { onEvent(ReviewsScreenEvent.CloseDialogs) },
-                                    onSelectSorting = {
+                                    onSelectOrdering = {
                                         onEvent(
                                             ReviewsScreenEvent.SetOrdering(
                                                 it
@@ -388,7 +415,7 @@ fun     ReviewsScreen(
                     }
                 }
                 when (state.reviews) {
-                    is RecipeResult.Downloading -> items(5) {
+                    is ApiResult.Downloading -> items(5) {
                         Column(
                             modifier = Modifier
                                 .padding(vertical = 8.dp, horizontal = 4.dp)
@@ -414,13 +441,13 @@ fun     ReviewsScreen(
                                 modifier = Modifier
                                     .height(128.dp)
                                     .fillMaxWidth()
-                                    .padding(vertical = 9.dp, horizontal = 8.dp)
+                                    .padding(vertical = 12.dp, horizontal = 8.dp)
                                     .shimmerEffect(),
                             )
                         }
                     }
 
-                    is RecipeResult.Error -> item {
+                    is ApiResult.Error -> item {
                         ErrorInfoPage(
                             errorInfo = state.reviews.info
                                 ?: stringResource(id = R.string.unknown_error_txt),
@@ -428,13 +455,30 @@ fun     ReviewsScreen(
                         )
                     }
 
-                    is RecipeResult.Succeed -> state.reviews.data?.let { reviews ->
-                        items(reviews) {
-                            ReviewCell(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 8.dp, horizontal = 4.dp),
-                                review = it
+                    is ApiResult.Succeed -> {
+                        state.reviews.data?.let { reviews ->
+                            items(reviews) {
+                                ReviewCard(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 8.dp, horizontal = 12.dp),
+                                    review = it
+                                )
+                            }
+                        }
+                        item {
+                            PageSelectionRow(modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp),
+                                totalPages = state.totalPages,
+                                currentPage = state.currentPage,
+                                onPageClick = {
+                                    onEvent(
+                                        ReviewsScreenEvent.SetCurrentPage(
+                                            it
+                                        )
+                                    )
+                                }
                             )
                         }
                     }
@@ -452,12 +496,12 @@ private fun Preview() {
         mutableStateOf(
             ReviewsScreenState(
                 recipeName = "kask;lsadjaksdjasdjlsajdlsakjdlksajdlsadjlksadjlksadjlsakdj",
-                ownReview = RecipeResult.Succeed(
+                ownReview = ApiResult.Succeed(
                     ReviewModel(
                         "", "User name", "", "some text", 3
                     )
                 ),
-                reviews = RecipeResult.Succeed(
+                reviews = ApiResult.Succeed(
                     listOf(
                         ReviewModel(
                             "", "User name", "", "some text", 3

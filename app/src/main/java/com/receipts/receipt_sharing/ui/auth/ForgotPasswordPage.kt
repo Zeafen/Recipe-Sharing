@@ -1,5 +1,6 @@
 package com.receipts.receipt_sharing.ui.auth
 
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -23,7 +24,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -38,6 +41,14 @@ import com.receipts.receipt_sharing.presentation.auth.AuthEvent
 import com.receipts.receipt_sharing.presentation.auth.AuthPageState
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
 
+
+/**
+ * Composes password changing screen
+ * @param state the state object user to control screen layout
+ * @param modifier Modifier applied to the ForgotPasswordPage
+ * @param onEvent called when user interacts with ui elements
+ * @param onGoBackClick called when user click back button
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ForgotPasswordPage(
@@ -46,14 +57,25 @@ fun ForgotPasswordPage(
     onEvent: (AuthEvent) -> Unit,
     onGoBackClick: () -> Unit
 ) {
+    val context = LocalContext.current
+    LaunchedEffect(state.infoMessage) {
+        if (!state.infoMessage.isNullOrEmpty()) {
+            Toast.makeText(
+                context,
+                state.infoMessage,
+                Toast.LENGTH_SHORT
+            ).show()
+            onEvent(AuthEvent.ClearMessage)
+        }
+    }
     Scaffold(modifier = modifier,
         topBar = {
             TopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                    actionIconContentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    actionIconContentColor = MaterialTheme.colorScheme.secondary,
+                    navigationIconContentColor = MaterialTheme.colorScheme.secondary
                 ),
                 navigationIcon = {
                     IconButton(onClick = onGoBackClick) {
@@ -66,8 +88,9 @@ fun ForgotPasswordPage(
                             .padding(horizontal = 8.dp)
                             .fillMaxWidth(),
                         text = stringResource(id = R.string.change_password_lbl),
+                        style = MaterialTheme.typography.headlineMedium,
+                        maxLines = 2,
                         textAlign = TextAlign.Start,
-                        style = MaterialTheme.typography.headlineLarge
                     )
                 })
         }
@@ -83,14 +106,14 @@ fun ForgotPasswordPage(
                 value = state.email,
                 maxLines = 1,
                 singleLine = true,
-                onValueChange = { onEvent(AuthEvent.SetEmailCode(it)) },
+                onValueChange = { onEvent(AuthEvent.SetEmail(it)) },
                 leadingIcon = {
                     Icon(
                         painter = painterResource(R.drawable.email_ic),
                         contentDescription = null
                     )
                 },
-                isError = state.emailCode.isEmpty(),
+                isError = !state.emailOk,
                 supportingText = {
                     AnimatedVisibility(visible = state.email.isEmpty(),
                         enter = slideInVertically(spring(stiffness = Spring.StiffnessMediumLow)) { -it } + fadeIn(
@@ -101,7 +124,7 @@ fun ForgotPasswordPage(
                         )
                     ) {
                         Text(
-                            text = stringResource(R.string.empty_field_error),
+                            text = stringResource(R.string.email_format_error),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.W400,
                             color = MaterialTheme.colorScheme.error
@@ -255,6 +278,7 @@ fun ForgotPasswordPage(
                 maxLines = 1,
                 singleLine = true,
                 value = state.repeatPassword,
+                visualTransformation = PasswordVisualTransformation('*'),
                 onValueChange = { onEvent(AuthEvent.SetRepeatPassword(it)) },
                 leadingIcon = {
                     Icon(
@@ -292,9 +316,9 @@ fun ForgotPasswordPage(
             Button(modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = 24.dp, end = 24.dp, top = 12.dp),
-                enabled = state.passwordOK && state.passwordsMatch && state.email.isNotEmpty() && state.emailCode.isNotEmpty(),
+                enabled = state.passwordOK && state.passwordsMatch && state.emailOk && state.emailCode.isNotEmpty(),
                 shape = RoundedCornerShape(16.dp),
-                onClick = { onEvent(AuthEvent.ConfirmLogin) }) {
+                onClick = { onEvent(AuthEvent.ResetPassword) }) {
                 Text(text = stringResource(R.string.change_password_lbl))
             }
         }

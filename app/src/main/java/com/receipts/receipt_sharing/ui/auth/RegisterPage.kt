@@ -7,7 +7,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -49,68 +48,87 @@ import com.receipts.receipt_sharing.presentation.auth.AuthEvent
 import com.receipts.receipt_sharing.presentation.auth.AuthPageState
 import com.receipts.receipt_sharing.ui.infoPages.ErrorInfoPage
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
-
+/**
+ * Composes registration screen
+ * @param state the state object user to control screen layout
+ * @param modifier Modifier applied to the RegisterScreen
+ * @param onEvent called when user interacts with ui elements
+ * @param onOpenMenu called when user click menu button
+ * @param onAuthorizationFinished called when user finishes authorization
+ * @param onGotoLogin called when user clicks on "Authorize" button
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(
     modifier: Modifier = Modifier,
-    onGotoLogin : () -> Unit,
-    state : AuthPageState,
+    onGotoLogin: () -> Unit,
+    state: AuthPageState,
     onEvent: (AuthEvent) -> Unit,
-    onOpenMenu : () -> Unit,
-    onAuthorizationFinished : () -> Unit
+    onOpenMenu: () -> Unit,
+    onAuthorizationFinished: () -> Unit
 ) {
     Scaffold(
         modifier = modifier,
         topBar = {
-            TopAppBar(colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                titleContentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                navigationIconContentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                actionIconContentColor = MaterialTheme.colorScheme.onSecondaryContainer),
+            TopAppBar(
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    actionIconContentColor = MaterialTheme.colorScheme.secondary,
+                    navigationIconContentColor = MaterialTheme.colorScheme.secondary
+                ),
                 navigationIcon = {
                     IconButton(onClick = onOpenMenu) {
                         Icon(Icons.Default.Menu, contentDescription = "")
                     }
                 },
                 title = {
-                    Text(modifier = Modifier
-                        .padding(horizontal = 8.dp)
-                        .fillMaxWidth(),
+                    Text(
+                        modifier = Modifier
+                            .padding(horizontal = 8.dp)
+                            .fillMaxWidth(),
                         text = stringResource(id = R.string.register_page_header),
+                        style = MaterialTheme.typography.headlineMedium,
+                        maxLines = 2,
                         textAlign = TextAlign.Start,
-                        style = MaterialTheme.typography.headlineLarge)
+                    )
                 })
         }
     ) {
-        when(state.result){
+        when (state.result) {
             is AuthResult.Authorized -> {
                 onAuthorizationFinished()
             }
-            is AuthResult.Error -> ErrorInfoPage(modifier = Modifier
-                .padding(it),
-                errorInfo = state.result.data?: stringResource(id = R.string.unknown_error_txt)) {
+
+            is AuthResult.Error -> ErrorInfoPage(
+                modifier = Modifier
+                    .padding(it),
+                errorInfo = state.result.info ?: stringResource(id = R.string.unknown_error_txt)
+            ) {
                 onEvent(AuthEvent.ClearData)
             }
+
             is AuthResult.Loading -> {
-                Column(modifier = Modifier
-                    .padding(it)
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.surface),
+                Column(
+                    modifier = Modifier
+                        .padding(it)
+                        .fillMaxSize(),
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    CircularProgressIndicator(modifier = Modifier
-                        .size(84.dp),
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .size(84.dp),
                         strokeWidth = 8.dp
                     )
                 }
             }
+
             is AuthResult.Unauthorized -> {
-                Column(modifier = Modifier
-                    .padding(it)
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.surface),
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(it),
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -120,7 +138,6 @@ fun RegisterScreen(
                         maxLines = 1,
                         singleLine = true,
                         value = state.login,
-                        visualTransformation = if (!state.showPassword) PasswordVisualTransformation('*') else VisualTransformation.None,
                         onValueChange = { onEvent(AuthEvent.SetLogin(it)) },
                         leadingIcon = {
                             Icon(
@@ -128,7 +145,7 @@ fun RegisterScreen(
                                 contentDescription = null
                             )
                         },
-                        isError = state.login.isEmpty(),
+                        isError = state.login.isEmpty() || state.login.length < 10,
                         supportingText = {
                             AnimatedVisibility(visible = state.login.isEmpty(),
                                 enter = slideInVertically(spring(stiffness = Spring.StiffnessMediumLow)) { -it } + fadeIn(
@@ -139,7 +156,14 @@ fun RegisterScreen(
                                 )
                             ) {
                                 Text(
-                                    text = stringResource(R.string.empty_field_error),
+                                    text = when {
+                                        state.login.isEmpty() -> stringResource(R.string.empty_field_error)
+                                        state.login.length < 10 -> stringResource(
+                                            R.string.incorrect_length_least_error,
+                                            10
+                                        )
+                                        else -> stringResource(R.string.illegal_data_format)
+                                    },
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.W400,
                                     color = MaterialTheme.colorScheme.error
@@ -159,8 +183,49 @@ fun RegisterScreen(
                         .padding(vertical = 16.dp, horizontal = 12.dp),
                         maxLines = 1,
                         singleLine = true,
+                        value = state.email,
+                        onValueChange = { onEvent(AuthEvent.SetEmail(it)) },
+                        leadingIcon = {
+                            Icon(
+                                painter = painterResource(R.drawable.email_ic),
+                                contentDescription = null
+                            )
+                        },
+                        isError = !state.emailOk,
+                        supportingText = {
+                            AnimatedVisibility(visible = state.login.isEmpty(),
+                                enter = slideInVertically(spring(stiffness = Spring.StiffnessMediumLow)) { -it } + fadeIn(
+                                    spring(stiffness = Spring.StiffnessLow)
+                                ),
+                                exit = slideOutVertically(spring(stiffness = Spring.StiffnessMediumLow)) { it } + fadeOut(
+                                    spring(stiffness = Spring.StiffnessLow)
+                                )
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.email_format_error),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.W400,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            }
+                        },
+                        label = {
+                            Text(
+                                text = stringResource(
+                                    R.string.email_address_lbl
+                                )
+                            )
+                        }
+                    )
+                    OutlinedTextField(modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp, horizontal = 12.dp),
+                        maxLines = 1,
+                        singleLine = true,
                         value = state.password,
-                        visualTransformation = if (!state.showPassword) PasswordVisualTransformation('*') else VisualTransformation.None,
+                        visualTransformation = if (!state.showPassword) PasswordVisualTransformation(
+                            '*'
+                        ) else VisualTransformation.None,
                         onValueChange = { onEvent(AuthEvent.SetPassword(it)) },
                         trailingIcon = {
                             IconButton(
@@ -279,18 +344,21 @@ fun RegisterScreen(
                     Button(modifier = Modifier
                         .fillMaxWidth()
                         .padding(start = 24.dp, end = 24.dp, top = 12.dp),
-                        enabled = state.passwordOK && state.passwordsMatch && state.login.isNotEmpty(),
+                        enabled = state.passwordOK && state.passwordsMatch && state.login.isNotEmpty() && state.emailOk,
                         shape = RoundedCornerShape(16.dp),
                         onClick = { onEvent(AuthEvent.ConfirmRegister) }) {
                         Text(text = stringResource(R.string.register_confirm_str))
                     }
-                    Text(modifier = Modifier
-                        .alpha(0.3f)
-                        .clickable {
-                            onGotoLogin()
-                        },
+                    Text(
+                        modifier = Modifier
+                            .alpha(0.5f)
+                            .clickable {
+                                onGotoLogin()
+                            },
                         text = stringResource(R.string.go_to_login_str),
-                        style = MaterialTheme.typography.titleMedium)
+                        color = MaterialTheme.colorScheme.secondary,
+                        style = MaterialTheme.typography.titleMedium
+                    )
                 }
             }
         }
@@ -304,8 +372,8 @@ private fun Preview() {
         Surface {
             RegisterScreen(onGotoLogin = { /*TODO*/ },
                 state = AuthPageState(
-                result = AuthResult.Unauthorized()
-            ),
+                    result = AuthResult.Unauthorized()
+                ),
                 onEvent = {},
                 onOpenMenu = {},
                 onAuthorizationFinished = {})

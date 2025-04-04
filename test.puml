@@ -1,0 +1,1175 @@
+@startuml
+interface com.receipts.receipt_sharing.domain.repositories.CreatorsRepository {
++ ApiResult<PagedResult<List<CreatorRequest>>> getCreators(String,Int,Int)
++ ApiResult<PagedResult<List<CreatorRequest>>> getTopCreators(String,Int,Int)
++ ApiResult<PagedResult<List<CreatorRequest>>> getCreatorsByName(String,String,Int,Int)
++ ApiResult<CreatorRequest> getCreatorById(String,String)
++ ApiResult<PagedResult<List<CreatorRequest>>> getOwnFollows(String,Int,Int)
++ ApiResult<PagedResult<List<CreatorRequest>>> getOwnFollowsByName(String,String,Int,Int)
++ ApiResult<Long> getOwnFollowsCount(String)
++ ApiResult<PagedResult<List<CreatorRequest>>> getOwnFollowers(String,Int,Int)
++ ApiResult<PagedResult<List<CreatorRequest>>> getOwnFollowersByName(String,String,Int,Int)
++ ApiResult<Long> getOwnFollowersCount(String)
++ ApiResult<PagedResult<List<CreatorRequest>>> getCreatorFollowers(String,String,Int,Int)
++ ApiResult<PagedResult<List<CreatorRequest>>> getCreatorFollowersByName(String,String,String,Int,Int)
++ ApiResult<Long> getCreatorFollowersCount(String,String)
++ ApiResult<PagedResult<List<CreatorRequest>>> getCreatorFollows(String,String,Int,Int)
++ ApiResult<PagedResult<List<CreatorRequest>>> getCreatorFollowsByName(String,String,String,Int,Int)
++ ApiResult<Long> getCreatorFollowsCount(String,String)
++ ApiResult<Long> getCreatorRecipesCount(String,String)
++ ApiResult<Unit> addToFollows(String,String)
++ ApiResult<Unit> removeFromFollows(String,String)
++ ApiResult<Boolean> doesFollow(String,String)
++ ApiResult<Unit> setEmail(String,String)
++ ApiResult<Unit> setEmailGetCode(String,String)
++ ApiResult<Unit> getCode(String)
++ ApiResult<Unit> confirmEmail(String,EmailConfirmRequest)
++ ApiResult<Unit> updateCreator(String,ProfileRequest)
++ ApiResult<Unit> updatePassword(String,ChangePasswRequest)
++ ApiResult<ProfileRequest> getUserInfo(String)
+}
+
+class com.receipts.receipt_sharing.ui.effects.SelectionLineStyle {
+}
+class com.receipts.receipt_sharing.ui.effects.Default {
+}
+class com.receipts.receipt_sharing.ui.effects.SelectionItem {
++  isSelected
+}
+
+class com.receipts.receipt_sharing.ui.effects.SwipeableSelectionState$Companion {
++  Saver
+}
+
+class com.receipts.receipt_sharing.ui.effects.SwipeableSelectionState {
++  lastSelectedIndex
+}
+
+class com.receipts.receipt_sharing.presentation.recipes.RecipesLoadedDataType$OwnDataRecipes {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipesLoadedDataType$CreatorRecipes {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipesLoadedDataType$Favorites {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipesLoadedDataType$Similar {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipesLoadedDataType$All {
+}
+interface com.receipts.receipt_sharing.presentation.recipes.RecipesLoadedDataType {
+}
+class com.receipts.receipt_sharing.ui.recipe.null {
+}
+enum com.receipts.receipt_sharing.presentation.PageSizes {
+}
+class com.receipts.receipt_sharing.presentation.RecipeNavigationItem {
+}
+class com.receipts.receipt_sharing.presentation.MainActivity {
++ void onCreate(Bundle?)
+}
+
+class com.receipts.receipt_sharing.data.helpers.PasswordChecker {
+- Int _minLength
+- Int _lettersLeastCount
+- Int _numbersLeastCount
+- Boolean _hasSpecials
+- Boolean _hasUpperCase
+- Boolean _hasLowerCase
++ Int MinLength
++ Int LettersLeastCount
++ Int NumbersLeastCount
++ Boolean HasSpecials
++ Boolean HasUpperCase
++ Boolean HasLowerCase
++ Boolean checkPassword(String)
++ void define(Int,Int,Int,Boolean,Boolean,Boolean)
+}
+
+
+interface com.receipts.receipt_sharing.domain.repositories.FiltersRepository {
++ void getCategories(void,String)
++ void getFiltersByCategory(void,String,void,String)
++ void getCategorizedFilters(void,String)
++ void getFiltersByRecipe(void,String,void,String)
++ void attachFiltersToRecipe(void,String,void,String,void,List<String>)
++ void removeFiltersFromRecipe(void,String,void,String,void,List<String>)
++ ApiResult<Unit> clearRecipeFilters(void,String,void,String,void)
+}
+
+class com.receipts.RecipesApplication$Companion {
++ IAppModule appModule
+}
+
+class com.receipts.RecipesApplication {
++ void onCreate()
+- void initializeMessageChannel()
+}
+
+class com.receipts.receipt_sharing.domain.filters.RecipeFilteringRequest {
+}
+class com.receipts.receipt_sharing.ui.recipe.shared.null {
+}
+class com.receipts.receipt_sharing.ui.recipe.shared.null {
+}
+class com.receipts.receipt_sharing.ui.recipe.shared.null {
+}
+class com.receipts.receipt_sharing.domain.response.ApiResult$Succeed {
+}
+class com.receipts.receipt_sharing.domain.response.ApiResult$Downloading {
+}
+class com.receipts.receipt_sharing.domain.response.ApiResult$Error {
+}
+class com.receipts.receipt_sharing.domain.response.ApiResult {
+}
+class com.receipts.receipt_sharing.presentation.auth.AuthPageState {
+}
+class com.receipts.receipt_sharing.data.repositoriesImpl.PreferencesConsts {
++  AUTH_PREFERENCE_NAME
++  CREATORS_PREFERENCE_NAME
+}
+
+class com.receipts.receipt_sharing.data.repositoriesImpl.AuthDataStoreRepository {
+}
+class com.receipts.receipt_sharing.data.repositoriesImpl.null {
+- AuthDataStoreRepository? instance
++ void createInstance(void,Context)
++ void null()
++ AuthDataStoreRepository get()
+}
+
+
+class NavigationRoutes$Auth$AuthFolder {
+}
+class NavigationRoutes$Auth$RegisterPage {
+}
+class NavigationRoutes$Auth$AuthorizePage {
+}
+class NavigationRoutes$Auth$TryAuthorizePage {
+}
+class NavigationRoutes$Auth$ForgotPasswordPage {
+}
+interface NavigationRoutes$Auth {
+}
+class NavigationRoutes$Creators$CreatorsFolder {
+}
+class NavigationRoutes$Creators$CreatorsScreen {
+}
+class NavigationRoutes$Creators$FollowsScreen {
+}
+class NavigationRoutes$Creators$FollowersScreen {
+}
+class NavigationRoutes$Creators$ProfilePage {
+}
+class NavigationRoutes$Creators$CreatorPage {
+}
+interface NavigationRoutes$Creators {
+}
+class NavigationRoutes$Recipes$HomePage {
+}
+class NavigationRoutes$Recipes$RecipesFolder {
+}
+class NavigationRoutes$Recipes$FavoritesPage {
+}
+class NavigationRoutes$Recipes$RecipesScreen {
+}
+class NavigationRoutes$Recipes$OwnRecipesScreen {
+}
+class NavigationRoutes$Recipes$CreatorRecipesScreen {
+}
+class NavigationRoutes$Recipes$RecipePage {
+}
+class NavigationRoutes$Recipes$ReviewsScreen {
+}
+class NavigationRoutes$Recipes$ReviewPage {
+}
+interface NavigationRoutes$Recipes {
+}
+interface NavigationRoutes {
+}
+interface com.receipts.receipt_sharing.domain.apiServices.RecipesAPIService {
++ void signIn(void)
++ void signUp(void)
++ void authorize(void)
++ void sendCode(void)
++ void updatePassword(void)
++ void uploadRecipeImage(void)
++ void uploadCreatorImage(void)
++ void getFavorites(void)
++ void getFavoritesByName(void)
++ void getFilteredFavorites(void)
++ void getFilteredFavoritesByName(void)
++ void getIsFavorite(void)
++ void addToFavorites(void)
++ void removeFromFavorites(void)
++ void getOwn(void)
++ void getOwnRecipes(void)
++ void getOwnRecipesByName(void)
++ void getFilteredOwnRecipes(void)
++ void getFilteredOwnRecipesByName(void)
++ void getFilteredRecipes(void)
++ void getFilteredRecipesByName(void)
++ void getRecipes(void)
++ void getRecipeByID(void)
++ void getRecipesByCreator(void)
++ void getTopRecipesByCreator(void)
++ void getRecipesCountByCreator(void)
++ void getRecipesByCreatorByName(void)
++ void getFilteredRecipesByCreator(void)
++ void getFilteredRecipesByCreatorByName(void)
++ void getRecipesByName(void)
++ void postRecipe(void)
++ void deleteRecipe(void)
++ void updateRecipe(void)
++ void setEmail(void)
++ void setEmailGetCode(void)
++ void getCode(void)
++ void confirmEmail(void)
++ void getCreators(void)
++ void getTopCreators(void)
++ void getCreatorById(void)
++ void updateCreator(void)
++ void updatePassword(void)
++ void getCreatorsByName(void)
++ void getUserInfo(void)
++ void getFollows(void)
++ void getFollowsByName(void)
++ void getFollowsCount(void)
++ void getFollowers(void)
++ void getFollowersByName(void)
++ void getFollowersCount(void)
++ void getCreatorFollows(void)
++ void getCreatorFollowsByName(void)
++ void getCreatorFollowsCount(void)
++ void getCreatorFollowers(void)
++ void getCreatorFollowersByName(void)
++ void getCreatorFollowersCount(void)
++ void addToFollows(void)
++ void removeFromFollows(void)
++ void doesFollow(void)
++ void getCategories(void)
++ void getFiltersByCategory(void)
++ void getCategorizedFilters(void)
++ void getFiltersByRecipe(void)
++ void attachFiltersToRecipe(void)
++ void removeFiltersFromRecipe(void)
++ void clearRecipeFilters(void)
++ void getReviewsByRecipe(void)
++ void getTopReviewsByRecipe(void)
++ void getOrderedReviewsByRecipe(void)
++ void getOwnReviewsByRecipe(void)
++ void getReviewsCountByRecipe(void)
++ void getRecipeRating(void)
++ void getPositiveReviewsByRecipe(void)
++ void getOrderedNegReviewsByRecipe(void)
++ void getNegativeReviewsByRecipe(void)
++ void getOrderedPosReviewsByRecipe(void)
++ void getReviewByID(void)
++ void getIsOwnReview(void)
++ void postReview(void)
++ void updateReview(void)
++ void deleteReview(void)
+}
+
+class com.receipts.receipt_sharing.data.helpers.FileHelper$Companion {
+- FileHelper? _instance
++ FileHelper get()
++ void createInstance(Context)
+}
+
+
+class com.receipts.receipt_sharing.data.helpers.FileHelper {
++ String? getFileFromUri(Uri?)
+}
+
+class com.receipts.receipt_sharing.presentation.creators.CreatorsScreenState {
+}
+class com.receipts.receipt_sharing.data.repositoriesImpl.RecipesRepositoryImpl {
++ ApiResult<String> uploadRecipeImage(String,File)
++ ApiResult<String> uploadCreatorImage(String,File)
++ void getRecipes(void,String,void,Int,void,Int)
++ void null()
++ void getOwnRecipes(void,String,void,Int,void,Int)
++ void null()
++ void getFilteredOwnRecipes(void,String,void,RecipeFilteringRequest,void,Int,void,Int)
++ void null()
++ void getOwnRecipesByName(void,String,void,String,void,Int,void,Int)
++ void null()
++ void getFilteredOwnRecipesByName(void,String,void,String,void,RecipeFilteringRequest,void,Int,void,Int)
++ void null()
++ ApiResult<Boolean> isRecipeOwn(String,String)
++ ApiResult<Recipe> getRecipeByID(String,String)
++ void getRecipesByCreator(void,String,void,String,void,Int,void,Int)
++ void null()
++ void getRecipesByCreatorByName(void,String,void,String,void,String,void,Int,void,Int)
++ void null()
++ void getFilteredRecipesByCreator(void,String,void,String,void,RecipeFilteringRequest,void,Int,void,Int)
++ void null()
++ void getFilteredRecipesByCreatorByName(void,String,void,String,void,String,void,RecipeFilteringRequest,void,Int,void,Int)
++ void null()
++ void getTopRecipesByCreator(void,String,void,String,void,Int)
++ void null()
++ void getRecipesByName(void,String,void,String,void,Int,void,Int)
++ void null()
++ void getFavoritesByName(void,String,void,String,void,Int,void,Int)
++ void null()
++ void getFilteredRecipes(void,String,void,RecipeFilteringRequest,void,Int,void,Int)
++ void null()
++ void getFilteredRecipesByName(void,String,void,RecipeFilteringRequest,void,String,void,Int,void,Int)
++ void null()
++ ApiResult<String> postRecipe(String,Recipe)
++ ApiResult<Unit> deleteRecipe(String,String)
++ ApiResult<Unit> updateRecipe(String,Recipe)
++ void getFavorites(void,String,void,Int,void,Int)
++ void null()
++ void getFilteredFavorites(void,String,void,RecipeFilteringRequest,void,Int,void,Int)
++ void null()
++ void getFilteredFavoritesByName(void,String,void,String,void,RecipeFilteringRequest,void,Int,void,Int)
++ void null()
++ void isRecipeInFavorites(void,String,void,String)
++ void null()
++ ApiResult<Unit> addToFavorites(String,String)
++ void removeFromFavorites(void,String,void,String)
++ void null()
+}
+
+enum com.receipts.receipt_sharing.presentation.recipes.RecipeTab {
+}
+class com.receipts.receipt_sharing.data.dataStore.UserInfo {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipePageViewModel {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$LoadRecipe {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$LoadAllFilters {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$EditRecord {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$DiscardChanges {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$DeleteRecipe {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$SetRecipeName {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$SetRecipeDescription {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$ChangeIsFavorite {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$InitializeRecipe {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$SetFilters {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$AddIngredient {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$UpdateIngredient {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$RemoveIngredient {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$SetSelectedIngredient {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$SetImageUrl {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$AddStep {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$RemoveStep {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$UpdateStep {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$SetSelectedStep {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$SaveChanges {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$SetOpenIngredientConfigDialog {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$SetOpenStepConfigDialog {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$SetOpenFiltersPage {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$OpenConfirmDeleteDialog {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$CloseDialogs {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$SetSelectedRecipeTabIndex {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$SetIsError {
+}
+interface com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent {
+}
+class com.receipts.receipt_sharing.domain.creators.ProfileRequest {
+}
+class com.receipts.receipt_sharing.domain.apiServices.UnsafeImageLoader$Companion {
+- ImageLoader? _imageLoader
++ void initialize(Context)
++ ImageLoader getInstance()
+}
+
+
+class com.receipts.receipt_sharing.domain.apiServices.UnsafeImageLoader {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipePageState {
+}
+class com.receipts.receipt_sharing.data.repositoriesImpl.AuthRepositoryImpl {
+}
+class com.receipts.receipt_sharing.presentation.creators.ProfilePageState {
+}
+class com.receipts.receipt_sharing.domain.recipes.Recipe {
+}
+class com.receipts.receipt_sharing.domain.response.AuthResult$Authorized {
+}
+class com.receipts.receipt_sharing.domain.response.AuthResult$Unauthorized {
+}
+class com.receipts.receipt_sharing.domain.response.AuthResult$Loading {
+}
+class com.receipts.receipt_sharing.domain.response.AuthResult$Error {
+}
+class com.receipts.receipt_sharing.domain.response.AuthResult {
+}
+class com.receipts.receipt_sharing.domain.recipes.Ingredient {
+}
+enum com.receipts.receipt_sharing.domain.recipes.Measure {
+}
+class com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenViewModel {
+-  authDataStoreRepo
+- MutableStateFlow<ApiResult<List<ReviewModel>>> _reviews
+- MutableStateFlow<ApiResult<ReviewModel>> _ownReviews
+- MutableStateFlow<ReviewsScreenState> _state
++ StateFlow<ReviewsScreenState> state
++ void null()
++ void onEvent(ReviewsScreenEvent)
+}
+
+
+interface com.receipts.receipt_sharing.domain.repositories.AuthRepository {
++ AuthResult<String> register(String,String,String)
++ AuthResult<String> logIn(String,String)
++ ApiResult<Unit> sendCode(String)
++ ApiResult<Unit> updatePassword(ChangePasswRequest)
++ AuthResult<String> authorize(String)
+}
+
+class com.receipts.receipt_sharing.presentation.reviews.ReviewPageViewModel {
+-  authDataStoreRepo
+- MutableStateFlow<ApiResult<ReviewModel>> _review
+- MutableStateFlow<ReviewPageState> _state
++ StateFlow<ReviewPageState> state
++ void onEvent(ReviewPageEvent)
+}
+
+
+class com.receipts.receipt_sharing.domain.apiServices.UnsafeOkHttpClient$Companion {
++ OkHttpClient getOkHttpClient()
+}
+
+class com.receipts.receipt_sharing.domain.apiServices.UnsafeOkHttpClient {
+}
+class com.receipts.receipt_sharing.domain.creators.ChangePasswRequest {
+}
+interface com.receipts.receipt_sharing.DI.IAppModule {
++ String BASE_URL
++ RecipesAPIService apiService
++ RecipesRepository recipesRepo
++ AuthDataStoreRepository authDataStoreRepo
++ AuthRepository authRepo
++ CreatorsRepository creatorsRepo
++ FiltersRepository filtersRepo
++ ReviewsRepository reviewsRepo
++ ViewModelProvider.Factory authVMFactory
++ ViewModelProvider.Factory homePageVMFactory
++ ViewModelProvider.Factory creatorsScreenVMFactory
++ ViewModelProvider.Factory creatorPageVMFactory
++ ViewModelProvider.Factory profilePageVMFactory
++ ViewModelProvider.Factory recipesScreenVMFactory
++ ViewModelProvider.Factory recipePageVMFactory
++ ViewModelProvider.Factory reviewsVMFactory
++ ViewModelProvider.Factory reviewsScreenVMFactory
++ ViewModelProvider.Factory reviewPageVMFactory
+}
+
+class com.receipts.receipt_sharing.DI.ManualAppModule {
+}
+class com.receipts.receipt_sharing.data.repositoriesImpl.CreatorsRepositoryImpl {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipesScreenViewModel {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent$LoadData {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent$SetOpenFiltersPage {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent$SetLoadDataType {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent$SetSearchName {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent$SetCellsAmount {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent$SetFilters {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent$SetIngredients {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent$SetOrdering {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent$LoadFilters {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent$SetExpandFiltersTab {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent$SetOpenSelectColumnMenu {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent$SetOpenSelectOrderingMenu {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent$SetOpenSearch {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent$SetCurrentPage {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent$SetPageSize {
+}
+interface com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent {
+}
+class com.receipts.receipt_sharing.presentation.StarShape {
++ void createOutline(void,Size,void,LayoutDirection,void,Density)
++ void null()
+}
+
+class com.receipts.receipt_sharing.ui.filters.SelectionCategory {
+}
+class com.receipts.receipt_sharing.presentation.creators.CreatorLoadDataType$All {
+}
+class com.receipts.receipt_sharing.presentation.creators.CreatorLoadDataType$Follows {
+}
+class com.receipts.receipt_sharing.presentation.creators.CreatorLoadDataType$Followers {
+}
+interface com.receipts.receipt_sharing.presentation.creators.CreatorLoadDataType {
+}
+class com.receipts.receipt_sharing.data.repositoriesImpl.FiltersRepositoryImpl {
+}
+class com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenState {
+}
+class com.receipts.receipt_sharing.domain.filters.OrderingRequest {
+}
+enum com.receipts.receipt_sharing.presentation.RecipeSharedElementType {
+}
+class com.receipts.receipt_sharing.presentation.RecipeSharedElementKey {
+}
+class com.receipts.receipt_sharing.domain.request.AuthRequest {
+}
+class com.receipts.receipt_sharing.domain.creators.EmailConfirmRequest {
+}
+class com.receipts.receipt_sharing.presentation.auth.AuthViewModel {
+-  authDataStoreRepo
+-  _result
+-  _state
++  state
++ void onEvent(AuthEvent)
+}
+
+
+class com.receipts.receipt_sharing.presentation.auth.AuthEvent$SetLogin {
+}
+class com.receipts.receipt_sharing.presentation.auth.AuthEvent$SetEmail {
+}
+class com.receipts.receipt_sharing.presentation.auth.AuthEvent$SetEmailCode {
+}
+class com.receipts.receipt_sharing.presentation.auth.AuthEvent$SetPassword {
+}
+class com.receipts.receipt_sharing.presentation.auth.AuthEvent$SetRepeatPassword {
+}
+class com.receipts.receipt_sharing.presentation.auth.AuthEvent$SetShowPassword {
+}
+class com.receipts.receipt_sharing.presentation.auth.AuthEvent$ConfirmLogin {
+}
+class com.receipts.receipt_sharing.presentation.auth.AuthEvent$ConfirmRegister {
+}
+class com.receipts.receipt_sharing.presentation.auth.AuthEvent$Authorize {
+}
+class com.receipts.receipt_sharing.presentation.auth.AuthEvent$SendCode {
+}
+class com.receipts.receipt_sharing.presentation.auth.AuthEvent$ResetPassword {
+}
+class com.receipts.receipt_sharing.presentation.auth.AuthEvent$ClearData {
+}
+class com.receipts.receipt_sharing.presentation.auth.AuthEvent$ClearMessage {
+}
+interface com.receipts.receipt_sharing.presentation.auth.AuthEvent {
+}
+class com.receipts.receipt_sharing.presentation.reviews.ReviewPageEvent$LoadReviewByRecipe {
+}
+class com.receipts.receipt_sharing.presentation.reviews.ReviewPageEvent$LoadReview {
+}
+class com.receipts.receipt_sharing.presentation.reviews.ReviewPageEvent$SetReviewText {
+}
+class com.receipts.receipt_sharing.presentation.reviews.ReviewPageEvent$SetReviewRating {
+}
+class com.receipts.receipt_sharing.presentation.reviews.ReviewPageEvent$ConfirmChanges {
+}
+interface com.receipts.receipt_sharing.presentation.reviews.ReviewPageEvent {
+}
+enum com.receipts.receipt_sharing.domain.filters.RecipeOrdering {
+}
+class com.receipts.receipt_sharing.domain.recipes.Step {
+}
+class com.receipts.receipt_sharing.domain.reviews.ReviewModel {
+}
+interface com.receipts.receipt_sharing.domain.repositories.ReviewsRepository {
++ ApiResult<PagedResult<List<RecipeReview>>> getReviewsByRecipe(String,String,Int,Int)
++ ApiResult<List<RecipeReview>> getTopReviewsByRecipe(String,String)
++ ApiResult<PagedResult<List<RecipeReview>>> getOrderedReviewsByRecipe(String,String,OrderRequest,Int,Int)
++ ApiResult<RecipeReview> getOwnReviewByRecipe(String,String)
++ ApiResult<Long> getReviewsCountByRecipe(String,String)
++ ApiResult<Double> getRecipeRating(String,String)
++ ApiResult<PagedResult<List<RecipeReview>>> getPosReviewsByRecipe(String,String,Int,Int)
++ ApiResult<PagedResult<List<RecipeReview>>> getOrderedPosReviewsByRecipe(String,String,OrderRequest,Int,Int)
++ ApiResult<PagedResult<List<RecipeReview>>> getNegReviewsByRecipe(String,String,Int,Int)
++ ApiResult<PagedResult<List<RecipeReview>>> getOrderedNegReviewsByRecipe(String,String,OrderRequest,Int,Int)
++ ApiResult<RecipeReview> getReviewByID(String,String)
++ ApiResult<Boolean> getIsOwnReview(String,String)
++ ApiResult<Unit> postReview(String,RecipeReview)
++ ApiResult<Unit> updateReview(String,RecipeReview)
++ ApiResult<Unit> deleteReview(String,String)
+}
+
+class com.receipts.receipt_sharing.domain.apiServices.PagedResult {
+}
+class com.receipts.receipt_sharing.presentation.home.HomePageEvent$LoadData {
+}
+class com.receipts.receipt_sharing.presentation.home.HomePageEvent$LoadPublishers {
+}
+class com.receipts.receipt_sharing.presentation.home.HomePageEvent$LoadPopulars {
+}
+class com.receipts.receipt_sharing.presentation.home.HomePageEvent$LoadRecents {
+}
+interface com.receipts.receipt_sharing.presentation.home.HomePageEvent {
+}
+class com.receipts.receipt_sharing.domain.filters.FilterRequest {
+}
+enum com.receipts.receipt_sharing.presentation.creators.ProfileConfigScreens {
+}
+class com.receipts.receipt_sharing.data.dataStore.UserInfoSerializer {
++ UserInfo defaultValue
++ UserInfo readFrom(InputStream)
++ void writeTo(UserInfo,OutputStream)
+}
+
+
+class com.receipts.receipt_sharing.presentation.home.HomePageViewModel {
+}
+enum com.receipts.receipt_sharing.presentation.reviews.ReviewsSorting {
+}
+enum com.receipts.receipt_sharing.presentation.reviews.ReviewsOrdering {
+}
+class com.receipts.receipt_sharing.presentation.reviews.ReviewPageState {
+}
+class com.receipts.receipt_sharing.presentation.creators.CreatorsScreenViewModel {
+-  authDataStore
+-  _creators
+-  _state
++  state
++ void onEvent(CreatorsScreenEvent)
+}
+
+
+class com.receipts.receipt_sharing.presentation.creators.CreatorsScreenEvent$LoadData {
+}
+class com.receipts.receipt_sharing.presentation.creators.CreatorsScreenEvent$SetLoadDataType {
+}
+class com.receipts.receipt_sharing.presentation.creators.CreatorsScreenEvent$SetSearchName {
+}
+class com.receipts.receipt_sharing.presentation.creators.CreatorsScreenEvent$SetOpenSearchString {
+}
+class com.receipts.receipt_sharing.presentation.creators.CreatorsScreenEvent$SetOpenSelectCellsAmountDialog {
+}
+class com.receipts.receipt_sharing.presentation.creators.CreatorsScreenEvent$SetCellsAmount {
+}
+class com.receipts.receipt_sharing.presentation.creators.CreatorsScreenEvent$SetCurrentPage {
+}
+interface com.receipts.receipt_sharing.presentation.creators.CreatorsScreenEvent {
+}
+class com.receipts.receipt_sharing.presentation.home.HomePageState {
+}
+class com.receipts.receipt_sharing.domain.creators.CreatorRequest {
+}
+class com.receipts.receipt_sharing.presentation.creators.ProfileViewModel {
+}
+class com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$LoadUserInfo {
+}
+class com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$UpdateUserState {
+}
+class com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$SetCreatorName {
+}
+class com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$SetCreatorLogin {
+}
+class com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$SetCreatorAboutMe {
+}
+class com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$SetImageUrl {
+}
+class com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$SetCurrentScreen {
+}
+class com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$SetOpenConfirmExitDialog {
+}
+class com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$SetOpenEditEmailDialog {
+}
+class com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$SaveInfoChanges {
+}
+class com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$ConfirmChangePassword {
+}
+class com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$DiscardChanges {
+}
+class com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$LogOut {
+}
+class com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$GetEmailCode {
+}
+class com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$GetCode {
+}
+class com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$SetEmailGetCode {
+}
+class com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$ChangeEmail {
+}
+class com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$ClearInfo {
+}
+class com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$SetPassword {
+}
+class com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$SetShowPassword {
+}
+class com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$SetRepeatPassword {
+}
+class com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$SetEmailCode {
+}
+class com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$SetEmail {
+}
+interface com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent {
+}
+class com.receipts.receipt_sharing.presentation.recipes.RecipesScreenState {
+}
+enum com.receipts.receipt_sharing.presentation.recipes.CellsAmount {
+}
+class com.receipts.receipt_sharing.presentation.creators.CreatorPageViewModel {
+-  authDataStoreRepo
+-  _creator
+-  _recipes
+-  _state
++  state
++ void onEvent(CreatorPageEvent)
+}
+
+
+class com.receipts.receipt_sharing.presentation.creators.CreatorPageEvent$LoadCreator {
+}
+class com.receipts.receipt_sharing.presentation.creators.CreatorPageEvent$ChangeFollows {
+}
+class com.receipts.receipt_sharing.presentation.creators.CreatorPageEvent$ReloadRecipes {
+}
+class com.receipts.receipt_sharing.presentation.creators.CreatorPageEvent$SetExpandAboutMe {
+}
+interface com.receipts.receipt_sharing.presentation.creators.CreatorPageEvent {
+}
+class com.receipts.receipt_sharing.domain.reviews.RecipeReview {
+}
+class com.receipts.receipt_sharing.domain.reviews.OrderRequest {
+}
+class com.receipts.receipt_sharing.data.repositoriesImpl.ReviewsRepositoryImpl {
+}
+class com.receipts.receipt_sharing.data.dataStore.CreatorsMapSerializer {
++ HashMap<String, Int> defaultValue
++ Map<String, Int> readFrom(InputStream)
++ void writeTo(Map<String, Int>,OutputStream)
+}
+
+
+interface RecipesRepository {
++ ApiResult<String> uploadRecipeImage(String,File)
++ ApiResult<String> uploadCreatorImage(String,File)
++ ApiResult<PagedResult<List<Recipe>>> getRecipes(String,Int,Int)
++ ApiResult<PagedResult<List<Recipe>>> getOwnRecipes(String,Int,Int)
++ ApiResult<PagedResult<List<Recipe>>> getOwnRecipesByName(String,String,Int,Int)
++ ApiResult<PagedResult<List<Recipe>>> getFilteredOwnRecipes(String,RecipeFilteringRequest,Int,Int)
++ ApiResult<PagedResult<List<Recipe>>> getFilteredOwnRecipesByName(String,String,RecipeFilteringRequest,Int,Int)
++ void getRecipeByID(void,String,void,String)
++ void getFilteredRecipes(void,String,void,RecipeFilteringRequest,void,Int,void,Int)
++ void getFilteredRecipesByName(void,String,void,RecipeFilteringRequest,void,String,void,Int,void,Int)
++ void getRecipesByCreator(void,String,void,String,void,Int,void,Int)
++ void getTopRecipesByCreator(void,String,void,String,void,Int)
++ void getRecipesByCreatorByName(void,String,void,String,void,String,void,Int,void,Int)
++ void getFilteredRecipesByCreatorByName(void,String,void,String,void,String,void,RecipeFilteringRequest,void,Int,void,Int)
++ void getFilteredRecipesByCreator(void,String,void,String,void,RecipeFilteringRequest,void,Int,void,Int)
++ void getRecipesByName(void,String,void,String,void,Int,void,Int)
++ void getFavoritesByName(void,String,void,String,void,Int,void,Int)
++ void getFilteredFavorites(void,String,void,RecipeFilteringRequest,void,Int,void,Int)
++ void getFilteredFavoritesByName(void,String,void,String,void,RecipeFilteringRequest,void,Int,void,Int)
++ void postRecipe(void,String,void,Recipe)
++ void deleteRecipe(void,String,void,String)
++ void updateRecipe(void,String,void,Recipe)
++ void getFavorites(void,String,void,Int,void,Int)
++ void isRecipeInFavorites(void,String,void,String)
++ void isRecipeOwn(void,String,void,String)
++ void addToFavorites(void,String,void,String)
++ void removeFromFavorites(void,String,void,String)
+}
+
+class com.receipts.receipt_sharing.presentation.creators.CreatorPageState {
+}
+class com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent$LoadReviews {
+}
+class com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent$SetCurrentPage {
+}
+class com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent$SetPageSize {
+}
+class com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent$SetOrdering {
+}
+class com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent$SetSorting {
+}
+class com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent$SetOpenOrderingBox {
+}
+class com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent$SetOpenSortingBox {
+}
+class com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent$OpenConfirmDeleteDialog {
+}
+class com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent$ApplyFilters {
+}
+class com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent$ClearFilters {
+}
+class com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent$SetSelectedReview {
+}
+class com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent$DeleteReview {
+}
+class com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent$ClearMessage {
+}
+class com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent$CloseDialogs {
+}
+interface com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent {
+}
+class com.receipts.receipt_sharing.ui.theme.ColorFamily {
+}
+
+
+com.receipts.receipt_sharing.ui.effects.SelectionLineStyle <|-- com.receipts.receipt_sharing.ui.effects.Default
+com.receipts.receipt_sharing.ui.effects.SwipeableSelectionState +.. com.receipts.receipt_sharing.ui.effects.SwipeableSelectionState$Companion
+com.receipts.receipt_sharing.presentation.recipes.RecipesLoadedDataType +.. com.receipts.receipt_sharing.presentation.recipes.RecipesLoadedDataType$OwnDataRecipes
+com.receipts.receipt_sharing.presentation.recipes.RecipesLoadedDataType <|.. com.receipts.receipt_sharing.presentation.recipes.RecipesLoadedDataType$OwnDataRecipes
+com.receipts.receipt_sharing.presentation.recipes.RecipesLoadedDataType +.. com.receipts.receipt_sharing.presentation.recipes.RecipesLoadedDataType$CreatorRecipes
+com.receipts.receipt_sharing.presentation.recipes.RecipesLoadedDataType <|.. com.receipts.receipt_sharing.presentation.recipes.RecipesLoadedDataType$CreatorRecipes
+com.receipts.receipt_sharing.presentation.recipes.RecipesLoadedDataType +.. com.receipts.receipt_sharing.presentation.recipes.RecipesLoadedDataType$Favorites
+com.receipts.receipt_sharing.presentation.recipes.RecipesLoadedDataType <|.. com.receipts.receipt_sharing.presentation.recipes.RecipesLoadedDataType$Favorites
+com.receipts.receipt_sharing.presentation.recipes.RecipesLoadedDataType +.. com.receipts.receipt_sharing.presentation.recipes.RecipesLoadedDataType$Similar
+com.receipts.receipt_sharing.presentation.recipes.RecipesLoadedDataType <|.. com.receipts.receipt_sharing.presentation.recipes.RecipesLoadedDataType$Similar
+com.receipts.receipt_sharing.presentation.recipes.RecipesLoadedDataType +.. com.receipts.receipt_sharing.presentation.recipes.RecipesLoadedDataType$All
+com.receipts.receipt_sharing.presentation.recipes.RecipesLoadedDataType <|.. com.receipts.receipt_sharing.presentation.recipes.RecipesLoadedDataType$All
+androidx.activity.ComponentActivity <|-- com.receipts.receipt_sharing.presentation.MainActivity
+com.receipts.RecipesApplication +.. com.receipts.RecipesApplication$Companion
+android.app.Application <|-- com.receipts.RecipesApplication
+com.receipts.receipt_sharing.domain.response.ApiResult +.. com.receipts.receipt_sharing.domain.response.ApiResult$Succeed
+com.receipts.receipt_sharing.domain.response.ApiResult <|-- com.receipts.receipt_sharing.domain.response.ApiResult$Succeed
+com.receipts.receipt_sharing.domain.response.ApiResult +.. com.receipts.receipt_sharing.domain.response.ApiResult$Downloading
+com.receipts.receipt_sharing.domain.response.ApiResult <|-- com.receipts.receipt_sharing.domain.response.ApiResult$Downloading
+com.receipts.receipt_sharing.domain.response.ApiResult +.. com.receipts.receipt_sharing.domain.response.ApiResult$Error
+com.receipts.receipt_sharing.domain.response.ApiResult <|-- com.receipts.receipt_sharing.domain.response.ApiResult$Error
+Auth +.. Auth$AuthFolder
+NavigationRoutes$Auth +.. NavigationRoutes$Auth$AuthFolder
+Auth <|.. NavigationRoutes$Auth$AuthFolder
+Auth +.. Auth$RegisterPage
+NavigationRoutes$Auth +.. NavigationRoutes$Auth$RegisterPage
+Auth <|.. NavigationRoutes$Auth$RegisterPage
+Auth +.. Auth$AuthorizePage
+NavigationRoutes$Auth +.. NavigationRoutes$Auth$AuthorizePage
+Auth <|.. NavigationRoutes$Auth$AuthorizePage
+Auth +.. Auth$TryAuthorizePage
+NavigationRoutes$Auth +.. NavigationRoutes$Auth$TryAuthorizePage
+Auth <|.. NavigationRoutes$Auth$TryAuthorizePage
+Auth +.. Auth$ForgotPasswordPage
+NavigationRoutes$Auth +.. NavigationRoutes$Auth$ForgotPasswordPage
+Auth <|.. NavigationRoutes$Auth$ForgotPasswordPage
+NavigationRoutes +.. NavigationRoutes$Auth
+NavigationRoutes <|.. NavigationRoutes$Auth
+Creators +.. Creators$CreatorsFolder
+NavigationRoutes$Creators +.. NavigationRoutes$Creators$CreatorsFolder
+Creators <|.. NavigationRoutes$Creators$CreatorsFolder
+Creators +.. Creators$CreatorsScreen
+NavigationRoutes$Creators +.. NavigationRoutes$Creators$CreatorsScreen
+Creators <|.. NavigationRoutes$Creators$CreatorsScreen
+Creators +.. Creators$FollowsScreen
+NavigationRoutes$Creators +.. NavigationRoutes$Creators$FollowsScreen
+Creators <|.. NavigationRoutes$Creators$FollowsScreen
+Creators +.. Creators$FollowersScreen
+NavigationRoutes$Creators +.. NavigationRoutes$Creators$FollowersScreen
+Creators <|.. NavigationRoutes$Creators$FollowersScreen
+Creators +.. Creators$ProfilePage
+NavigationRoutes$Creators +.. NavigationRoutes$Creators$ProfilePage
+Creators <|.. NavigationRoutes$Creators$ProfilePage
+Creators +.. Creators$CreatorPage
+NavigationRoutes$Creators +.. NavigationRoutes$Creators$CreatorPage
+Creators <|.. NavigationRoutes$Creators$CreatorPage
+NavigationRoutes +.. NavigationRoutes$Creators
+NavigationRoutes <|.. NavigationRoutes$Creators
+Recipes +.. Recipes$HomePage
+NavigationRoutes$Recipes +.. NavigationRoutes$Recipes$HomePage
+Recipes <|.. NavigationRoutes$Recipes$HomePage
+Recipes +.. Recipes$RecipesFolder
+NavigationRoutes$Recipes +.. NavigationRoutes$Recipes$RecipesFolder
+Recipes <|.. NavigationRoutes$Recipes$RecipesFolder
+Recipes +.. Recipes$FavoritesPage
+NavigationRoutes$Recipes +.. NavigationRoutes$Recipes$FavoritesPage
+Recipes <|.. NavigationRoutes$Recipes$FavoritesPage
+Recipes +.. Recipes$RecipesScreen
+NavigationRoutes$Recipes +.. NavigationRoutes$Recipes$RecipesScreen
+Recipes <|.. NavigationRoutes$Recipes$RecipesScreen
+Recipes +.. Recipes$OwnRecipesScreen
+NavigationRoutes$Recipes +.. NavigationRoutes$Recipes$OwnRecipesScreen
+Recipes <|.. NavigationRoutes$Recipes$OwnRecipesScreen
+Recipes +.. Recipes$CreatorRecipesScreen
+NavigationRoutes$Recipes +.. NavigationRoutes$Recipes$CreatorRecipesScreen
+Recipes <|.. NavigationRoutes$Recipes$CreatorRecipesScreen
+Recipes +.. Recipes$RecipePage
+NavigationRoutes$Recipes +.. NavigationRoutes$Recipes$RecipePage
+Recipes <|.. NavigationRoutes$Recipes$RecipePage
+Recipes +.. Recipes$ReviewsScreen
+NavigationRoutes$Recipes +.. NavigationRoutes$Recipes$ReviewsScreen
+Recipes <|.. NavigationRoutes$Recipes$ReviewsScreen
+Recipes +.. Recipes$ReviewPage
+NavigationRoutes$Recipes +.. NavigationRoutes$Recipes$ReviewPage
+Recipes <|.. NavigationRoutes$Recipes$ReviewPage
+NavigationRoutes +.. NavigationRoutes$Recipes
+NavigationRoutes <|.. NavigationRoutes$Recipes
+com.receipts.receipt_sharing.data.helpers.FileHelper +.. com.receipts.receipt_sharing.data.helpers.FileHelper$Companion
+RecipesRepository <|.. com.receipts.receipt_sharing.data.repositoriesImpl.RecipesRepositoryImpl
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent +.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$LoadRecipe
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent <|.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$LoadRecipe
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent +.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$LoadAllFilters
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent <|.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$LoadAllFilters
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent +.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$EditRecord
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent <|.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$EditRecord
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent +.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$DiscardChanges
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent <|.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$DiscardChanges
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent +.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$DeleteRecipe
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent <|.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$DeleteRecipe
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent +.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$SetRecipeName
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent <|.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$SetRecipeName
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent +.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$SetRecipeDescription
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent <|.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$SetRecipeDescription
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent +.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$ChangeIsFavorite
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent <|.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$ChangeIsFavorite
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent +.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$InitializeRecipe
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent <|.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$InitializeRecipe
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent +.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$SetFilters
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent <|.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$SetFilters
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent +.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$AddIngredient
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent <|.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$AddIngredient
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent +.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$UpdateIngredient
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent <|.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$UpdateIngredient
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent +.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$RemoveIngredient
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent <|.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$RemoveIngredient
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent +.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$SetSelectedIngredient
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent +.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$SetImageUrl
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent <|.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$SetImageUrl
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent +.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$AddStep
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent <|.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$AddStep
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent +.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$RemoveStep
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent <|.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$RemoveStep
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent +.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$UpdateStep
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent <|.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$UpdateStep
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent +.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$SetSelectedStep
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent <|.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$SetSelectedStep
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent +.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$SaveChanges
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent <|.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$SaveChanges
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent +.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$SetOpenIngredientConfigDialog
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent <|.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$SetOpenIngredientConfigDialog
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent +.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$SetOpenStepConfigDialog
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent <|.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$SetOpenStepConfigDialog
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent +.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$SetOpenFiltersPage
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent <|.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$SetOpenFiltersPage
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent +.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$OpenConfirmDeleteDialog
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent <|.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$OpenConfirmDeleteDialog
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent +.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$CloseDialogs
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent <|.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$CloseDialogs
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent +.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$SetSelectedRecipeTabIndex
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent <|.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$SetSelectedRecipeTabIndex
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent +.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$SetIsError
+com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent <|.. com.receipts.receipt_sharing.presentation.recipes.RecipePageEvent$SetIsError
+com.receipts.receipt_sharing.domain.apiServices.UnsafeImageLoader +.. com.receipts.receipt_sharing.domain.apiServices.UnsafeImageLoader$Companion
+com.receipts.receipt_sharing.domain.response.AuthResult +.. com.receipts.receipt_sharing.domain.response.AuthResult$Authorized
+com.receipts.receipt_sharing.domain.response.AuthResult <|-- com.receipts.receipt_sharing.domain.response.AuthResult$Authorized
+com.receipts.receipt_sharing.domain.response.AuthResult +.. com.receipts.receipt_sharing.domain.response.AuthResult$Unauthorized
+com.receipts.receipt_sharing.domain.response.AuthResult <|-- com.receipts.receipt_sharing.domain.response.AuthResult$Unauthorized
+com.receipts.receipt_sharing.domain.response.AuthResult +.. com.receipts.receipt_sharing.domain.response.AuthResult$Loading
+com.receipts.receipt_sharing.domain.response.AuthResult <|-- com.receipts.receipt_sharing.domain.response.AuthResult$Loading
+com.receipts.receipt_sharing.domain.response.AuthResult +.. com.receipts.receipt_sharing.domain.response.AuthResult$Error
+com.receipts.receipt_sharing.domain.response.AuthResult <|-- com.receipts.receipt_sharing.domain.response.AuthResult$Error
+androidx.lifecycle.ViewModel <|-- com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenViewModel
+androidx.lifecycle.ViewModel <|-- com.receipts.receipt_sharing.presentation.reviews.ReviewPageViewModel
+com.receipts.receipt_sharing.domain.apiServices.UnsafeOkHttpClient +.. com.receipts.receipt_sharing.domain.apiServices.UnsafeOkHttpClient$Companion
+com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent +.. com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent$LoadData
+com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent <|.. com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent$LoadData
+com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent +.. com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent$SetOpenFiltersPage
+com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent <|.. com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent$SetOpenFiltersPage
+com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent +.. com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent$SetLoadDataType
+com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent <|.. com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent$SetLoadDataType
+com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent +.. com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent$SetSearchName
+com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent <|.. com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent$SetSearchName
+com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent +.. com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent$SetCellsAmount
+com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent <|.. com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent$SetCellsAmount
+com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent +.. com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent$SetFilters
+com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent <|.. com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent$SetFilters
+com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent +.. com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent$SetIngredients
+com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent <|.. com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent$SetIngredients
+com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent +.. com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent$SetOrdering
+com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent <|.. com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent$SetOrdering
+com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent +.. com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent$LoadFilters
+com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent <|.. com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent$LoadFilters
+com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent +.. com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent$SetExpandFiltersTab
+com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent <|.. com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent$SetExpandFiltersTab
+com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent +.. com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent$SetOpenSelectColumnMenu
+com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent <|.. com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent$SetOpenSelectColumnMenu
+com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent +.. com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent$SetOpenSelectOrderingMenu
+com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent <|.. com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent$SetOpenSelectOrderingMenu
+com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent +.. com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent$SetOpenSearch
+com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent <|.. com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent$SetOpenSearch
+com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent +.. com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent$SetCurrentPage
+com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent <|.. com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent$SetCurrentPage
+com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent +.. com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent$SetPageSize
+com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent <|.. com.receipts.receipt_sharing.presentation.recipes.RecipesScreenEvent$SetPageSize
+androidx.compose.ui.graphics.Shape <|.. com.receipts.receipt_sharing.presentation.StarShape
+com.receipts.receipt_sharing.presentation.creators.CreatorLoadDataType +.. com.receipts.receipt_sharing.presentation.creators.CreatorLoadDataType$All
+com.receipts.receipt_sharing.presentation.creators.CreatorLoadDataType <|.. com.receipts.receipt_sharing.presentation.creators.CreatorLoadDataType$All
+com.receipts.receipt_sharing.presentation.creators.CreatorLoadDataType +.. com.receipts.receipt_sharing.presentation.creators.CreatorLoadDataType$Follows
+com.receipts.receipt_sharing.presentation.creators.CreatorLoadDataType <|.. com.receipts.receipt_sharing.presentation.creators.CreatorLoadDataType$Follows
+com.receipts.receipt_sharing.presentation.creators.CreatorLoadDataType +.. com.receipts.receipt_sharing.presentation.creators.CreatorLoadDataType$Followers
+com.receipts.receipt_sharing.presentation.creators.CreatorLoadDataType <|.. com.receipts.receipt_sharing.presentation.creators.CreatorLoadDataType$Followers
+androidx.lifecycle.ViewModel <|-- com.receipts.receipt_sharing.presentation.auth.AuthViewModel
+com.receipts.receipt_sharing.presentation.auth.AuthEvent +.. com.receipts.receipt_sharing.presentation.auth.AuthEvent$SetLogin
+com.receipts.receipt_sharing.presentation.auth.AuthEvent <|.. com.receipts.receipt_sharing.presentation.auth.AuthEvent$SetLogin
+com.receipts.receipt_sharing.presentation.auth.AuthEvent +.. com.receipts.receipt_sharing.presentation.auth.AuthEvent$SetEmail
+com.receipts.receipt_sharing.presentation.auth.AuthEvent <|.. com.receipts.receipt_sharing.presentation.auth.AuthEvent$SetEmail
+com.receipts.receipt_sharing.presentation.auth.AuthEvent +.. com.receipts.receipt_sharing.presentation.auth.AuthEvent$SetEmailCode
+com.receipts.receipt_sharing.presentation.auth.AuthEvent <|.. com.receipts.receipt_sharing.presentation.auth.AuthEvent$SetEmailCode
+com.receipts.receipt_sharing.presentation.auth.AuthEvent +.. com.receipts.receipt_sharing.presentation.auth.AuthEvent$SetPassword
+com.receipts.receipt_sharing.presentation.auth.AuthEvent <|.. com.receipts.receipt_sharing.presentation.auth.AuthEvent$SetPassword
+com.receipts.receipt_sharing.presentation.auth.AuthEvent +.. com.receipts.receipt_sharing.presentation.auth.AuthEvent$SetRepeatPassword
+com.receipts.receipt_sharing.presentation.auth.AuthEvent <|.. com.receipts.receipt_sharing.presentation.auth.AuthEvent$SetRepeatPassword
+com.receipts.receipt_sharing.presentation.auth.AuthEvent +.. com.receipts.receipt_sharing.presentation.auth.AuthEvent$SetShowPassword
+com.receipts.receipt_sharing.presentation.auth.AuthEvent <|.. com.receipts.receipt_sharing.presentation.auth.AuthEvent$SetShowPassword
+com.receipts.receipt_sharing.presentation.auth.AuthEvent +.. com.receipts.receipt_sharing.presentation.auth.AuthEvent$ConfirmLogin
+com.receipts.receipt_sharing.presentation.auth.AuthEvent <|.. com.receipts.receipt_sharing.presentation.auth.AuthEvent$ConfirmLogin
+com.receipts.receipt_sharing.presentation.auth.AuthEvent +.. com.receipts.receipt_sharing.presentation.auth.AuthEvent$ConfirmRegister
+com.receipts.receipt_sharing.presentation.auth.AuthEvent <|.. com.receipts.receipt_sharing.presentation.auth.AuthEvent$ConfirmRegister
+com.receipts.receipt_sharing.presentation.auth.AuthEvent +.. com.receipts.receipt_sharing.presentation.auth.AuthEvent$Authorize
+com.receipts.receipt_sharing.presentation.auth.AuthEvent <|.. com.receipts.receipt_sharing.presentation.auth.AuthEvent$Authorize
+com.receipts.receipt_sharing.presentation.auth.AuthEvent +.. com.receipts.receipt_sharing.presentation.auth.AuthEvent$SendCode
+com.receipts.receipt_sharing.presentation.auth.AuthEvent <|.. com.receipts.receipt_sharing.presentation.auth.AuthEvent$SendCode
+com.receipts.receipt_sharing.presentation.auth.AuthEvent +.. com.receipts.receipt_sharing.presentation.auth.AuthEvent$ResetPassword
+com.receipts.receipt_sharing.presentation.auth.AuthEvent <|.. com.receipts.receipt_sharing.presentation.auth.AuthEvent$ResetPassword
+com.receipts.receipt_sharing.presentation.auth.AuthEvent +.. com.receipts.receipt_sharing.presentation.auth.AuthEvent$ClearData
+com.receipts.receipt_sharing.presentation.auth.AuthEvent <|.. com.receipts.receipt_sharing.presentation.auth.AuthEvent$ClearData
+com.receipts.receipt_sharing.presentation.auth.AuthEvent +.. com.receipts.receipt_sharing.presentation.auth.AuthEvent$ClearMessage
+com.receipts.receipt_sharing.presentation.auth.AuthEvent <|.. com.receipts.receipt_sharing.presentation.auth.AuthEvent$ClearMessage
+com.receipts.receipt_sharing.presentation.reviews.ReviewPageEvent +.. com.receipts.receipt_sharing.presentation.reviews.ReviewPageEvent$LoadReviewByRecipe
+com.receipts.receipt_sharing.presentation.reviews.ReviewPageEvent <|.. com.receipts.receipt_sharing.presentation.reviews.ReviewPageEvent$LoadReviewByRecipe
+com.receipts.receipt_sharing.presentation.reviews.ReviewPageEvent +.. com.receipts.receipt_sharing.presentation.reviews.ReviewPageEvent$LoadReview
+com.receipts.receipt_sharing.presentation.reviews.ReviewPageEvent <|.. com.receipts.receipt_sharing.presentation.reviews.ReviewPageEvent$LoadReview
+com.receipts.receipt_sharing.presentation.reviews.ReviewPageEvent +.. com.receipts.receipt_sharing.presentation.reviews.ReviewPageEvent$SetReviewText
+com.receipts.receipt_sharing.presentation.reviews.ReviewPageEvent <|.. com.receipts.receipt_sharing.presentation.reviews.ReviewPageEvent$SetReviewText
+com.receipts.receipt_sharing.presentation.reviews.ReviewPageEvent +.. com.receipts.receipt_sharing.presentation.reviews.ReviewPageEvent$SetReviewRating
+com.receipts.receipt_sharing.presentation.reviews.ReviewPageEvent <|.. com.receipts.receipt_sharing.presentation.reviews.ReviewPageEvent$SetReviewRating
+com.receipts.receipt_sharing.presentation.reviews.ReviewPageEvent +.. com.receipts.receipt_sharing.presentation.reviews.ReviewPageEvent$ConfirmChanges
+com.receipts.receipt_sharing.presentation.reviews.ReviewPageEvent <|.. com.receipts.receipt_sharing.presentation.reviews.ReviewPageEvent$ConfirmChanges
+com.receipts.receipt_sharing.presentation.home.HomePageEvent +.. com.receipts.receipt_sharing.presentation.home.HomePageEvent$LoadData
+com.receipts.receipt_sharing.presentation.home.HomePageEvent <|.. com.receipts.receipt_sharing.presentation.home.HomePageEvent$LoadData
+com.receipts.receipt_sharing.presentation.home.HomePageEvent +.. com.receipts.receipt_sharing.presentation.home.HomePageEvent$LoadPublishers
+com.receipts.receipt_sharing.presentation.home.HomePageEvent <|.. com.receipts.receipt_sharing.presentation.home.HomePageEvent$LoadPublishers
+com.receipts.receipt_sharing.presentation.home.HomePageEvent +.. com.receipts.receipt_sharing.presentation.home.HomePageEvent$LoadPopulars
+com.receipts.receipt_sharing.presentation.home.HomePageEvent <|.. com.receipts.receipt_sharing.presentation.home.HomePageEvent$LoadPopulars
+com.receipts.receipt_sharing.presentation.home.HomePageEvent +.. com.receipts.receipt_sharing.presentation.home.HomePageEvent$LoadRecents
+com.receipts.receipt_sharing.presentation.home.HomePageEvent <|.. com.receipts.receipt_sharing.presentation.home.HomePageEvent$LoadRecents
+androidx.datastore.core.Serializer <|.. com.receipts.receipt_sharing.data.dataStore.UserInfoSerializer
+androidx.lifecycle.ViewModel <|-- com.receipts.receipt_sharing.presentation.creators.CreatorsScreenViewModel
+com.receipts.receipt_sharing.presentation.creators.CreatorsScreenEvent +.. com.receipts.receipt_sharing.presentation.creators.CreatorsScreenEvent$LoadData
+com.receipts.receipt_sharing.presentation.creators.CreatorsScreenEvent <|.. com.receipts.receipt_sharing.presentation.creators.CreatorsScreenEvent$LoadData
+com.receipts.receipt_sharing.presentation.creators.CreatorsScreenEvent +.. com.receipts.receipt_sharing.presentation.creators.CreatorsScreenEvent$SetLoadDataType
+com.receipts.receipt_sharing.presentation.creators.CreatorsScreenEvent <|.. com.receipts.receipt_sharing.presentation.creators.CreatorsScreenEvent$SetLoadDataType
+com.receipts.receipt_sharing.presentation.creators.CreatorsScreenEvent +.. com.receipts.receipt_sharing.presentation.creators.CreatorsScreenEvent$SetSearchName
+com.receipts.receipt_sharing.presentation.creators.CreatorsScreenEvent <|.. com.receipts.receipt_sharing.presentation.creators.CreatorsScreenEvent$SetSearchName
+com.receipts.receipt_sharing.presentation.creators.CreatorsScreenEvent +.. com.receipts.receipt_sharing.presentation.creators.CreatorsScreenEvent$SetOpenSearchString
+com.receipts.receipt_sharing.presentation.creators.CreatorsScreenEvent <|.. com.receipts.receipt_sharing.presentation.creators.CreatorsScreenEvent$SetOpenSearchString
+com.receipts.receipt_sharing.presentation.creators.CreatorsScreenEvent +.. com.receipts.receipt_sharing.presentation.creators.CreatorsScreenEvent$SetOpenSelectCellsAmountDialog
+com.receipts.receipt_sharing.presentation.creators.CreatorsScreenEvent <|.. com.receipts.receipt_sharing.presentation.creators.CreatorsScreenEvent$SetOpenSelectCellsAmountDialog
+com.receipts.receipt_sharing.presentation.creators.CreatorsScreenEvent +.. com.receipts.receipt_sharing.presentation.creators.CreatorsScreenEvent$SetCellsAmount
+com.receipts.receipt_sharing.presentation.creators.CreatorsScreenEvent <|.. com.receipts.receipt_sharing.presentation.creators.CreatorsScreenEvent$SetCellsAmount
+com.receipts.receipt_sharing.presentation.creators.CreatorsScreenEvent +.. com.receipts.receipt_sharing.presentation.creators.CreatorsScreenEvent$SetCurrentPage
+com.receipts.receipt_sharing.presentation.creators.CreatorsScreenEvent <|.. com.receipts.receipt_sharing.presentation.creators.CreatorsScreenEvent$SetCurrentPage
+com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent +.. com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$LoadUserInfo
+com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent <|.. com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$LoadUserInfo
+com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent +.. com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$UpdateUserState
+com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent <|.. com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$UpdateUserState
+com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent +.. com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$SetCreatorName
+com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent <|.. com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$SetCreatorName
+com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent +.. com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$SetCreatorLogin
+com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent <|.. com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$SetCreatorLogin
+com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent +.. com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$SetCreatorAboutMe
+com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent <|.. com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$SetCreatorAboutMe
+com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent +.. com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$SetImageUrl
+com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent <|.. com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$SetImageUrl
+com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent +.. com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$SetCurrentScreen
+com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent <|.. com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$SetCurrentScreen
+com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent +.. com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$SetOpenConfirmExitDialog
+com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent <|.. com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$SetOpenConfirmExitDialog
+com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent +.. com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$SetOpenEditEmailDialog
+com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent <|.. com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$SetOpenEditEmailDialog
+com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent +.. com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$SaveInfoChanges
+com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent <|.. com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$SaveInfoChanges
+com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent +.. com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$ConfirmChangePassword
+com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent <|.. com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$ConfirmChangePassword
+com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent +.. com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$DiscardChanges
+com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent <|.. com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$DiscardChanges
+com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent +.. com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$LogOut
+com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent <|.. com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$LogOut
+com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent +.. com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$GetEmailCode
+com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent <|.. com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$GetEmailCode
+com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent +.. com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$GetCode
+com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent <|.. com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$GetCode
+com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent +.. com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$SetEmailGetCode
+com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent <|.. com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$SetEmailGetCode
+com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent +.. com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$ChangeEmail
+com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent <|.. com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$ChangeEmail
+com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent +.. com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$ClearInfo
+com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent <|.. com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$ClearInfo
+com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent +.. com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$SetPassword
+com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent <|.. com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$SetPassword
+com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent +.. com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$SetShowPassword
+com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent <|.. com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$SetShowPassword
+com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent +.. com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$SetRepeatPassword
+com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent <|.. com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$SetRepeatPassword
+com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent +.. com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$SetEmailCode
+com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent <|.. com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$SetEmailCode
+com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent +.. com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$SetEmail
+com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent <|.. com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent$SetEmail
+androidx.lifecycle.ViewModel <|-- com.receipts.receipt_sharing.presentation.creators.CreatorPageViewModel
+com.receipts.receipt_sharing.presentation.creators.CreatorPageEvent +.. com.receipts.receipt_sharing.presentation.creators.CreatorPageEvent$LoadCreator
+com.receipts.receipt_sharing.presentation.creators.CreatorPageEvent <|.. com.receipts.receipt_sharing.presentation.creators.CreatorPageEvent$LoadCreator
+com.receipts.receipt_sharing.presentation.creators.CreatorPageEvent +.. com.receipts.receipt_sharing.presentation.creators.CreatorPageEvent$ChangeFollows
+com.receipts.receipt_sharing.presentation.creators.CreatorPageEvent <|.. com.receipts.receipt_sharing.presentation.creators.CreatorPageEvent$ChangeFollows
+com.receipts.receipt_sharing.presentation.creators.CreatorPageEvent +.. com.receipts.receipt_sharing.presentation.creators.CreatorPageEvent$ReloadRecipes
+com.receipts.receipt_sharing.presentation.creators.CreatorPageEvent <|.. com.receipts.receipt_sharing.presentation.creators.CreatorPageEvent$ReloadRecipes
+com.receipts.receipt_sharing.presentation.creators.CreatorPageEvent +.. com.receipts.receipt_sharing.presentation.creators.CreatorPageEvent$SetExpandAboutMe
+com.receipts.receipt_sharing.presentation.creators.CreatorPageEvent <|.. com.receipts.receipt_sharing.presentation.creators.CreatorPageEvent$SetExpandAboutMe
+androidx.datastore.core.Serializer <|.. com.receipts.receipt_sharing.data.dataStore.CreatorsMapSerializer
+com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent +.. com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent$LoadReviews
+com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent <|.. com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent$LoadReviews
+com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent +.. com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent$SetCurrentPage
+com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent <|.. com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent$SetCurrentPage
+com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent +.. com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent$SetPageSize
+com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent <|.. com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent$SetPageSize
+com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent +.. com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent$SetOrdering
+com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent <|.. com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent$SetOrdering
+com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent +.. com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent$SetSorting
+com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent <|.. com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent$SetSorting
+com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent +.. com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent$SetOpenOrderingBox
+com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent <|.. com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent$SetOpenOrderingBox
+com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent +.. com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent$SetOpenSortingBox
+com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent <|.. com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent$SetOpenSortingBox
+com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent +.. com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent$OpenConfirmDeleteDialog
+com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent <|.. com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent$OpenConfirmDeleteDialog
+com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent +.. com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent$ApplyFilters
+com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent <|.. com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent$ApplyFilters
+com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent +.. com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent$ClearFilters
+com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent <|.. com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent$ClearFilters
+com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent +.. com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent$SetSelectedReview
+com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent <|.. com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent$SetSelectedReview
+com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent +.. com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent$DeleteReview
+com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent <|.. com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent$DeleteReview
+com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent +.. com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent$ClearMessage
+com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent <|.. com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent$ClearMessage
+com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent +.. com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent$CloseDialogs
+com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent <|.. com.receipts.receipt_sharing.presentation.reviews.ReviewsScreenEvent$CloseDialogs
+@enduml

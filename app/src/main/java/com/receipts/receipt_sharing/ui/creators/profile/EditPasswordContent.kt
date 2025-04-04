@@ -32,6 +32,19 @@ import com.receipts.receipt_sharing.R
 import com.receipts.receipt_sharing.data.helpers.PasswordChecker
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
 
+/**
+ * Composes password changing screen
+ * @param modifier Modifier applied to the EditPasswordContent
+ * @param emailCode Email code value
+ * @param onEnterEmailCode called when user enters new email code
+ * @param password Password value
+ * @param onEnterPassword called when user enters password
+ * @param showPassword Whenever password should be shown
+ * @param onSetShowPassword Called when user triggers show password trigger
+ * @param repeatPassword repeat password value
+ * @param onEnterRepeatPassword called when uer enters repeat password value
+ * @param onGenerateCodeClick called when user clicks on "Generate code" button
+ */
 @Composable
 fun EditPasswordContent(
     modifier: Modifier = Modifier,

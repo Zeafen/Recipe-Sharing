@@ -49,7 +49,15 @@ import com.receipts.receipt_sharing.domain.recipes.Recipe
 import com.receipts.receipt_sharing.domain.recipes.Step
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
 
-
+/**
+ * Composes editable step row
+ * @param stepOrder current step index
+ * @param modifier Modifier applied to row
+ * @param step step information
+ * @param canEdit if user can edit row
+ * @param onEditClick called when user clicks on "Edit" button
+ * @param onDeleteClick called when user clicks on "Delete" button
+ */
 @Composable
 fun EditableStepRow(
     modifier: Modifier = Modifier,
@@ -88,7 +96,7 @@ fun EditableStepRow(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(CircleShape)
-                        .border(2.dp, Color.Gray, CircleShape)
+                        .border(2.dp, MaterialTheme.colorScheme.tertiary, CircleShape)
                         .padding(horizontal = 12.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -98,6 +106,7 @@ fun EditableStepRow(
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.W500,
                         textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onTertiaryContainer,
                         letterSpacing = TextUnit(0.1f, TextUnitType.Em)
                     )
                     Text(
@@ -107,15 +116,22 @@ fun EditableStepRow(
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.W500,
                         textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onTertiaryContainer,
                         letterSpacing = TextUnit(0.1f, TextUnitType.Em)
                     )
                     if (canEdit) {
                         Row {
                             IconButton(onClick = { onEditClick(step) }) {
-                                Icon(painterResource(R.drawable.edit_ic), contentDescription = "")
+                                Icon(
+                                    painterResource(R.drawable.edit_ic), contentDescription = "",
+                                    tint = MaterialTheme.colorScheme.secondary
+                                )
                             }
                             IconButton(onClick = { onDeleteClick(step) }) {
-                                Icon(Icons.Default.Delete, contentDescription = "")
+                                Icon(
+                                    Icons.Default.Delete, contentDescription = "",
+                                    tint = MaterialTheme.colorScheme.secondary
+                                )
                             }
                         }
                     }
@@ -136,6 +152,7 @@ fun EditableStepRow(
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.W500,
                             textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer,
                             letterSpacing = TextUnit(0.1f, TextUnitType.Em)
                         )
                         Text(
@@ -145,6 +162,7 @@ fun EditableStepRow(
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.W500,
                             textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer,
                             letterSpacing = TextUnit(0.1f, TextUnitType.Em)
                         )
                         if (canEdit) {
@@ -152,11 +170,15 @@ fun EditableStepRow(
                                 IconButton(onClick = { onEditClick(step) }) {
                                     Icon(
                                         painterResource(R.drawable.edit_ic),
-                                        contentDescription = ""
+                                        contentDescription = "",
+                                        tint = MaterialTheme.colorScheme.secondary
                                     )
                                 }
                                 IconButton(onClick = { onDeleteClick(step) }) {
-                                    Icon(Icons.Default.Delete, contentDescription = "")
+                                    Icon(
+                                        Icons.Default.Delete, contentDescription = "",
+                                        tint = MaterialTheme.colorScheme.secondary
+                                    )
                                 }
                             }
                         }
@@ -179,9 +201,18 @@ fun EditableStepRow(
     }
 }
 
-
+/**
+ * Composes instructions editable row
+ * @param modifier Modifier applied to StepsRows
+ * @param itemPadding padding between items
+ * @param steps steps list
+ * @param canEdit if user can edit instructions
+ * @param onEditClick called when user clicks on "Edit" button
+ * @param onDeleteClick called when user clicks on "Delete" button
+ * @param onAddClick called when user clicks on "Add" button
+ */
 @Composable
-fun EditableStepsRows(
+fun  EditableStepsRows(
     modifier: Modifier = Modifier,
     steps: List<Step>,
     canEdit: Boolean = false,
@@ -219,20 +250,22 @@ fun EditableStepsRows(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(CircleShape)
-                        .border(2.dp, Color.Gray, CircleShape)
+                        .border(2.dp, MaterialTheme.colorScheme.tertiary, CircleShape)
                         .padding(horizontal = 12.dp, vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
                         text = stringResource(R.string.instruction_string, steps.size),
-                        style = MaterialTheme.typography.titleMedium
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onTertiaryContainer
                     )
                     Text(
                         modifier = Modifier
                             .alpha(0.5f),
                         text = "${steps.sumOf { s -> s.duration }} min",
-                        style = MaterialTheme.typography.titleMedium
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onTertiaryContainer
                     )
                 }
             else {
@@ -241,20 +274,22 @@ fun EditableStepsRows(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(CircleShape)
-                            .border(2.dp, Color.Gray, CircleShape)
+                            .border(2.dp, MaterialTheme.colorScheme.tertiary, CircleShape)
                             .padding(horizontal = 12.dp, vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
                             text = stringResource(R.string.instruction_string, steps.size),
-                            style = MaterialTheme.typography.titleMedium
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer
                         )
                         Text(
                             modifier = Modifier
                                 .alpha(0.5f),
                             text = "${steps.sumOf { s -> s.duration }} min",
-                            style = MaterialTheme.typography.titleMedium
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer
                         )
                     }
                     repeat(steps.size) {
@@ -320,12 +355,14 @@ private fun StepsRowsPreview() {
                                 "Phasellus nulla leo, condimentum in est et, ornare tincidunt neque. Morbi lectus velit, cursus quis pharetra sed, semper rhoncus felis. Pellentesque volutpat ipsum vitae mattis sodales. Proin mattis nulla velit, ac venenatis nisi euismod ut. Sed non imperdiet neque. Sed lacinia libero erat. Vestibulum id pellentesque tellus, at suscipit nulla. Duis ut erat interdum, laoreet nibh ut, lobortis est.",
                         123123123L
                     )
-                )
+                ),
+                reviewsCount = 100_000_000,
+                currentRating = 0f,
+                viewsCount = 0L
             )
         )
     }
-    RecipeSharing_theme {
-
+    RecipeSharing_theme(darkTheme = true) {
         EditableStepsRows(steps = recipe.steps,
             onAddClick = {
             },
@@ -341,18 +378,20 @@ private fun StepsRowsPreview() {
 @Composable
 @Preview
 private fun StepsPreview() {
-    EditableStepRow(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp)),
-        stepOrder = 1,
-        step = Step(
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse sit amet est varius, tempor tortor non, pellentesque mi. Praesent accumsan facilisis urna nec semper. Proin gravida consectetur augue. Nullam pharetra nulla at malesuada consequat. Donec eu tortor vitae risus laoreet mollis nec in ipsum. Donec sem erat, rhoncus a iaculis at, accumsan eget nisl. Nulla hendrerit dui in quam rutrum, id ultricies urna facilisis. Fusce urna augue, maximus at tortor pellentesque, laoreet auctor tortor. Maecenas ut eros enim. Donec faucibus venenatis semper. Pellentesque laoreet metus blandit arcu venenatis auctor ac non arcu.\n" +
-                    "\n" +
-                    "Phasellus nulla leo, condimentum in est et, ornare tincidunt neque. Morbi lectus velit, cursus quis pharetra sed, semper rhoncus felis. Pellentesque volutpat ipsum vitae mattis sodales. Proin mattis nulla velit, ac venenatis nisi euismod ut. Sed non imperdiet neque. Sed lacinia libero erat. Vestibulum id pellentesque tellus, at suscipit nulla. Duis ut erat interdum, laoreet nibh ut, lobortis est.",
-            123123123L
-        ),
-        onEditClick = {},
-        onDeleteClick = {}
-    )
+    RecipeSharing_theme {
+        EditableStepRow(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp)),
+            stepOrder = 1,
+            step = Step(
+                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse sit amet est varius, tempor tortor non, pellentesque mi. Praesent accumsan facilisis urna nec semper. Proin gravida consectetur augue. Nullam pharetra nulla at malesuada consequat. Donec eu tortor vitae risus laoreet mollis nec in ipsum. Donec sem erat, rhoncus a iaculis at, accumsan eget nisl. Nulla hendrerit dui in quam rutrum, id ultricies urna facilisis. Fusce urna augue, maximus at tortor pellentesque, laoreet auctor tortor. Maecenas ut eros enim. Donec faucibus venenatis semper. Pellentesque laoreet metus blandit arcu venenatis auctor ac non arcu.\n" +
+                        "\n" +
+                        "Phasellus nulla leo, condimentum in est et, ornare tincidunt neque. Morbi lectus velit, cursus quis pharetra sed, semper rhoncus felis. Pellentesque volutpat ipsum vitae mattis sodales. Proin mattis nulla velit, ac venenatis nisi euismod ut. Sed non imperdiet neque. Sed lacinia libero erat. Vestibulum id pellentesque tellus, at suscipit nulla. Duis ut erat interdum, laoreet nibh ut, lobortis est.",
+                123123123L
+            ),
+            onEditClick = {},
+            onDeleteClick = {}
+        )
+    }
 }

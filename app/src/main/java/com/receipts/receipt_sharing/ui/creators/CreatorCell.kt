@@ -1,7 +1,8 @@
 package com.receipts.receipt_sharing.ui.creators
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -10,11 +11,13 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
@@ -31,18 +34,27 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.receipts.receipt_sharing.R
 import com.receipts.receipt_sharing.data.helpers.toAmountString
+import com.receipts.receipt_sharing.data.helpers.UnsafeImageLoader
 import com.receipts.receipt_sharing.domain.creators.CreatorRequest
-import com.receipts.receipt_sharing.domain.apiServices.UnsafeImageLoader
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
 
+/**
+ * Composes creator cell (card)
+ * @param modifier Modifier applied to Card
+ * @param creator Creator info
+ */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun CreatorCell(
     modifier: Modifier = Modifier,
-    creator: CreatorRequest
+    creator: CreatorRequest,
 ) {
-    Column(
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+        ),
+        shape = RoundedCornerShape(16.dp),
         modifier = modifier,
-        horizontalAlignment = Alignment.Start
     ) {
         if(creator.imageUrl.isBlank())
             Image(
@@ -74,7 +86,8 @@ fun CreatorCell(
                 contentDescription = "")
         Text(
             modifier = Modifier
-                .fillMaxWidth(),
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp),
             textAlign = TextAlign.Justify,
             text = creator.nickname,
             style = MaterialTheme.typography.titleLarge,
@@ -82,26 +95,36 @@ fun CreatorCell(
             maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
-        Text(
+        FlowRow(
             modifier = Modifier
-                .padding(horizontal = 8.dp)
-                .alpha(0.5f),
-            textAlign = TextAlign.Start,
-            text = stringResource(R.string.creator_recipes_count, creator.recipesCount.toAmountString()),
-            style = MaterialTheme.typography.bodyLarge,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis
-        )
-        Text(
-            modifier = Modifier
-                .padding(horizontal = 8.dp)
-                .alpha(0.5f),
-            textAlign = TextAlign.Start,
-            text = stringResource(R.string.followers_count, creator.followersCount.toAmountString()),
-            style = MaterialTheme.typography.bodyLarge,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis
-        )
+                .padding(horizontal = 8.dp, vertical = 4.dp),
+        ){
+            Text(
+                modifier = Modifier
+                    .alpha(0.5f)
+                    .padding(end = 8.dp),
+                textAlign = TextAlign.Start,
+                text = stringResource(
+                    R.string.creator_recipes_count,
+                    creator.recipesCount.toAmountString()
+                ),
+                style = MaterialTheme.typography.bodyLarge,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                modifier = Modifier
+                    .alpha(0.5f),
+                textAlign = TextAlign.Start,
+                text = stringResource(
+                    R.string.followers_count,
+                    creator.followersCount.toAmountString()
+                ),
+                style = MaterialTheme.typography.bodyLarge,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
     }
 }
 
@@ -111,7 +134,7 @@ private fun Preview() {
     RecipeSharing_theme {
         Surface {
             LazyVerticalStaggeredGrid(
-                columns = StaggeredGridCells.Fixed(2),
+                columns = StaggeredGridCells.Fixed(1),
                 verticalItemSpacing = 12.dp
             ) {
                 items(10) {

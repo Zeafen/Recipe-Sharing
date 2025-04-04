@@ -35,6 +35,12 @@ import androidx.compose.ui.unit.dp
 import com.receipts.receipt_sharing.R
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
 
+/**
+ * Composes error information page
+ * @param modifier Modifier applied to ErrorInfoPage
+ * @param onReloadPage called when user clicks on "Reload" button
+ * @param errorInfo error info string
+ */
 @Composable
 fun ErrorInfoPage(
     modifier: Modifier = Modifier,

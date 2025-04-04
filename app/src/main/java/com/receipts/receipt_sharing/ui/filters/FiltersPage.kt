@@ -1,5 +1,9 @@
 package com.receipts.receipt_sharing.ui.filters
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.EaseOutQuad
+import androidx.compose.animation.core.ExperimentalAnimationSpecApi
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -28,7 +32,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.receipts.receipt_sharing.R
-import com.receipts.receipt_sharing.ui.effects.SwipeableSelectionItem
+import com.receipts.receipt_sharing.ui.effects.SelectionItem
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
 
 
@@ -55,7 +59,7 @@ private fun Preview() {
             var txt by remember {
                 mutableStateOf("")
             }
-            if(open)
+            if (open)
                 androidx.wear.compose.material.dialog.Dialog(
                     showDialog = open,
                     onDismissRequest = { open = false }) {
@@ -76,9 +80,14 @@ private fun Preview() {
 
 data class SelectionCategory(
     var name: String,
-    val items: List<SwipeableSelectionItem<String>>
+    val items: List<SelectionItem<String>>
 )
 
+/**
+ * Composes Category name header
+ * @param text Category name
+ * @param modifier Modifier applied to CategoryHeader
+ */
 @Composable
 private fun CategoryHeader(
     text: String,
@@ -89,27 +98,45 @@ private fun CategoryHeader(
         style = MaterialTheme.typography.headlineLarge,
         modifier = modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.primaryContainer)
+            .background(MaterialTheme.colorScheme.surfaceVariant)
             .padding(16.dp)
     )
 }
 
+/**
+ * Composes filter value cell
+ * @param modifier Modifier applied to SelectionCategoryItem
+ * @param text filter value
+ * @param onUnSelect called when user clicks on selected filter item
+ * @param onSelect called when user clicks on unselected filter item
+ * @param isSelected if item is selected
+ */
+@OptIn(ExperimentalAnimationSpecApi::class)
 @Composable
 private fun SelectionCategoryItem(
-    isSelected : Boolean,
+    isSelected: Boolean,
     text: String,
     modifier: Modifier = Modifier,
-    onSelect : () -> Unit,
-    onUnSelect : () -> Unit
+    onSelect: () -> Unit,
+    onUnSelect: () -> Unit
 ) {
-    TextButton(modifier = modifier,
-        onClick = if(isSelected) onUnSelect else onSelect,
+    val animatedContainerColor = animateColorAsState(
+        if(isSelected) MaterialTheme.colorScheme.onSurface
+        else MaterialTheme.colorScheme.surface,
+        animationSpec = tween(500, easing = EaseOutQuad)
+    )
+    val animatedContentColor = animateColorAsState(
+        if(isSelected) MaterialTheme.colorScheme.surface
+        else MaterialTheme.colorScheme.onSurface,
+        animationSpec = tween(500, easing = EaseOutQuad)
+    )
+    TextButton(
+        modifier = modifier,
         colors = ButtonDefaults.textButtonColors(
-            contentColor = if(isSelected) MaterialTheme.colorScheme.surface
-            else MaterialTheme.colorScheme.onSurface,
-            containerColor = if(isSelected) MaterialTheme.colorScheme.onSurface
-            else MaterialTheme.colorScheme.surface,
-        )
+            contentColor = animatedContentColor.value,
+            containerColor = animatedContainerColor.value,
+        ),
+        onClick = if (isSelected) onUnSelect else onSelect,
     ) {
         Text(
             text = text,
@@ -117,22 +144,30 @@ private fun SelectionCategoryItem(
             textAlign = TextAlign.Center,
         )
     }
+
 }
 
+/**
+ * Composes filters selection page
+ *  @param modifier Modifier applied to FiltersPage
+ *  @param onFiltersConfirmed called when user clicks on "Confirm" button
+ *  @param categorizedItems filters grouped by categories
+ *  @param onCancelChanges called when user clicks on "Cancel" button
+ */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun FiltersPage(
     categorizedItems: Map<String, List<String>>,
     modifier: Modifier = Modifier,
-    onFiltersConfirmed : (filters : List<String>) -> Unit,
-    onCancelChanges : () -> Unit
+    onFiltersConfirmed: (filters: List<String>) -> Unit,
+    onCancelChanges: () -> Unit
 ) {
     var categories = rememberSaveable(categorizedItems) {
         categorizedItems.map {
             SelectionCategory(
                 name = it.key,
                 items = it.value.map { value ->
-                    SwipeableSelectionItem(value)
+                    SelectionItem(value)
                 }
             )
         }
@@ -140,35 +175,42 @@ fun FiltersPage(
 
     Scaffold(modifier = modifier,
         bottomBar = {
-            BottomAppBar {
-                TextButton(modifier = Modifier
+            BottomAppBar(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            ) {
+            TextButton(
+                modifier = Modifier
                     .weight(1f),
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error,
-                    ),
-                    onClick = onCancelChanges)
-                {
-                    Text(
-                        text = stringResource(id = R.string.cancel_txt),
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                }
-                TextButton(modifier = Modifier
-                    .weight(1f),
-                    onClick = {
-                        val items = mutableListOf<String>()
-                        categories.forEach { sc ->
-                            sc.items.forEach {
-                                if (it.isSelected)
-                                    items.add(it.item)
-                            }
-                        }
-                        onFiltersConfirmed(items.toList())
-                    }) {
-                    Text(text = stringResource(id = R.string.confirm_txt),
-                        style = MaterialTheme.typography.titleMedium)
-                }
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = MaterialTheme.colorScheme.error,
+                ),
+                onClick = onCancelChanges
+            )
+            {
+                Text(
+                    text = stringResource(id = R.string.cancel_txt),
+                    style = MaterialTheme.typography.titleMedium
+                )
             }
+            TextButton(modifier = Modifier
+                .weight(1f),
+                onClick = {
+                    val items = mutableListOf<String>()
+                    categories.forEach { sc ->
+                        sc.items.forEach {
+                            if (it.isSelected)
+                                items.add(it.item)
+                        }
+                    }
+                    onFiltersConfirmed(items.toList())
+                }) {
+                Text(
+                    text = stringResource(id = R.string.confirm_txt),
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+        }
         }
     ) {
         LazyColumn(

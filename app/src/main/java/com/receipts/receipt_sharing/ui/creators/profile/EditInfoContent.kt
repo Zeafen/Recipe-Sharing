@@ -38,12 +38,17 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.receipts.receipt_sharing.R
-import com.receipts.receipt_sharing.domain.apiServices.UnsafeImageLoader
-import com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent
-import com.receipts.receipt_sharing.presentation.creators.ProfilePageState
+import com.receipts.receipt_sharing.data.helpers.UnsafeImageLoader
+import com.receipts.receipt_sharing.presentation.creators.profile.ProfilePageEvent
+import com.receipts.receipt_sharing.presentation.creators.profile.ProfilePageState
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
 
-
+/**
+ * Composes general user info screen
+ * @param state the state object user to control screen layout
+ * @param modifier Modifier applied to the EditInfoContent
+ * @param onEvent called when user interacts with ui elements
+ */
 @Composable
 fun EditInfoContent(
     modifier: Modifier = Modifier,
@@ -76,7 +81,7 @@ fun EditInfoContent(
                     modifier = Modifier
                         .align(Alignment.Center)
                         .clip(CircleShape)
-                        .fillMaxWidth(0.4f),
+                        .fillMaxWidth(0.3f),
                     model = ImageRequest.Builder(LocalContext.current)
                         .data(state.imageUrl)
                         .crossfade(true)
@@ -117,7 +122,7 @@ fun EditInfoContent(
             },
             isError = state.creatorName.isEmpty(),
             supportingText = {
-                AnimatedVisibility(visible = state.creatorName.isEmpty(),
+                AnimatedVisibility(visible = state.creatorName.isEmpty() || state.creatorName.all { !it.isLetter() },
                     enter = slideInVertically(spring(stiffness = Spring.StiffnessMediumLow)) { -it } + fadeIn(
                         spring(stiffness = Spring.StiffnessLow)
                     ),
@@ -145,7 +150,7 @@ fun EditInfoContent(
             .fillMaxWidth()
             .padding(vertical = 16.dp, horizontal = 12.dp),
             value = state.creatorLogin,
-            onValueChange = { onEvent(ProfilePageEvent.SetCreatorName(it)) },
+            onValueChange = { onEvent(ProfilePageEvent.SetCreatorLogin(it)) },
             trailingIcon = {
                 Icon(
                     painter = painterResource(R.drawable.user_info_page_ic),
@@ -154,7 +159,7 @@ fun EditInfoContent(
             },
             isError = state.creatorLogin.length < 10,
             supportingText = {
-                AnimatedVisibility(visible = state.creatorName.isEmpty(),
+                AnimatedVisibility(visible = state.creatorLogin.isEmpty() || state.creatorLogin.length < 10,
                     enter = slideInVertically(spring(stiffness = Spring.StiffnessMediumLow)) { -it } + fadeIn(
                         spring(stiffness = Spring.StiffnessLow)
                     ),

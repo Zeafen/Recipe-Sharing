@@ -32,12 +32,21 @@ import androidx.compose.ui.unit.dp
 import com.receipts.receipt_sharing.presentation.StarShape
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
 
+/**
+ * Composes view-only stars rating row
+ * @param modifier Modifier applied to row
+ * @param currentRating selected rating value
+ * @param maxRating maximum rating value
+ * @param starSize defines star element size
+ * @param starColor defines star element color
+ * @param itemsPadding star items spacing
+ */
 @Composable
 fun RatingRow(
     modifier: Modifier = Modifier,
     maxRating: Int = 5,
     currentRating: Float,
-    starColor: Color = MaterialTheme.colorScheme.primary,
+    starColor: Color = MaterialTheme.colorScheme.tertiary,
     starSize: Dp = 32.dp,
     itemsPadding: PaddingValues = PaddingValues(horizontal = 4.dp),
 ) {
@@ -81,11 +90,21 @@ fun RatingRow(
     }
 }
 
+/**
+ * Composes selectable stars rating row
+ * @param modifier Modifier applied to row
+ * @param currentRating selected rating value
+ * @param maxRating maximum rating value
+ * @param starSize defines star element size
+ * @param starColor defines star element color
+ * @param itemsPadding star items spacing
+ * @param onStarClick called when users click on a certain star button
+ */
 @Composable
 fun RatingRow(
     modifier: Modifier = Modifier,
     maxRating: Int = 5,
-    starColor: Color = MaterialTheme.colorScheme.primary,
+    starColor: Color = MaterialTheme.colorScheme.tertiary,
     starSize: Dp = 48.dp,
     itemsPadding: PaddingValues = PaddingValues(horizontal = 4.dp),
     onStarClick: (rating: Int) -> Unit,

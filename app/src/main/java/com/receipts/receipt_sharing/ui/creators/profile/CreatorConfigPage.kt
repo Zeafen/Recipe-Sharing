@@ -71,19 +71,27 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.receipts.receipt_sharing.R
 import com.receipts.receipt_sharing.data.helpers.PasswordChecker
-import com.receipts.receipt_sharing.domain.apiServices.UnsafeImageLoader
+import com.receipts.receipt_sharing.data.helpers.UnsafeImageLoader
 import com.receipts.receipt_sharing.domain.creators.ProfileRequest
-import com.receipts.receipt_sharing.domain.response.RecipeResult
-import com.receipts.receipt_sharing.presentation.creators.ProfileConfigScreens
-import com.receipts.receipt_sharing.presentation.creators.ProfilePageEvent
-import com.receipts.receipt_sharing.presentation.creators.ProfilePageState
-import com.receipts.receipt_sharing.ui.SectionSelectionButton
+import com.receipts.receipt_sharing.domain.response.ApiResult
+import com.receipts.receipt_sharing.presentation.creators.profile.ProfileConfigScreens
+import com.receipts.receipt_sharing.presentation.creators.profile.ProfilePageEvent
+import com.receipts.receipt_sharing.presentation.creators.profile.ProfilePageState
+import com.receipts.receipt_sharing.ui.SectionButton
 import com.receipts.receipt_sharing.ui.TwoLayerTopAppBar
 import com.receipts.receipt_sharing.ui.dialogs.EditEmailDialog
 import com.receipts.receipt_sharing.ui.effects.shimmerEffect
 import com.receipts.receipt_sharing.ui.infoPages.ErrorInfoPage
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
 
+/**
+ * Composes profile screen
+ * @param state the state object user to control screen layout
+ * @param modifier Modifier applied to the CreatorConfigPage
+ * @param onEvent called when user interacts with ui elements
+ * @param onOpenMenu called when user click menu button
+ * @param onLogOut called when user logs out
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreatorConfigPage(
@@ -104,20 +112,23 @@ fun CreatorConfigPage(
     val refreshState = rememberPullToRefreshState()
     Scaffold(modifier = modifier,
         topBar = {
-            TwoLayerTopAppBar(colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                titleContentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                navigationIconContentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                actionIconContentColor = MaterialTheme.colorScheme.onSecondaryContainer
-            ),
+            TwoLayerTopAppBar(modifier = Modifier
+                .clip(RoundedCornerShape(bottomStartPercent = 15, bottomEndPercent = 15)),
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    actionIconContentColor = MaterialTheme.colorScheme.secondary,
+                    navigationIconContentColor = MaterialTheme.colorScheme.secondary
+                ),
                 title = {
                     Text(
                         modifier = Modifier
                             .padding(start = 8.dp)
                             .fillMaxWidth(),
                         text = stringResource(R.string.profile_page_header),
-                        style = MaterialTheme.typography.headlineLarge,
-                        maxLines = 1,
+                        style = MaterialTheme.typography.headlineMedium,
+                        maxLines = 2,
+                        textAlign = TextAlign.Start,
                         overflow = TextOverflow.Ellipsis,
                         letterSpacing = TextUnit(0.1f, TextUnitType.Em),
                         fontWeight = FontWeight.W400
@@ -198,6 +209,7 @@ fun CreatorConfigPage(
                                             .data(state.creator.data.imageUrl)
                                             .crossfade(true)
                                             .build(),
+
                                         imageLoader = UnsafeImageLoader.getInstance(),
                                         contentScale = ContentScale.Fit,
                                         contentDescription = "",
@@ -305,7 +317,7 @@ fun CreatorConfigPage(
                     }
                 ) {
                     Text(
-                        text = stringResource(R.string.save_changes_str),
+                        text = stringResource(R.string.confirm_txt),
                         style = MaterialTheme.typography.titleMedium
                     )
                 }
@@ -316,11 +328,11 @@ fun CreatorConfigPage(
                 .fillMaxSize()
                 .padding(it),
             state = refreshState,
-            isRefreshing = state.creator is RecipeResult.Downloading,
+            isRefreshing = state.creator is ApiResult.Downloading,
             onRefresh = { onEvent(ProfilePageEvent.LoadUserInfo) },
         ) {
             when (state.creator) {
-                is RecipeResult.Downloading -> {
+                is ApiResult.Downloading -> {
                     Column {
                         repeat(4) {
                             Box(
@@ -336,7 +348,7 @@ fun CreatorConfigPage(
                     }
                 }
 
-                is RecipeResult.Error -> {
+                is ApiResult.Error -> {
                     ErrorInfoPage(
                         errorInfo = state.creator.info ?: stringResource(
                             id = R.string.unknown_error_txt
@@ -345,7 +357,7 @@ fun CreatorConfigPage(
                     )
                 }
 
-                is RecipeResult.Succeed -> {
+                is ApiResult.Succeed -> {
                     state.creator.data?.let {
                         if (state.openConfirmExitDialog)
                             AlertDialog(
@@ -361,8 +373,7 @@ fun CreatorConfigPage(
                                         modifier = Modifier
                                             .padding(horizontal = 8.dp),
                                         onClick = {
-                                            onEvent(ProfilePageEvent.LogOut)
-                                            onLogOut()
+                                            onEvent(ProfilePageEvent.LogOut(onLogOut))
                                         },
                                         shape = CircleShape
                                     ) {
@@ -391,7 +402,7 @@ fun CreatorConfigPage(
                                         shape = CircleShape
                                     ) {
                                         Text(
-                                            text = stringResource(R.string.cancel_changes_str),
+                                            text = stringResource(R.string.cancel_txt),
                                             textAlign = TextAlign.Center,
                                             style = MaterialTheme.typography.titleLarge,
                                             letterSpacing = TextUnit(
@@ -449,6 +460,7 @@ fun CreatorConfigPage(
                                             false
                                         )
                                     )
+                                    onEvent(ProfilePageEvent.DiscardChanges)
                                 },
                                 onConfirmClick = { onEvent(ProfilePageEvent.ChangeEmail) },
                                 onGenerateCodeClick = { onEvent(ProfilePageEvent.SetEmailGetCode) }
@@ -493,7 +505,7 @@ fun CreatorConfigPage(
                                             )
                                         )
                                             .forEach {
-                                                SectionSelectionButton(
+                                                SectionButton(
                                                     modifier = Modifier
                                                         .padding(8.dp),
                                                     title = {
@@ -531,7 +543,7 @@ fun CreatorConfigPage(
                                                     }
                                                 )
                                             }
-                                        SectionSelectionButton(
+                                        SectionButton(
                                             modifier = Modifier
                                                 .padding(8.dp),
                                             title = {
@@ -581,7 +593,7 @@ fun CreatorConfigPage(
 
                                 ProfileConfigScreens.Security -> {
                                     Column {
-                                        SectionSelectionButton(
+                                        SectionButton(
                                             modifier = Modifier
                                                 .padding(8.dp),
                                             title = {
@@ -634,7 +646,7 @@ fun CreatorConfigPage(
                                                 onEvent(ProfilePageEvent.SetOpenEditEmailDialog(true))
                                             }
                                         )
-                                        SectionSelectionButton(
+                                        SectionButton(
                                             modifier = Modifier
                                                 .padding(8.dp),
                                             title = {
@@ -705,8 +717,6 @@ fun CreatorConfigPage(
                                         onGenerateCodeClick = { onEvent(ProfilePageEvent.GetEmailCode) }
                                     )
                                 }
-
-                                ProfileConfigScreens.Settings -> TODO()
                             }
                         }
                     }
@@ -722,14 +732,13 @@ private fun Preview() {
     var state by remember {
         mutableStateOf(
             ProfilePageState(
-                creator = RecipeResult.Succeed(
+                creator = ApiResult.Succeed(
                     ProfileRequest(
-                        userID = "1231312ijhkjh",
+                        userID = "1231312ijhkjhfahufhflsdkjhfkdhfjshfkjshdfkshkfjf",
                         nickname = "Some nicknameSome nicknameSome nicknameSome nicknameSome nickname",
                         imageUrl = "",
                         aboutMe = "some about me",
                         login = "",
-                        password = "",
                         email = "someEmail@gmail.com",
                         emailConfirmed = false
                     )

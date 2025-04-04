@@ -21,6 +21,12 @@ object PasswordChecker {
     val HasLowerCase: Boolean
         get() = _hasLowerCase
 
+
+    /**
+     * Checks if password matches all defined rules
+     * @param password password input
+     * @return true if password follows all required rules; otherwise - false
+     */
     fun checkPassword(password: String): Boolean {
         return password.length >= _minLength
                 && password.count { it.isDigit() } >= _numbersLeastCount
@@ -30,6 +36,15 @@ object PasswordChecker {
                 && password.contains("[a-z]".toRegex()) == _hasLowerCase
     }
 
+    /**
+     * Defines rules for checking password
+     * @param minLength password min length
+     * @param hasSpecials should password contain specials
+     * @param hasLowerCase should password contain lowercase letters
+     * @param hasUpperCase password contain uppercase letters
+     * @param lettersLeastCount min number of letters password must contain
+     * @param numbersLeastCount min number of numbers password must contain
+     */
     fun define(minLength: Int = 15, lettersLeastCount: Int = 1, numbersLeastCount: Int = 1, hasSpecials: Boolean = true, hasUpperCase: Boolean = true, hasLowerCase: Boolean = true) {
         _minLength = minLength
         _lettersLeastCount = lettersLeastCount

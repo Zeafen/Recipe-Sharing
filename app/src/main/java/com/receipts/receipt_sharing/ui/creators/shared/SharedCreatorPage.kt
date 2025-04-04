@@ -5,6 +5,13 @@ import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -29,6 +36,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -51,7 +59,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -66,17 +74,27 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.receipts.receipt_sharing.R
+import com.receipts.receipt_sharing.data.helpers.UnsafeImageLoader
 import com.receipts.receipt_sharing.data.helpers.toAmountString
 import com.receipts.receipt_sharing.domain.creators.CreatorRequest
-import com.receipts.receipt_sharing.domain.apiServices.UnsafeImageLoader
 import com.receipts.receipt_sharing.domain.recipes.Recipe
-import com.receipts.receipt_sharing.domain.response.RecipeResult
-import com.receipts.receipt_sharing.presentation.creators.CreatorPageEvent
-import com.receipts.receipt_sharing.presentation.creators.CreatorPageState
+import com.receipts.receipt_sharing.domain.response.ApiResult
+import com.receipts.receipt_sharing.presentation.creators.creatorPage.CreatorPageEvent
+import com.receipts.receipt_sharing.presentation.creators.creatorPage.CreatorPageState
 import com.receipts.receipt_sharing.ui.effects.shimmerEffect
 import com.receipts.receipt_sharing.ui.infoPages.ErrorInfoPage
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
 
+/**
+ * Composes creator info screen
+ * @param state the state object user to control screen layout
+ * @param modifier Modifier applied to the CreatorPage
+ * @param onEvent called when user interacts with ui elements
+ * @param onGoBack called when user clicks "Go back" button
+ * @param onGoToRecipe called when user click on certain recipe card
+ * @param onReloadData called when user update page
+ * @param onGoToCreatorRecipes called when user click on "More" button in recipes list
+ */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun CreatorPage(
@@ -91,23 +109,30 @@ fun CreatorPage(
     onReloadData: () -> Unit
 ) {
     val refreshState = rememberPullToRefreshState()
+    val aboutMe_rotate by animateFloatAsState(
+        if (state.expandAboutMe)
+            180f else 0f
+    )
 
     with(sharedTransitionScope) {
         Scaffold(modifier = modifier,
             topBar = {
-                TopAppBar(colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                    actionIconContentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                ),
+                TopAppBar(modifier = Modifier
+                    .clip(RoundedCornerShape(bottomStartPercent = 40, bottomEndPercent = 40)),
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        actionIconContentColor = MaterialTheme.colorScheme.secondary,
+                        navigationIconContentColor = MaterialTheme.colorScheme.secondary
+                    ),
                     title = {
                         Text(
                             modifier = Modifier
                                 .padding(start = 8.dp),
                             text = stringResource(R.string.creator_page_header),
-                            style = MaterialTheme.typography.headlineLarge,
-                            maxLines = 1,
+                            style = MaterialTheme.typography.headlineMedium,
+                            maxLines = 2,
+                            textAlign = TextAlign.Start,
                             overflow = TextOverflow.Ellipsis,
                             letterSpacing = TextUnit(0.1f, TextUnitType.Em),
                             fontWeight = FontWeight.W400
@@ -138,16 +163,15 @@ fun CreatorPage(
                     .fillMaxSize()
                     .padding(it),
                 state = refreshState,
-                isRefreshing = state.creator is RecipeResult.Downloading,
+                isRefreshing = state.creator is ApiResult.Downloading,
                 onRefresh = onReloadData,
             ) {
 
                 when (state.creator) {
-                    is RecipeResult.Downloading -> {
+                    is ApiResult.Downloading -> {
                         Column(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .background(MaterialTheme.colorScheme.surface)
                         ) {
                             Box(
                                 modifier = Modifier
@@ -186,7 +210,6 @@ fun CreatorPage(
                                                 .height(24.dp)
                                                 .width(64.dp)
                                                 .alpha(0.3f)
-                                                .background(Color.Black)
                                                 .shimmerEffect()
                                         )
                                     }
@@ -195,7 +218,7 @@ fun CreatorPage(
                         }
                     }
 
-                    is RecipeResult.Error -> ErrorInfoPage(
+                    is ApiResult.Error -> ErrorInfoPage(
                         modifier = Modifier
                             .padding(it),
                         errorInfo = state.creator.info
@@ -203,12 +226,11 @@ fun CreatorPage(
                         onReloadPage = onReloadData
                     )
 
-                    is RecipeResult.Succeed -> {
+                    is ApiResult.Succeed -> {
                         if (state.creator.data != null)
                             LazyColumn(
                                 modifier = Modifier
-                                    .fillMaxSize()
-                                    .background(MaterialTheme.colorScheme.surface),
+                                    .fillMaxSize(),
                             ) {
                                 item {
                                     if (state.creator.data.imageUrl.isEmpty())
@@ -247,17 +269,75 @@ fun CreatorPage(
                                     )
                                 }
                                 item {
-                                    Text(
+                                    Column(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .padding(start = 8.dp, top = 24.dp, bottom = 12.dp, end = 8.dp),
-                                        style = MaterialTheme.typography.titleLarge,
-                                        text = state.creator.data.aboutMe?:"",
-                                        textAlign = TextAlign.Center,
-                                        fontWeight = FontWeight.W300,
-                                        letterSpacing = TextUnit(1.5f, TextUnitType.Sp)
+                                            .padding(
+                                                start = 8.dp,
+                                                top = 24.dp,
+                                                bottom = 12.dp,
+                                                end = 8.dp
+                                            ),
+                                        verticalArrangement = Arrangement.Top,
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(8.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            Text(
+                                                text = stringResource(R.string.creator_about_me_input),
+                                                style = MaterialTheme.typography.headlineMedium,
+                                                maxLines = 2,
+                                                textAlign = TextAlign.Start,
+                                                overflow = TextOverflow.Ellipsis,
+                                                letterSpacing = TextUnit(0.1f, TextUnitType.Em),
+                                                fontWeight = FontWeight.W400
+                                            )
+                                            IconButton(onClick = {
+                                                onEvent(
+                                                    CreatorPageEvent.SetExpandAboutMe(
+                                                        !state.expandAboutMe
+                                                    )
+                                                )
+                                            }) {
+                                                Icon(
+                                                    modifier = Modifier
+                                                        .rotate(aboutMe_rotate),
+                                                    imageVector = Icons.Default.KeyboardArrowDown,
+                                                    contentDescription = null
+                                                )
+                                            }
 
-                                    )
+                                        }
+                                        AnimatedVisibility(
+                                            visible = state.expandAboutMe,
+                                            enter = expandVertically(
+                                                spring(stiffness = Spring.StiffnessMediumLow),
+                                                expandFrom = Alignment.Top
+                                            ) + fadeIn(
+                                                spring(stiffness = Spring.StiffnessLow)
+                                            ),
+                                            exit = shrinkVertically(
+                                                spring(stiffness = Spring.StiffnessMediumLow),
+                                                shrinkTowards = Alignment.Top
+                                            ) + fadeOut(
+                                                spring(stiffness = Spring.StiffnessLow)
+                                            )
+                                        ) {
+                                            Text(
+                                                style = MaterialTheme.typography.titleLarge,
+                                                text = state.creator.data.aboutMe ?: "",
+                                                textAlign = TextAlign.Center,
+                                                fontWeight = FontWeight.W300,
+                                                letterSpacing = TextUnit(1.5f, TextUnitType.Sp)
+
+                                            )
+                                        }
+                                    }
                                 }
 
                                 item {
@@ -293,8 +373,9 @@ fun CreatorPage(
                                                     contentDescription = "",
                                                     contentScale = ContentScale.Crop
                                                 )
-                                                Text(modifier = Modifier
-                                                    .padding(horizontal = 8.dp),
+                                                Text(
+                                                    modifier = Modifier
+                                                        .padding(horizontal = 8.dp),
                                                     text = stringResource(id = R.string.follow_button_txt),
                                                     style = MaterialTheme.typography.titleLarge
                                                 )
@@ -316,7 +397,7 @@ fun CreatorPage(
                                 }
                                 item {
                                     when (state.recipes) {
-                                        is RecipeResult.Downloading -> {
+                                        is ApiResult.Downloading -> {
                                             LazyRow(
                                                 contentPadding = PaddingValues(
                                                     vertical = 36.dp,
@@ -340,7 +421,6 @@ fun CreatorPage(
                                                                 .height(24.dp)
                                                                 .width(64.dp)
                                                                 .alpha(0.3f)
-                                                                .background(Color.Black)
                                                                 .shimmerEffect()
                                                         )
                                                     }
@@ -348,7 +428,7 @@ fun CreatorPage(
                                             }
                                         }
 
-                                        is RecipeResult.Error -> ErrorInfoPage(
+                                        is ApiResult.Error -> ErrorInfoPage(
                                             modifier = Modifier
                                                 .padding(vertical = 12.dp),
                                             errorInfo = state.creator.info
@@ -357,13 +437,14 @@ fun CreatorPage(
                                             onEvent(CreatorPageEvent.ReloadRecipes)
                                         }
 
-                                        is RecipeResult.Succeed -> {
+                                        is ApiResult.Succeed -> {
                                             if (!state.recipes.data.isNullOrEmpty()) {
                                                 LazyRow(
                                                     contentPadding = PaddingValues(
                                                         vertical = 36.dp,
                                                         horizontal = 8.dp
-                                                    )
+                                                    ),
+                                                    verticalAlignment = Alignment.CenterVertically
                                                 ) {
                                                     items(
                                                         state.recipes.data.take(4)
@@ -385,10 +466,10 @@ fun CreatorPage(
                                                             modifier = Modifier
                                                                 .size(256.dp)
                                                                 .padding(horizontal = 8.dp)
-                                                                .clip(RoundedCornerShape(12.dp))
-                                                                .background(MaterialTheme.colorScheme.primaryContainer)
+                                                                .clip(CircleShape)
+                                                                .background(MaterialTheme.colorScheme.surfaceVariant)
                                                                 .clickable {
-                                                                    onGoToCreatorRecipes(state.creator.data.imageUrl)
+                                                                    onGoToCreatorRecipes(state.creator.data.userID)
                                                                 },
                                                             verticalArrangement = Arrangement.Center,
                                                             horizontalAlignment = Alignment.CenterHorizontally,
@@ -397,10 +478,12 @@ fun CreatorPage(
                                                                 modifier = Modifier
                                                                     .size(64.dp),
                                                                 imageVector = Icons.Default.MoreVert,
+                                                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                                                 contentDescription = ""
                                                             )
                                                             Text(
                                                                 text = stringResource(R.string.more_btn_text),
+                                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                                                 style = MaterialTheme.typography.headlineLarge
                                                             )
                                                         }
@@ -415,7 +498,6 @@ fun CreatorPage(
                                                         ),
                                                     text = stringResource(id = R.string.no_items),
                                                     style = MaterialTheme.typography.titleLarge,
-                                                    color = MaterialTheme.colorScheme.tertiary
                                                 )
                                             }
                                         }
@@ -439,23 +521,15 @@ private fun CreatorInfoPreview() {
             var state by remember {
                 mutableStateOf(
                     CreatorPageState(
-                        creator = RecipeResult.Succeed(
+                        creator = ApiResult.Succeed(
                             CreatorRequest(
                                 "",
                                 "Very Very Very Very Very Very long name",
-                                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer in ultricies velit, et finibus turpis. Sed ut augue vitae lorem imperdiet vehicula. Nullam faucibus, ante vitae tristique tincidunt, ipsum elit tempor odio, non aliquam nisi risus eu erat. Donec sit amet erat nisl. Mauris egestas augue lorem, mollis interdum magna finibus et. Morbi non ullamcorper nunc. Nulla scelerisque neque eros, nec aliquam massa elementum a. Maecenas ante massa, efficitur fermentum feugiat at, semper at neque. Nullam sed nibh mattis, feugiat erat et, aliquet odio. Vestibulum posuere condimentum velit a pharetra. Maecenas lobortis tortor ut erat rutrum, eu commodo odio faucibus. In sit amet nulla imperdiet, euismod lacus eget, lobortis mi. Quisque sollicitudin porta magna at pharetra. In imperdiet ante neque, eu viverra sem aliquet pharetra.\n" +
-                                        "\n" +
-                                        "Aenean quis lorem nec lectus varius consequat et eu elit. Phasellus eu hendrerit nisi. Cras auctor pretium sodales. Phasellus nec vehicula urna, sed sagittis justo. Sed vitae justo vel nisi maximus tincidunt. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam feugiat rhoncus varius.\n" +
-                                        "\n" +
-                                        "Suspendisse potenti. Suspendisse non purus orci. Nam sit amet ex erat. Pellentesque posuere vestibulum feugiat. Duis sit amet gravida mi, eget condimentum lacus. Sed auctor, urna pharetra ultricies posuere, urna quam lobortis turpis, non auctor tellus diam id libero. Proin interdum odio nibh, vitae finibus odio varius id. Suspendisse potenti. Cras diam ex, hendrerit eget velit at, faucibus rutrum sem. Ut at velit non nibh euismod dictum id et est. Quisque rutrum congue lacinia. Aenean ultrices cursus ex sollicitudin aliquam. Aliquam erat volutpat. Aliquam varius congue sem vitae aliquet.\n" +
-                                        "\n" +
-                                        "Nam tellus ante, auctor rutrum vestibulum id, scelerisque nec diam. Sed odio mauris, dapibus a metus eget, vehicula gravida nibh. Suspendisse potenti. Donec in erat viverra, dapibus urna non, pharetra sem. Integer a imperdiet turpis. Curabitur ultrices sodales quam, lacinia condimentum dui fermentum id. Cras et nulla auctor, laoreet turpis eu, ullamcorper massa. Etiam nec urna eget nisl consequat viverra. Fusce et blandit mauris. Sed in ultrices mi. Phasellus eu ipsum at velit gravida tincidunt a eu arcu.\n" +
-                                        "\n" +
-                                        "Vivamus in mauris a risus dictum consectetur. Vivamus iaculis orci id libero tempus faucibus. Suspendisse at odio eget dui imperdiet tempus. Nam sollicitudin dolor id felis congue vestibulum. Nam hendrerit justo vitae bibendum molestie. Sed nec ligula turpis. Morbi aliquet, felis tempor vulputate laoreet, ligula nulla eleifend magna, at congue nisl sapien eu erat. Mauris porta pellentesque volutpat. Curabitur condimentum dapibus massa, et facilisis odio tincidunt at. Etiam tempus suscipit iaculis.",
+                                "Vivamus in mauris a risus dictum consectetur. Vivamus iaculis orci id libero tempus faucibus. Suspendisse at odio eget dui imperdiet tempus. Nam sollicitudin dolor id felis congue vestibulum. Nam hendrerit justo vitae bibendum molestie. Sed nec ligula turpis. Morbi aliquet, felis tempor vulputate laoreet, ligula nulla eleifend magna, at congue nisl sapien eu erat. Mauris porta pellentesque volutpat. Curabitur condimentum dapibus massa, et facilisis odio tincidunt at. Etiam tempus suscipit iaculis.",
                                 ""
                             )
                         ),
-                        recipes = RecipeResult.Succeed(
+                        recipes = ApiResult.Succeed(
                             listOf(
                                 Recipe(
                                     "1",
@@ -464,7 +538,10 @@ private fun CreatorInfoPreview() {
                                     "Long name",
                                     "qweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqweqwe",
                                     emptyList(),
-                                    emptyList()
+                                    emptyList(),
+                                    reviewsCount = 100_000_000,
+                                    currentRating = 0f,
+                                    viewsCount = 0L
                                 ),
                                 Recipe(
                                     "2",
@@ -473,7 +550,10 @@ private fun CreatorInfoPreview() {
                                     "Long name",
                                     "qweqweqweqweqweqwe",
                                     emptyList(),
-                                    emptyList()
+                                    emptyList(),
+                                    reviewsCount = 100_000_000,
+                                    currentRating = 0f,
+                                    viewsCount = 0L
                                 ),
                                 Recipe(
                                     "3",
@@ -482,7 +562,10 @@ private fun CreatorInfoPreview() {
                                     "Long name",
                                     "qweqweqweqweqweqwe",
                                     emptyList(),
-                                    emptyList()
+                                    emptyList(),
+                                    reviewsCount = 100_000_000,
+                                    currentRating = 0f,
+                                    viewsCount = 0L
                                 ),
                                 Recipe(
                                     "4",
@@ -491,7 +574,10 @@ private fun CreatorInfoPreview() {
                                     "Long name",
                                     "qweqweqweqweqweqwe",
                                     emptyList(),
-                                    emptyList()
+                                    emptyList(),
+                                    reviewsCount = 100_000_000,
+                                    currentRating = 0f,
+                                    viewsCount = 0L
                                 ),
                                 Recipe(
                                     "5",
@@ -500,7 +586,10 @@ private fun CreatorInfoPreview() {
                                     "Long name",
                                     "qweqweqweqweqweqwe",
                                     emptyList(),
-                                    emptyList()
+                                    emptyList(),
+                                    reviewsCount = 100_000_000,
+                                    currentRating = 0f,
+                                    viewsCount = 0L
                                 ),
                                 Recipe(
                                     "6",
@@ -509,7 +598,10 @@ private fun CreatorInfoPreview() {
                                     "Long name",
                                     "qweqweqweqweqweqwe",
                                     emptyList(),
-                                    emptyList()
+                                    emptyList(),
+                                    reviewsCount = 100_000_000,
+                                    currentRating = 0f,
+                                    viewsCount = 0L
                                 ),
                             )
                         )
@@ -526,7 +618,7 @@ private fun CreatorInfoPreview() {
                         onGoToCreatorRecipes = {},
                         onGoToRecipe = {},
                         onReloadData = {
-                            state = state.copy(creator = RecipeResult.Downloading())
+                            state = state.copy(creator = ApiResult.Downloading())
                         })
                 }
             }

@@ -1,6 +1,11 @@
 package com.receipts.receipt_sharing.ui.effects
 
 import androidx.annotation.FloatRange
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Arrangement
@@ -40,15 +45,15 @@ import androidx.wear.compose.material.rememberSwipeableState
 import androidx.wear.compose.material.swipeable
 import com.receipts.receipt_sharing.domain.recipes.Measure
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
-import kotlin.math.absoluteValue
+import kotlin.math.abs
 import kotlin.math.roundToInt
 
 open class SelectionLineStyle(
     val brush: Brush,
     @FloatRange(from = 0.0, to = 1.0)
-    val lengthFraction : Float,
-    val strokeWidth : Float
-){
+    val lengthFraction: Float,
+    val strokeWidth: Float
+) {
     object Default : SelectionLineStyle(
         brush = Brush.linearGradient(
             listOf(Color.DarkGray, Color.LightGray)
@@ -60,8 +65,10 @@ open class SelectionLineStyle(
 
 
 @Composable
-fun CustomLayout(modifier: Modifier = Modifier,
-                 content : @Composable () -> Unit) {
+fun CustomLayout(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
     Layout(modifier = modifier,
         content = content,
         measurePolicy = { measurables, constraints ->
@@ -79,15 +86,15 @@ fun CustomLayout(modifier: Modifier = Modifier,
         })
 }
 
- class SwipeableSelectionItem<E>(var item : E, isSelected : Boolean = false){
+class SelectionItem<E>(var item: E, isSelected: Boolean = false) {
     var isSelected by mutableStateOf(isSelected)
 }
 
-class SwipeableSelectionState(lastSelectedIndex : Int = 0){
+class SwipeableSelectionState(lastSelectedIndex: Int = 0) {
     var lastSelectedIndex by mutableStateOf(lastSelectedIndex)
 
     companion object {
-        val Saver = object : Saver<SwipeableSelectionState, Int>{
+        val Saver = object : Saver<SwipeableSelectionState, Int> {
             override fun restore(value: Int): SwipeableSelectionState {
                 return SwipeableSelectionState(lastSelectedIndex = value)
             }
@@ -101,26 +108,37 @@ class SwipeableSelectionState(lastSelectedIndex : Int = 0){
 
 
 @Composable
-fun rememberSwipeableSelectionState(initialValue : Int = 0) = rememberSaveable(saver = SwipeableSelectionState.Saver){
-    SwipeableSelectionState(initialValue)
-}
+fun rememberSelectionState(initialValue: Int = 0) =
+    rememberSaveable(saver = SwipeableSelectionState.Saver) {
+        SwipeableSelectionState(initialValue)
+    }
 
+/**
+ * Composes swipeable vertical list
+ * @param modifier Modifier applied to SwipeableSelection
+ * @param state state object to get electionProcess info
+ * @param items items to fill the list
+ * @param content item's layout
+ * @param itemHeight item cell height
+ * @param visibleItems amount of item to be visible
+ * @param onSelectedItemChanged called when user selects another item
+ */
 @OptIn(ExperimentalWearMaterialApi::class, ExperimentalWearMaterialApi::class)
 @Composable
 fun <T> SwipeableSelection(
-    modifier : Modifier = Modifier,
+    modifier: Modifier = Modifier,
     selectionLineStyle: SelectionLineStyle = SelectionLineStyle.Default,
-    state : SwipeableSelectionState = rememberSwipeableSelectionState(),
-    items : List<T>,
+    state: SwipeableSelectionState = rememberSelectionState(),
+    items: List<T>,
     content: @Composable RowScope.(T, Boolean) -> Unit,
-    itemHeight : Dp,
-    visibleItems : Int = 3,
-    onSelectedItemChanged : (selectedIndex : Int) -> Unit
+    itemHeight: Dp,
+    visibleItems: Int = 3,
+    onSelectedItemChanged: (selectedIndex: Int) -> Unit
 ) {
 
     val selectionItems = remember(items) {
         items.map {
-            SwipeableSelectionItem(it)
+            SelectionItem(it)
         }
     }
     val swipeableState = rememberSwipeableState(initialValue = state.lastSelectedIndex) {
@@ -131,11 +149,11 @@ fun <T> SwipeableSelection(
         true
     }
 
-    val sizePx = with(LocalDensity.current) { itemHeight.toPx() }
+    val itemHeighPx = with(LocalDensity.current) { itemHeight.toPx() }
     val anchors = remember(items) {
         val anchors = mutableMapOf<Float, Int>()
         for (index in items.indices) {
-            anchors[-index * sizePx] = index
+            anchors[-index * itemHeighPx] = index
         }
         anchors
     }
@@ -143,7 +161,7 @@ fun <T> SwipeableSelection(
 
     Box(
         modifier = Modifier
-            .height(itemHeight*visibleItems),
+            .height(itemHeight * visibleItems),
         contentAlignment = Alignment.Center
     ) {
         Box(
@@ -165,11 +183,11 @@ fun <T> SwipeableSelection(
                         brush = selectionLineStyle.brush,
                         start = Offset(
                             width * startFraction,
-                            sizePx
+                            itemHeighPx
                         ),
                         end = Offset(
                             width * endFraction,
-                            sizePx
+                            itemHeighPx
                         ),
                         strokeWidth = 3f
                     )
@@ -199,19 +217,27 @@ fun <T> SwipeableSelection(
                         placeable.placeRelative(
                             IntOffset(
                                 0,
-                                (placeableYMultiplier * sizePx).roundToInt()
+                                (placeableYMultiplier * itemHeighPx).roundToInt()
                             )
                         )
                     }
                 }) {
-                selectionItems.forEach {
+                selectionItems.forEachIndexed { index, item ->
                     Row(
                         modifier = Modifier
                             .height(itemHeight),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        if(it.isSelected || (!it.isSelected && visibleItems-1 >= (state.lastSelectedIndex-selectionItems.indexOf(it)).absoluteValue))
-                            content(it.item, it.isSelected)
+                        val visible by remember(abs((swipeableState.offset.value / itemHeighPx)).roundToInt()) {
+                            mutableStateOf(abs((swipeableState.offset.value / itemHeighPx)).roundToInt() in (index - 1)..(index + 1))
+                        }
+                        AnimatedVisibility(
+                            visible = visible,
+                            enter = fadeIn(spring(stiffness = Spring.StiffnessMediumLow)),
+                            exit = fadeOut(spring(stiffness = Spring.StiffnessMediumLow))
+                        ) {
+                            content(item.item, item.isSelected)
+                        }
                     }
                 }
             }

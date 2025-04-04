@@ -1,5 +1,6 @@
 package com.receipts.receipt_sharing.ui.reviews
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -27,8 +29,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,15 +54,24 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.receipts.receipt_sharing.R
-import com.receipts.receipt_sharing.domain.apiServices.UnsafeImageLoader
-import com.receipts.receipt_sharing.domain.response.RecipeResult
+import com.receipts.receipt_sharing.data.helpers.UnsafeImageLoader
+import com.receipts.receipt_sharing.domain.response.ApiResult
 import com.receipts.receipt_sharing.domain.reviews.ReviewModel
-import com.receipts.receipt_sharing.presentation.reviews.ReviewPageEvent
-import com.receipts.receipt_sharing.presentation.reviews.ReviewPageState
+import com.receipts.receipt_sharing.presentation.reviews.reviewPage.ReviewPageEvent
+import com.receipts.receipt_sharing.presentation.reviews.reviewPage.ReviewPageState
 import com.receipts.receipt_sharing.ui.effects.shimmerEffect
+import com.receipts.receipt_sharing.ui.infoPages.ErrorInfoPage
 import com.receipts.receipt_sharing.ui.recipe.RatingRow
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
 
+/**
+ * Composes review editing page
+ * @param modifier Modifier applied to ReviewPage
+ * @param state state object used to control layout
+ * @param onEvent called when user interacts with ui
+ * @param onRefresh called when user updates page
+ * @param onGoBack called when user clicks on "Back" navigation button
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReviewPage(
@@ -68,10 +81,22 @@ fun ReviewPage(
     onGoBack: () -> Unit,
     onRefresh: () -> Unit
 ) {
+    val ctx = LocalContext.current
+    LaunchedEffect(state.infoMessage) {
+        if (!state.infoMessage.isNullOrEmpty())
+            Toast.makeText(ctx, state.infoMessage, Toast.LENGTH_SHORT).show()
+    }
     Scaffold(
         modifier = modifier,
         topBar = {
-            TopAppBar(
+            TopAppBar(modifier = Modifier
+                .clip(RoundedCornerShape(bottomStartPercent = 40, bottomEndPercent = 40)),
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    actionIconContentColor = MaterialTheme.colorScheme.secondary,
+                    navigationIconContentColor = MaterialTheme.colorScheme.secondary
+                ),
                 title = {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -138,12 +163,12 @@ fun ReviewPage(
         PullToRefreshBox(
             modifier = Modifier
                 .padding(innerPadding),
-            isRefreshing = state.review is RecipeResult.Downloading,
+            isRefreshing = state.review is ApiResult.Downloading,
             onRefresh = onRefresh,
         ) {
             LazyColumn {
                 when (state.review) {
-                    is RecipeResult.Downloading -> {
+                    is ApiResult.Downloading -> {
                         item {
                             Row(
                                 verticalAlignment = Alignment.Top,
@@ -175,13 +200,21 @@ fun ReviewPage(
                         }
                     }
 
-                    is RecipeResult.Error -> {}
-                    is RecipeResult.Succeed -> {
+                    is ApiResult.Error -> {
+                        item {
+                            ErrorInfoPage(
+                                errorInfo = state.review.info
+                                    ?: stringResource(R.string.unknown_error_txt),
+                            ) { onRefresh() }
+                        }
+                    }
+
+                    is ApiResult.Succeed -> {
                         item {
                             Row(
                                 modifier = Modifier
                                     .wrapContentWidth()
-                                    .padding(bottom = 8.dp, start = 8.dp, end = 4.dp),
+                                    .padding(top = 12.dp, bottom = 8.dp, start = 8.dp, end = 4.dp),
                                 horizontalArrangement = Arrangement.Start,
                                 verticalAlignment = Alignment.Top
                             ) {
@@ -213,7 +246,7 @@ fun ReviewPage(
                                         .padding(horizontal = 8.dp, vertical = 12.dp),
                                     text = state.userName,
                                     textAlign = TextAlign.Center,
-                                    style = MaterialTheme.typography.titleMedium,
+                                    style = MaterialTheme.typography.titleLarge,
                                     letterSpacing = TextUnit(
                                         1.5f,
                                         TextUnitType.Sp
@@ -229,7 +262,7 @@ fun ReviewPage(
                                     .wrapContentSize(),
                                 starSize = 40.dp,
                                 itemsPadding = PaddingValues(horizontal = 8.dp),
-                                onStarClick = { onEvent(ReviewPageEvent.SetReviewRating(1)) },
+                                onStarClick = { onEvent(ReviewPageEvent.SetReviewRating(it)) },
                                 currentRating = state.reviewRating,
                             )
                         }
@@ -240,7 +273,7 @@ fun ReviewPage(
                                 .padding(horizontal = 12.dp, vertical = 8.dp),
                                 value = state.reviewText,
 
-                                placeholder =  {
+                                placeholder = {
                                     Text(
                                         modifier = Modifier
                                             .alpha(0.5f),
@@ -250,29 +283,35 @@ fun ReviewPage(
                                         letterSpacing = TextUnit(1.5f, TextUnitType.Sp)
                                     )
                                 },
-                                isError = state.reviewText.length < 100 && state.reviewText.split(" ").size < 15,
+                                isError = state.reviewText.length < 50 && state.reviewText.split(" ").size < 5,
                                 supportingText = {
-                                        if (state.reviewText.isEmpty())
-                                            Text(
-                                                text = stringResource(R.string.empty_field_error),
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                fontWeight = FontWeight.W400,
-                                                color = MaterialTheme.colorScheme.error
-                                            )
-                                        else if (state.reviewText.length < 100)
-                                            Text(
-                                                text = stringResource(R.string.incorrect_length_least_error, 100),
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                fontWeight = FontWeight.W400,
-                                                color = MaterialTheme.colorScheme.error
-                                            )
-                                        else if (state.reviewText.split(" ").size < 20)
-                                            Text(
-                                                text = stringResource(R.string.incorrect_words_least_error, 20),
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                fontWeight = FontWeight.W400,
-                                                color = MaterialTheme.colorScheme.error
-                                            )
+                                    if (state.reviewText.isEmpty())
+                                        Text(
+                                            text = stringResource(R.string.empty_field_error),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.W400,
+                                            color = MaterialTheme.colorScheme.error
+                                        )
+                                    else if (state.reviewText.length < 50)
+                                        Text(
+                                            text = stringResource(
+                                                R.string.incorrect_length_least_error,
+                                                50
+                                            ),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.W400,
+                                            color = MaterialTheme.colorScheme.error
+                                        )
+                                    else if (state.reviewText.split(" ").size < 5)
+                                        Text(
+                                            text = stringResource(
+                                                R.string.incorrect_words_least_error,
+                                                5
+                                            ),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.W400,
+                                            color = MaterialTheme.colorScheme.error
+                                        )
                                 },
                                 onValueChange = { onEvent(ReviewPageEvent.SetReviewText(it)) }
                             )
@@ -290,7 +329,7 @@ private fun Preview() {
     val state by remember {
         mutableStateOf(
             ReviewPageState(
-                review = RecipeResult.Succeed(
+                review = ApiResult.Succeed(
                     ReviewModel(
                         "",
                         "", "", "", 4

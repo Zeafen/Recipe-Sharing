@@ -5,7 +5,8 @@ import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -14,11 +15,13 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
@@ -37,13 +40,19 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.receipts.receipt_sharing.R
 import com.receipts.receipt_sharing.data.helpers.toAmountString
+import com.receipts.receipt_sharing.data.helpers.UnsafeImageLoader
 import com.receipts.receipt_sharing.domain.creators.CreatorRequest
-import com.receipts.receipt_sharing.domain.apiServices.UnsafeImageLoader
 import com.receipts.receipt_sharing.presentation.RecipeSharedElementKey
 import com.receipts.receipt_sharing.presentation.RecipeSharedElementType
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
 
-@OptIn(ExperimentalSharedTransitionApi::class)
+
+/**
+ * Composes creator cell (card)
+ * @param modifier Modifier applied to Card
+ * @param creator Creator info
+ */
+@OptIn(ExperimentalSharedTransitionApi::class, ExperimentalLayoutApi::class)
 @Composable
 fun CreatorCell(
     modifier: Modifier = Modifier,
@@ -52,7 +61,7 @@ fun CreatorCell(
     animatedVisibility: AnimatedVisibilityScope
 ) {
     with(sharedTransitionScope) {
-        Column(
+        Card(
             modifier = Modifier
                 .sharedBounds(
                     rememberSharedContentState(
@@ -65,7 +74,10 @@ fun CreatorCell(
                     animatedVisibilityScope = animatedVisibility
                 )
                 .then(modifier),
-            horizontalAlignment = Alignment.CenterHorizontally,
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            ),
+            shape = RoundedCornerShape(16.dp)
         ) {
             if (creator.imageUrl.isBlank())
                 Image(
@@ -119,7 +131,7 @@ fun CreatorCell(
                 )
             Text(
                 modifier = Modifier
-                    .padding(horizontal = 8.dp)
+                    .padding(horizontal = 12.dp)
                     .sharedElement(
                         rememberSharedContentState(
                             key = RecipeSharedElementKey(
@@ -130,7 +142,7 @@ fun CreatorCell(
                         ),
                         animatedVisibilityScope = animatedVisibility
                     )
-                    .fillMaxWidth(),
+                    .fillMaxWidth(1f),
                 textAlign = TextAlign.Justify,
                 text = creator.nickname,
                 maxLines = 2,
@@ -139,26 +151,36 @@ fun CreatorCell(
                 letterSpacing = TextUnit(0.15f, TextUnitType.Em),
                 fontWeight = FontWeight.W400
             )
-            Text(
+            FlowRow(
                 modifier = Modifier
-                    .padding(horizontal = 8.dp)
-                    .alpha(0.5f),
-                textAlign = TextAlign.Start,
-                text = stringResource(R.string.creator_recipes_count, creator.recipesCount.toAmountString()),
-                style = MaterialTheme.typography.bodyLarge,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-            Text(
-                modifier = Modifier
-                    .padding(horizontal = 8.dp)
-                    .alpha(0.5f),
-                textAlign = TextAlign.Start,
-                text = stringResource(R.string.followers_count, creator.followersCount.toAmountString()),
-                style = MaterialTheme.typography.bodyLarge,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
+            ){
+                Text(
+                    modifier = Modifier
+                        .alpha(0.5f)
+                        .padding(end = 8.dp),
+                    textAlign = TextAlign.Start,
+                    text = stringResource(
+                        R.string.creator_recipes_count,
+                        creator.recipesCount.toAmountString()
+                    ),
+                    style = MaterialTheme.typography.bodyLarge,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    modifier = Modifier
+                        .alpha(0.5f),
+                    textAlign = TextAlign.Start,
+                    text = stringResource(
+                        R.string.followers_count,
+                        creator.followersCount.toAmountString()
+                    ),
+                    style = MaterialTheme.typography.bodyLarge,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         }
     }
 }
@@ -167,11 +189,11 @@ fun CreatorCell(
 @Preview
 @Composable
 private fun Preview() {
-    RecipeSharing_theme {
+    RecipeSharing_theme(darkTheme = true) {
         Surface {
             SharedTransitionLayout {
                 LazyVerticalStaggeredGrid(
-                    columns = StaggeredGridCells.Fixed(2),
+                    columns = StaggeredGridCells.Fixed(1),
                     verticalItemSpacing = 12.dp
                 ) {
                     items(10) {

@@ -26,8 +26,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Menu
@@ -41,8 +43,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
@@ -58,18 +58,30 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.receipts.receipt_sharing.R
 import com.receipts.receipt_sharing.domain.creators.CreatorRequest
-import com.receipts.receipt_sharing.domain.response.RecipeResult
-import com.receipts.receipt_sharing.presentation.creators.CreatorsScreenEvent
-import com.receipts.receipt_sharing.presentation.creators.CreatorsScreenState
+import com.receipts.receipt_sharing.domain.response.ApiResult
+import com.receipts.receipt_sharing.presentation.creators.creatorsScreen.CreatorLoadDataType
+import com.receipts.receipt_sharing.presentation.creators.creatorsScreen.CreatorsScreenEvent
+import com.receipts.receipt_sharing.presentation.creators.creatorsScreen.CreatorsScreenState
+import com.receipts.receipt_sharing.ui.PageSelectionRow
+import com.receipts.receipt_sharing.ui.TwoLayerTopAppBar
 import com.receipts.receipt_sharing.ui.effects.shimmerEffect
 import com.receipts.receipt_sharing.ui.infoPages.ErrorInfoPage
 import com.receipts.receipt_sharing.ui.recipe.ColumnAmountDropDownMenu
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
 
+/**
+ * Composes
+ * @param state the state object user to control screen layout
+ * @param modifier Modifier applied to the CreatorsScreen
+ * @param onEvent called when user interacts with ui elements
+ * @param onOpenMenu called when user click on menu button
+ * @param onGoToCreatorPage called when user click on creator card
+ */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun CreatorsScreen(
@@ -83,14 +95,16 @@ fun CreatorsScreen(
 ) {
     val refreshState = rememberPullToRefreshState()
     Scaffold(
+
         modifier = modifier,
         topBar = {
-            TopAppBar(modifier = Modifier,
+            TwoLayerTopAppBar(modifier = Modifier
+                .clip(RoundedCornerShape(bottomStartPercent = 40, bottomEndPercent = 40)),
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                    actionIconContentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    actionIconContentColor = MaterialTheme.colorScheme.secondary,
+                    navigationIconContentColor = MaterialTheme.colorScheme.secondary
                 ),
                 title = {
                     AnimatedContent(targetState = state.openSearchString,
@@ -122,10 +136,6 @@ fun CreatorsScreen(
                                 .fillMaxWidth()
                                 .padding(vertical = 8.dp, horizontal = 4.dp),
                                 singleLine = true,
-                                colors = TextFieldDefaults.colors(
-                                    focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-                                    unfocusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-                                ),
                                 label = { Text(stringResource(R.string.creator_name_input)) },
                                 trailingIcon = {
                                     IconButton(
@@ -142,8 +152,14 @@ fun CreatorsScreen(
                         else Text(
                             modifier = Modifier
                                 .padding(start = 8.dp),
-                            text = stringResource(R.string.creator_screen_header),
-                            style = MaterialTheme.typography.headlineLarge
+                            text = stringResource(when(state.loadDataType){
+                                CreatorLoadDataType.All -> R.string.creator_screen_header
+                                is CreatorLoadDataType.Followers -> R.string.followers_screen_header
+                                is CreatorLoadDataType.Follows -> R.string.follows_page_title
+                            }),
+                            style = MaterialTheme.typography.headlineMedium,
+                            maxLines = 2,
+                            textAlign = TextAlign.Start,
                         )
                     }
                 },
@@ -180,34 +196,30 @@ fun CreatorsScreen(
                 modifier = Modifier
                     .padding(8.dp)
             ) {
-                AnimatedContent(targetState = state.openCellsAmountSelect) { targetState ->
-                    if (targetState)
-                        ColumnAmountDropDownMenu(
-                            onDismissRequest = {
-                                onEvent(CreatorsScreenEvent.SetOpenSelectCellsAmountDialog(false))
-                            },
-                            onSelectSize = {
-                                onEvent(CreatorsScreenEvent.SetCellsAmount(it))
-                            },
-                            expanded = state.openCellsAmountSelect
-                        )
-                    else
-                        FloatingActionButton(
-                            onClick = {
-                                onEvent(
-                                    CreatorsScreenEvent.SetOpenSelectCellsAmountDialog(
-                                        true
-                                    )
-                                )
-                            },
-                            shape = CircleShape
-                        ) {
-                            Icon(
-                                painterResource(R.drawable.cells_amount_ic),
-                                contentDescription = null
+                FloatingActionButton(
+                    onClick = {
+                        onEvent(
+                            CreatorsScreenEvent.SetOpenSelectCellsAmountDialog(
+                                true
                             )
-                        }
+                        )
+                    },
+                    shape = CircleShape
+                ) {
+                    Icon(
+                        painterResource(R.drawable.cells_amount_ic),
+                        contentDescription = null
+                    )
                 }
+                ColumnAmountDropDownMenu(
+                    onDismissRequest = {
+                        onEvent(CreatorsScreenEvent.SetOpenSelectCellsAmountDialog(false))
+                    },
+                    onSelectSize = {
+                        onEvent(CreatorsScreenEvent.SetCellsAmount(it))
+                    },
+                    expanded = state.openCellsAmountSelect
+                )
             }
         }
     ) {
@@ -216,20 +228,13 @@ fun CreatorsScreen(
                 .fillMaxSize()
                 .padding(it),
             state = refreshState,
-            isRefreshing = state.creators is RecipeResult.Downloading,
-            onRefresh = {
-                onEvent(
-                    if (state.followsLoaded)
-                        CreatorsScreenEvent.LoadData
-                    else CreatorsScreenEvent.LoadFollows
-                )
-            },
+            isRefreshing = state.creators is ApiResult.Downloading,
+            onRefresh = { onEvent(CreatorsScreenEvent.LoadData) },
         ) {
             when (state.creators) {
-                is RecipeResult.Downloading -> {
+                is ApiResult.Downloading -> {
                     LazyColumn(
                         modifier = Modifier
-                            .background(MaterialTheme.colorScheme.surface)
                             .fillMaxSize(),
                     ) {
                         items(10) {
@@ -259,26 +264,24 @@ fun CreatorsScreen(
                     }
                 }
 
-                is RecipeResult.Error -> {
+                is ApiResult.Error -> {
                     ErrorInfoPage(errorInfo = state.creators.info
                         ?: stringResource(id = R.string.unknown_error_txt),
                         onReloadPage = {
                             onEvent(
-                                if (state.followsLoaded)
-                                    CreatorsScreenEvent.LoadData
-                                else CreatorsScreenEvent.LoadFollows
+                                CreatorsScreenEvent.LoadData
                             )
                         })
                 }
 
-                is RecipeResult.Succeed -> {
+                is ApiResult.Succeed -> {
                     LazyVerticalStaggeredGrid(
                         columns = StaggeredGridCells.Fixed(state.cellsAmount.cellsCount),
                         modifier = Modifier
                             .background(Color.Transparent)
                             .fillMaxSize(),
                     ) {
-                        if (state.creators.data != null)
+                        if (state.creators.data != null) {
                             items(state.creators.data) {
                                 CreatorCell(
                                     modifier = Modifier
@@ -291,6 +294,22 @@ fun CreatorsScreen(
                                     animatedVisibility = animatedVisibility
                                 )
                             }
+                            item(span = StaggeredGridItemSpan.FullLine) {
+                                PageSelectionRow(modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 12.dp),
+                                    totalPages = state.maxPages,
+                                    currentPage = state.currentPage,
+                                    onPageClick = {
+                                        onEvent(
+                                            CreatorsScreenEvent.SetCurrentPage(
+                                                it
+                                            )
+                                        )
+                                    }
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -306,7 +325,7 @@ private fun Preview() {
         var state by remember {
             mutableStateOf(
                 CreatorsScreenState(
-                    creators = RecipeResult.Succeed(
+                    creators = ApiResult.Succeed(
                         listOf(
                             CreatorRequest(
                                 "1",
@@ -351,7 +370,9 @@ private fun Preview() {
                                 ""
                             )
                         )
-                    )
+                    ),
+                    currentPage = 5,
+                    maxPages = 12,
                 )
             )
         }
@@ -365,11 +386,11 @@ private fun Preview() {
                         onEvent = {
                             if (it is CreatorsScreenEvent.SetOpenSelectCellsAmountDialog)
                                 state = state.copy(openCellsAmountSelect = it.openDialog)
-                            else if(it is CreatorsScreenEvent.SetCellsAmount)
+                            else if (it is CreatorsScreenEvent.SetCellsAmount)
                                 state = state.copy(cellsAmount = it.cellsAmount)
                         },
                         sharedTransitionScope = this@SharedTransitionLayout,
-                        animatedVisibility = this
+                        animatedVisibility = this,
                     )
                 }
             }

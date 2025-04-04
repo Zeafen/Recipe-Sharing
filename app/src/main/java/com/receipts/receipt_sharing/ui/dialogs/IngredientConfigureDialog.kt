@@ -1,6 +1,7 @@
 package com.receipts.receipt_sharing.ui.dialogs
 
 import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -9,10 +10,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,20 +32,22 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import androidx.core.text.isDigitsOnly
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Text
 import com.receipts.receipt_sharing.R
 import com.receipts.receipt_sharing.domain.recipes.Ingredient
 import com.receipts.receipt_sharing.domain.recipes.Measure
 import com.receipts.receipt_sharing.ui.effects.SwipeableSelection
-import com.receipts.receipt_sharing.ui.effects.rememberSwipeableSelectionState
+import com.receipts.receipt_sharing.ui.effects.rememberSelectionState
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
-
+import kotlin.Float.Companion.MAX_VALUE
+/**
+ * Composes email editing dialog
+ * @param ingredient initial ingredient value
+ * @param onSaveChanges called when user click on "Confirm" button
+ * @param onDismissRequest called when user tries to dismiss dialog
+ */
 @Composable
 fun IngredientConfigureDialog(
-    ingredient: Ingredient = Ingredient("name", 0, Measure.Gram),
+    ingredient: Ingredient = Ingredient("name", 0f, Measure.Gram),
     onDismissRequest: () -> Unit,
     onSaveChanges: (Ingredient) -> Unit
 ) {
@@ -52,12 +57,8 @@ fun IngredientConfigureDialog(
     var amountInput by rememberSaveable {
         mutableStateOf(ingredientState.amount.toString())
     }
-    var isError by remember {
-        mutableStateOf(false)
-    }
-
-    LaunchedEffect(amountInput.isEmpty() || !amountInput.isDigitsOnly() || amountInput.length > 5 || ingredientState.name.isEmpty()) {
-        isError = amountInput.isEmpty() || !amountInput.isDigitsOnly() || amountInput.length > 5 || ingredientState.name.isEmpty()
+    var isError = remember(amountInput) {
+        amountInput.isEmpty() || amountInput.toFloatOrNull() == null || amountInput.length > 5 || amountInput.toFloat() !in 1f..MAX_VALUE
     }
 
     Dialog(
@@ -67,7 +68,7 @@ fun IngredientConfigureDialog(
         )
     ) {
         Column(
-            modifier = Modifier.background(MaterialTheme.colorScheme.secondaryContainer),
+            modifier = Modifier.background(MaterialTheme.colorScheme.surfaceVariant),
             verticalArrangement = Arrangement.SpaceAround
         ) {
             OutlinedTextField(modifier = Modifier
@@ -78,13 +79,12 @@ fun IngredientConfigureDialog(
                 label = {
                     Text(
                         text = stringResource(R.string.ingredient_name_input),
-                        color = MaterialTheme.colorScheme.onSecondaryContainer
                     )
                 },
                 supportingText = {
-                    if(ingredientState.name.isEmpty())
+                    if (ingredientState.name.isEmpty())
                         Text(
-                            text =stringResource(R.string.empty_field_error),
+                            text = stringResource(R.string.empty_field_error),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.W400,
                             color = MaterialTheme.colorScheme.error
@@ -104,42 +104,52 @@ fun IngredientConfigureDialog(
                         .weight(2f)
                         .padding(vertical = 12.dp, horizontal = 8.dp),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    isError = amountInput.isEmpty() || amountInput.length > 5 || !amountInput.isDigitsOnly(),
+                    isError = isError,
                     label = {
                         Text(
                             text = stringResource(R.string.ingredient_amount_input),
-                            color = MaterialTheme.colorScheme.onSecondaryContainer
                         )
                     },
                     value = amountInput,
                     supportingText = {
-                        if(amountInput.isEmpty() || amountInput.length > 5 || !amountInput.isDigitsOnly())
+                        AnimatedVisibility(isError) {
                             Text(
-                                text =
-                                    if(amountInput.isEmpty())
-                                    stringResource(R.string.empty_field_error)
-                                else if(amountInput.length > 5)
-                                    stringResource(R.string.incorrect_length_range_error, 1, 5)
-                                else stringResource(R.string.no_letter_allowed),
+                                text = when {
+                                    amountInput.isEmpty() -> stringResource(R.string.empty_field_error)
+
+                                    amountInput.length > 5 -> stringResource(
+                                        R.string.incorrect_length_range_error,
+                                        1,
+                                        5
+                                    )
+
+                                    else -> {
+                                        stringResource(R.string.illegal_data_format)
+                                    }
+                                },
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.W400,
                                 color = MaterialTheme.colorScheme.error
                             )
+                        }
                     },
                     onValueChange = { amountInput = it },
                 )
                 SwipeableSelection(modifier = Modifier
-                    .background(MaterialTheme.colorScheme.secondaryContainer)
                     .padding(horizontal = 8.dp),
                     items = Measure.entries.toList(),
                     itemHeight = 24.dp,
                     visibleItems = 2,
-                    state = rememberSwipeableSelectionState(initialValue = Measure.entries.indexOf(ingredient.measureType)),
+                    state = rememberSelectionState(
+                        initialValue = Measure.entries.indexOf(
+                            ingredient.measureType
+                        )
+                    ),
                     content = { item, isSelected ->
                         Text(
                             modifier = Modifier
                                 .alpha(if (isSelected) 1f else 0.4f),
-                            text = item.name,
+                            text = stringResource(item.fulName),
                             color = MaterialTheme.colorScheme.onSecondaryContainer
                         )
                     },
@@ -154,31 +164,31 @@ fun IngredientConfigureDialog(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Button(modifier = Modifier
-                    .padding(horizontal = 8.dp, vertical = 12.dp)
+                    .padding(horizontal = 4.dp, vertical = 12.dp)
                     .weight(1f),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.secondary,
                         contentColor = MaterialTheme.colorScheme.onSecondary
                     ),
                     shape = RoundedCornerShape(16.dp),
-                    enabled = !isError,
+                    enabled = !isError && ingredientState.name.isNotEmpty(),
                     onClick = {
                         onSaveChanges(
                             ingredientState.copy(
-                                amount = amountInput.toLongOrNull() ?: 0L
+                                amount = amountInput.toFloatOrNull() ?: 0f
                             )
                         )
                     }
                 ) {
                     Text(
                         style = MaterialTheme.typography.titleSmall,
-                        text = stringResource(id = R.string.save_changes_str)
+                        text = stringResource(id = R.string.confirm_txt)
                     )
                 }
                 Button(
                     modifier = Modifier
                         .weight(1f)
-                        .padding(horizontal = 8.dp, vertical = 12.dp),
+                        .padding(horizontal = 4.dp, vertical = 12.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.error,
                         contentColor = MaterialTheme.colorScheme.onError
@@ -188,7 +198,7 @@ fun IngredientConfigureDialog(
                 ) {
                     Text(
                         style = MaterialTheme.typography.titleSmall,
-                        text = stringResource(id = R.string.cancel_changes_str)
+                        text = stringResource(id = R.string.cancel_txt)
                     )
                 }
             }

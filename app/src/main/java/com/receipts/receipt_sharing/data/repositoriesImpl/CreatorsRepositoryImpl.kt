@@ -5,264 +5,377 @@ import com.receipts.receipt_sharing.domain.creators.ChangePasswRequest
 import com.receipts.receipt_sharing.domain.creators.CreatorRequest
 import com.receipts.receipt_sharing.domain.creators.EmailConfirmRequest
 import com.receipts.receipt_sharing.domain.creators.ProfileRequest
-import com.receipts.receipt_sharing.domain.repositories.ICreatorsRepository
-import com.receipts.receipt_sharing.domain.response.RecipeResult
+import com.receipts.receipt_sharing.domain.repositories.CreatorsRepository
+import com.receipts.receipt_sharing.domain.response.ApiResult
+import com.receipts.receipt_sharing.domain.response.PagedResult
 import retrofit2.HttpException
 
 class CreatorsRepositoryImpl(
     private val api: RecipesAPIService
-) : ICreatorsRepository {
-    override suspend fun getCreators(token: String): RecipeResult<List<CreatorRequest>> {
-        return try {
-            val result = api.getCreators(token)
-            RecipeResult.Succeed(result)
-        } catch (e: HttpException) {
-            RecipeResult.Error(e.response()?.message() ?: e.message())
-        } catch (e: Exception) {
-            RecipeResult.Error(e.message)
-        }
-    }
-
-    override suspend fun getFollowersCount(token: String): RecipeResult<Long> {
-        return try {
-            RecipeResult.Succeed(api.getFollowersCount(token))
-        } catch (e: HttpException) {
-            RecipeResult.Error(e.response()?.message() ?: e.message())
-        } catch (e: Exception) {
-            RecipeResult.Error(e.message)
-        }
-    }
-
-    override suspend fun getCreatorFollowersCount(
+) : CreatorsRepository {
+    override suspend fun getCreators(
         token: String,
-        creatorID: String
-    ): RecipeResult<Long> {
+        page: Int,
+        pageSize: Int
+    ): ApiResult<PagedResult<List<CreatorRequest>>> {
         return try {
-            RecipeResult.Succeed(api.getCreatorFollowersCount(token, creatorID))
+            val result = api.getCreators(token, page, pageSize)
+            ApiResult.Succeed(result)
         } catch (e: HttpException) {
-            RecipeResult.Error(e.response()?.message() ?: e.message())
+            ApiResult.Error(e.response()?.message() ?: e.message())
         } catch (e: Exception) {
-            RecipeResult.Error(e.message)
+            ApiResult.Error(e.message)
         }
     }
 
-    override suspend fun getCreatorRecipesCount(
+    override suspend fun getTopCreators(
         token: String,
-        creatorID: String
-    ): RecipeResult<Long> {
+        page: Int,
+        pageSize: Int
+    ): ApiResult<PagedResult<List<CreatorRequest>>> {
         return try {
-            RecipeResult.Succeed(api.getRecipesCountByCreator(token, creatorID))
+            val result = api.getTopCreators(token, page, pageSize)
+            ApiResult.Succeed(result)
         } catch (e: HttpException) {
-            RecipeResult.Error(e.response()?.message() ?: e.message())
+            ApiResult.Error(e.response()?.message() ?: e.message())
         } catch (e: Exception) {
-            RecipeResult.Error(e.message)
+            ApiResult.Error(e.message)
         }
     }
 
     override suspend fun getCreatorsByName(
         token: String,
-        nickname: String
-    ): RecipeResult<List<CreatorRequest>> {
+        nickname: String,
+        page: Int,
+        pageSize: Int
+    ): ApiResult<PagedResult<List<CreatorRequest>>> {
         return try {
-            val result = api.getCreatorsByName(token, nickname)
-            RecipeResult.Succeed(result)
+            val result = api.getCreatorsByName(token, nickname, page, pageSize)
+            ApiResult.Succeed(result)
         } catch (e: HttpException) {
-            RecipeResult.Error(e.response()?.message() ?: e.message())
+            ApiResult.Error(e.response()?.message() ?: e.message())
         } catch (e: Exception) {
-            RecipeResult.Error(e.message)
-        }
-    }
-
-    override suspend fun getCreatorFollowsCount(
-        token: String,
-        creatorID: String
-    ): RecipeResult<Long> {
-        return try {
-            val result = api.getCreatorFollowsCount(token, creatorID)
-            RecipeResult.Succeed(result)
-        } catch (e: HttpException) {
-            RecipeResult.Error(e.response()?.message() ?: e.message())
-        } catch (e: Exception) {
-            RecipeResult.Error(e.message)
-        }
-    }
-
-    override suspend fun setEmail(token: String, email: String): RecipeResult<Unit> {
-        return try {
-            api.setEmail(token, email)
-            RecipeResult.Succeed()
-        } catch (e: HttpException) {
-            RecipeResult.Error(e.response()?.message() ?: e.message())
-        } catch (e: Exception) {
-            RecipeResult.Error(e.message)
-        }
-    }
-
-    override suspend fun setEmailGetCode(token: String, email: String): RecipeResult<Unit> {
-        return try {
-            api.setEmailGetCode(token, email)
-            RecipeResult.Succeed()
-        } catch (e: HttpException) {
-            RecipeResult.Error(e.response()?.message() ?: e.message())
-        } catch (e: Exception) {
-            RecipeResult.Error(e.message)
-        }
-    }
-
-    override suspend fun getCode(token: String): RecipeResult<Unit> {
-        return try {
-            api.getCode(token)
-            RecipeResult.Succeed()
-        } catch (e: HttpException) {
-            RecipeResult.Error(e.response()?.message() ?: e.message())
-        } catch (e: Exception) {
-            RecipeResult.Error(e.message)
-        }
-    }
-
-    override suspend fun confirmEmail(
-        token: String,
-        request: EmailConfirmRequest
-    ): RecipeResult<Unit> {
-        return try {
-            api.confirmEmail(token, request)
-            RecipeResult.Succeed()
-        } catch (e: HttpException) {
-            RecipeResult.Error(e.response()?.message() ?: e.message())
-        } catch (e: Exception) {
-            RecipeResult.Error(e.message)
-        }
-    }
-
-    override suspend fun updatePassword(
-        token: String,
-        request: ChangePasswRequest
-    ): RecipeResult<Unit> {
-        return try {
-            api.updatePassword(token, request)
-            RecipeResult.Succeed()
-        } catch (e: HttpException) {
-            RecipeResult.Error(e.response()?.message() ?: e.message())
-        } catch (e: Exception) {
-            RecipeResult.Error(e.message)
+            ApiResult.Error(e.message)
         }
     }
 
     override suspend fun getCreatorById(
         token: String,
         creatorId: String
-    ): RecipeResult<CreatorRequest> {
+    ): ApiResult<CreatorRequest> {
         return try {
             val result = api.getCreatorById(token, creatorId)
-            RecipeResult.Succeed(result)
+            ApiResult.Succeed(result)
         } catch (e: HttpException) {
-            RecipeResult.Error(e.response()?.message() ?: e.message())
+            ApiResult.Error(e.response()?.message() ?: e.message())
         } catch (e: Exception) {
-            RecipeResult.Error(e.message)
+            ApiResult.Error(e.message)
         }
     }
 
-    override suspend fun getFollows(token: String): RecipeResult<List<CreatorRequest>> {
-        return try {
-            val result = api.getFollows(token)
-            RecipeResult.Succeed(result)
-        } catch (e: HttpException) {
-            RecipeResult.Error(e.response()?.message() ?: e.message())
-        } catch (e: Exception) {
-            RecipeResult.Error(e.message)
-        }
-    }
-
-    override suspend fun getFollowers(token: String): RecipeResult<List<CreatorRequest>> {
-        return try {
-            val result = api.getFollowers(token)
-            RecipeResult.Succeed(result)
-        } catch (e: HttpException) {
-            RecipeResult.Error(e.response()?.message() ?: e.message())
-        } catch (e: Exception) {
-            RecipeResult.Error(e.message)
-        }
-    }
-
-    override suspend fun getFollowsByName(
+    override suspend fun getOwnFollows(
         token: String,
-        name: String
-    ): RecipeResult<List<CreatorRequest>> {
+        page: Int,
+        pageSize: Int
+    ): ApiResult<PagedResult<List<CreatorRequest>>> {
         return try {
-            val result = api.getFollowsByName(token, name)
-            RecipeResult.Succeed(result)
+            val result = api.getFollows(token, page, pageSize)
+            ApiResult.Succeed(result)
         } catch (e: HttpException) {
-            RecipeResult.Error(e.response()?.message() ?: e.message())
+            ApiResult.Error(e.response()?.message() ?: e.message())
         } catch (e: Exception) {
-            RecipeResult.Error(e.message)
+            ApiResult.Error(e.message)
         }
     }
 
-    override suspend fun getUserInfo(token: String): RecipeResult<ProfileRequest> {
+    override suspend fun getOwnFollowsByName(
+        token: String,
+        name: String,
+        page: Int,
+        pageSize: Int
+    ): ApiResult<PagedResult<List<CreatorRequest>>> {
         return try {
-            val result = api.getUserInfo(token)
-            RecipeResult.Succeed(result)
+            val result = api.getFollowsByName(token, name, page, pageSize)
+            ApiResult.Succeed(result)
         } catch (e: HttpException) {
-            RecipeResult.Error(e.response()?.message() ?: e.message())
+            ApiResult.Error(e.response()?.message() ?: e.message())
         } catch (e: Exception) {
-            RecipeResult.Error(e.message)
+            ApiResult.Error(e.message)
         }
     }
+
+    override suspend fun getOwnFollowsCount(token: String): ApiResult<Long> {
+        return try {
+            val result = api.getFollowsCount(token)
+            ApiResult.Succeed(result)
+        } catch (e: HttpException) {
+            ApiResult.Error(e.response()?.message() ?: e.message())
+        } catch (e: Exception) {
+            ApiResult.Error(e.message)
+        }
+    }
+
+    override suspend fun getOwnFollowers(
+        token: String,
+        page: Int,
+        pageSize: Int
+    ): ApiResult<PagedResult<List<CreatorRequest>>> {
+        return try {
+            val result = api.getFollowers(token, page, pageSize)
+            ApiResult.Succeed(result)
+        } catch (e: HttpException) {
+            ApiResult.Error(e.response()?.message() ?: e.message())
+        } catch (e: Exception) {
+            ApiResult.Error(e.message)
+        }
+    }
+
+    override suspend fun getOwnFollowersByName(
+        token: String,
+        name: String,
+        page: Int,
+        pageSize: Int
+    ): ApiResult<PagedResult<List<CreatorRequest>>> {
+        return try {
+            val result = api.getFollowersByName(token, name, page, pageSize)
+            ApiResult.Succeed(result)
+        } catch (e: HttpException) {
+            ApiResult.Error(e.response()?.message() ?: e.message())
+        } catch (e: Exception) {
+            ApiResult.Error(e.message)
+        }
+    }
+
+    override suspend fun getOwnFollowersCount(token: String): ApiResult<Long> {
+        return try {
+            ApiResult.Succeed(api.getFollowersCount(token))
+        } catch (e: HttpException) {
+            ApiResult.Error(e.response()?.message() ?: e.message())
+        } catch (e: Exception) {
+            ApiResult.Error(e.message)
+        }
+    }
+
 
     override suspend fun getCreatorFollowers(
         token: String,
-        creatorID: String
-    ): RecipeResult<List<CreatorRequest>> {
+        creatorID: String,
+        page: Int,
+        pageSize: Int
+    ): ApiResult<PagedResult<List<CreatorRequest>>> {
         return try {
-            val result = api.getCreatorFollowers(token, creatorID)
-            RecipeResult.Succeed(result)
+            val result = api.getCreatorFollowers(token, creatorID, page, pageSize)
+            ApiResult.Succeed(result)
         } catch (e: HttpException) {
-            RecipeResult.Error(e.response()?.message() ?: e.message())
+            ApiResult.Error(e.response()?.message() ?: e.message())
         } catch (e: Exception) {
-            RecipeResult.Error(e.message)
+            ApiResult.Error(e.message)
         }
     }
 
-    override suspend fun addToFollows(token: String, creatorID: String): RecipeResult<Unit> {
+    override suspend fun getCreatorFollowersByName(
+        token: String,
+        name: String,
+        creatorID: String,
+        page: Int,
+        pageSize: Int
+    ): ApiResult<PagedResult<List<CreatorRequest>>> {
+        return try {
+            val result = api.getCreatorFollowersByName(token, creatorID, name, page, pageSize)
+            ApiResult.Succeed(result)
+        } catch (e: HttpException) {
+            ApiResult.Error(e.response()?.message() ?: e.message())
+        } catch (e: Exception) {
+            ApiResult.Error(e.message)
+        }
+    }
+
+    override suspend fun getCreatorFollowersCount(
+        token: String,
+        creatorID: String
+    ): ApiResult<Long> {
+        return try {
+            ApiResult.Succeed(api.getCreatorFollowersCount(token, creatorID))
+        } catch (e: HttpException) {
+            ApiResult.Error(e.response()?.message() ?: e.message())
+        } catch (e: Exception) {
+            ApiResult.Error(e.message)
+        }
+    }
+
+    override suspend fun getCreatorFollows(
+        token: String,
+        creatorID: String,
+        page: Int,
+        pageSize: Int
+    ): ApiResult<PagedResult<List<CreatorRequest>>> {
+        return try {
+            val result = api.getCreatorFollows(token, creatorID, page, pageSize)
+            ApiResult.Succeed(result)
+        } catch (e: HttpException) {
+            ApiResult.Error(e.response()?.message() ?: e.message())
+        } catch (e: Exception) {
+            ApiResult.Error(e.message)
+        }
+    }
+
+    override suspend fun getCreatorFollowsByName(
+        token: String,
+        name: String,
+        creatorID: String,
+        page: Int,
+        pageSize: Int
+    ): ApiResult<PagedResult<List<CreatorRequest>>> {
+        return try {
+            val result = api.getCreatorFollowsByName(token, creatorID, name, page, pageSize)
+            ApiResult.Succeed(result)
+        } catch (e: HttpException) {
+            ApiResult.Error(e.response()?.message() ?: e.message())
+        } catch (e: Exception) {
+            ApiResult.Error(e.message)
+        }
+    }
+
+    override suspend fun getCreatorFollowsCount(
+        token: String,
+        creatorID: String
+    ): ApiResult<Long> {
+        return try {
+            val result = api.getCreatorFollowsCount(token, creatorID)
+            ApiResult.Succeed(result)
+        } catch (e: HttpException) {
+            ApiResult.Error(e.response()?.message() ?: e.message())
+        } catch (e: Exception) {
+            ApiResult.Error(e.message)
+        }
+    }
+
+    override suspend fun getCreatorRecipesCount(
+        token: String,
+        creatorID: String
+    ): ApiResult<Long> {
+        return try {
+            ApiResult.Succeed(api.getRecipesCountByCreator(token, creatorID))
+        } catch (e: HttpException) {
+            ApiResult.Error(e.response()?.message() ?: e.message())
+        } catch (e: Exception) {
+            ApiResult.Error(e.message)
+        }
+    }
+
+
+    override suspend fun setEmail(token: String, email: String): ApiResult<Unit> {
+        return try {
+            api.setEmail(token, email)
+            ApiResult.Succeed()
+        } catch (e: HttpException) {
+            ApiResult.Error(e.response()?.message() ?: e.message())
+        } catch (e: Exception) {
+            ApiResult.Error(e.message)
+        }
+    }
+
+    override suspend fun setEmailGetCode(token: String, email: String): ApiResult<Unit> {
+        return try {
+            api.setEmailGetCode(token, email)
+            ApiResult.Succeed()
+        } catch (e: HttpException) {
+            ApiResult.Error(e.response()?.message() ?: e.message())
+        } catch (e: Exception) {
+            ApiResult.Error(e.message)
+        }
+    }
+
+    override suspend fun getCode(token: String): ApiResult<Unit> {
+        return try {
+            api.getCode(token)
+            ApiResult.Succeed()
+        } catch (e: HttpException) {
+            ApiResult.Error(e.response()?.message() ?: e.message())
+        } catch (e: Exception) {
+            ApiResult.Error(e.message)
+        }
+    }
+
+    override suspend fun confirmEmail(
+        token: String,
+        request: EmailConfirmRequest
+    ): ApiResult<Unit> {
+        return try {
+            api.confirmEmail(token, request)
+            ApiResult.Succeed()
+        } catch (e: HttpException) {
+            ApiResult.Error(e.response()?.message() ?: e.message())
+        } catch (e: Exception) {
+            ApiResult.Error(e.message)
+        }
+    }
+
+    override suspend fun updatePassword(
+        token: String,
+        request: ChangePasswRequest
+    ): ApiResult<Unit> {
+        return try {
+            api.updatePassword(token, request)
+            ApiResult.Succeed()
+        } catch (e: HttpException) {
+            ApiResult.Error(e.response()?.message() ?: e.message())
+        } catch (e: Exception) {
+            ApiResult.Error(e.message)
+        }
+    }
+
+    override suspend fun addToFollows(token: String, creatorID: String): ApiResult<Unit> {
         return try {
             api.addToFollows(token, creatorID)
-            RecipeResult.Succeed()
+            ApiResult.Succeed()
         } catch (e: HttpException) {
-            RecipeResult.Error(e.response()?.message() ?: e.message())
+            ApiResult.Error(e.response()?.message() ?: e.message())
         } catch (e: Exception) {
-            RecipeResult.Error(e.message)
+            ApiResult.Error(e.message)
         }
     }
 
-    override suspend fun removeFromFollows(token: String, creatorID: String): RecipeResult<Unit> {
+    override suspend fun removeFromFollows(token: String, creatorID: String): ApiResult<Unit> {
         return try {
             api.removeFromFollows(token, creatorID)
-            RecipeResult.Succeed()
+            ApiResult.Succeed()
         } catch (e: HttpException) {
-            RecipeResult.Error(e.response()?.message() ?: e.message())
+            ApiResult.Error(e.response()?.message() ?: e.message())
         } catch (e: Exception) {
-            RecipeResult.Error(e.message)
+            ApiResult.Error(e.message)
         }
     }
 
-    override suspend fun doesFollow(token: String, creatorID: String): RecipeResult<Boolean> {
+    override suspend fun doesFollow(token: String, creatorID: String): ApiResult<Boolean> {
         return try {
-            RecipeResult.Succeed(api.doesFollow(token, creatorID))
+            ApiResult.Succeed(api.doesFollow(token, creatorID))
         } catch (e: HttpException) {
-            RecipeResult.Error(e.response()?.message() ?: e.message())
+            ApiResult.Error(e.response()?.message() ?: e.message())
         } catch (e: Exception) {
-            RecipeResult.Error(e.message)
+            ApiResult.Error(e.message)
         }
     }
 
-    override suspend fun updateCreator(token: String, request: ProfileRequest): RecipeResult<Unit> {
+    override suspend fun updateCreator(token: String, request: ProfileRequest): ApiResult<Unit> {
         return try {
             api.updateCreator(token, request)
-            RecipeResult.Succeed()
+            ApiResult.Succeed()
         } catch (e: HttpException) {
-            RecipeResult.Error(e.response()?.message() ?: e.message())
+            ApiResult.Error(e.response()?.message() ?: e.message())
         } catch (e: Exception) {
-            RecipeResult.Error(e.message)
+            ApiResult.Error(e.message)
+        }
+    }
+
+    override suspend fun getUserInfo(token: String): ApiResult<ProfileRequest> {
+        return try {
+            val result = api.getUserInfo(token)
+            ApiResult.Succeed(result)
+        } catch (e: HttpException) {
+            ApiResult.Error(e.response()?.message() ?: e.message())
+        } catch (e: Exception) {
+            ApiResult.Error(e.message)
         }
     }
 }

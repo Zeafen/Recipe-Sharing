@@ -7,5 +7,5 @@ data class UserInfo(
     val userName : String = "",
     val token : String? = null,
     val imageUrl : String? = null,
-    val lastSelectedPageInd : Int = -1
+    val lastSelectedPageInd : Int = -1,
 )

@@ -14,15 +14,23 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.res.stringResource
-import com.receipts.receipt_sharing.presentation.reviews.ReviewsOrdering
+import com.receipts.receipt_sharing.presentation.reviews.reviewsScreen.ReviewsOrdering
 import kotlinx.coroutines.launch
 
-
+/**
+ * Composes review ordering selection drop down menu
+ * @param modifier Modifier applied to DropDowMenu
+ * @param expanded if drop down menu is expanded
+ * @param selectedOrder current selected ordering
+ * @param isAscending if selected ordering is ascending
+ * @param onSelectOrdering called when user clicks on ordering item
+ * @param onDismissRequest called when user tries to dismiss menu
+ */
 @Composable
 fun ReviewOrderDropDownMenu(
     modifier: Modifier = Modifier,
     onDismissRequest: () -> Unit,
-    onSelectSorting: (ReviewsOrdering) -> Unit,
+    onSelectOrdering: (ReviewsOrdering) -> Unit,
     selectedOrder: ReviewsOrdering,
     isAscending: Boolean,
     expanded: Boolean
@@ -59,7 +67,7 @@ fun ReviewOrderDropDownMenu(
                     }
                 },
                 onClick = {
-                    onSelectSorting(cell)
+                    onSelectOrdering(cell)
                 })
         }
     }

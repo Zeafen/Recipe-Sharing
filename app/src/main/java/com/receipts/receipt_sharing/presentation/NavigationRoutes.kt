@@ -5,36 +5,36 @@ sealed interface NavigationRoutes {
     sealed interface Auth : NavigationRoutes {
 
         @Serializable
-        object AuthFolder : Auth
+        data object AuthFolder : Auth
 
         @Serializable
-        object RegisterPage : Auth
+        data object RegisterPage : Auth
 
         @Serializable
-        object AuthorizePage : Auth
+        data object AuthorizePage : Auth
 
         @Serializable
-        object TryAuthorizePage : Auth
+        data object TryAuthorizePage : Auth
 
         @Serializable
-        object ForgotPasswordPage : Auth
+        data object ForgotPasswordPage : Auth
     }
 
     sealed interface Creators : NavigationRoutes {
         @Serializable
-        object CreatorsFolder : Creators
+        data object CreatorsFolder : Creators
 
         @Serializable
-        object CreatorsScreen : Creators
+        data object CreatorsScreen : Creators
 
         @Serializable
-        object FollowsScreen : Creators
+        data object FollowsScreen : Creators
 
         @Serializable
-        object FollowersScreen : Creators
+        data object FollowersScreen : Creators
 
         @Serializable
-        object UserInfoPage : Creators
+        data object ProfilePage : Creators
 
         @Serializable
         data class CreatorPage(val creatorID: String) : Creators
@@ -42,30 +42,26 @@ sealed interface NavigationRoutes {
 
     sealed interface Recipes : NavigationRoutes {
         @Serializable
-        object RecipesFolder : Recipes
+        data object HomePage : Recipes
 
         @Serializable
-        object FavoritesPage : Recipes
+        data object RecipesFolder : Recipes
 
         @Serializable
-        object RecipesScreen : Recipes
+        data object FavoritesPage : Recipes
 
         @Serializable
-        object OwnRecipesScreen : Recipes
+        data object RecipesScreen : Recipes
 
         @Serializable
-        data class FiltersSelection(
-            val isRecipePage: Boolean = false
-        ) : Recipes
+        data object OwnRecipesScreen : Recipes
 
         @Serializable
         data class CreatorRecipesScreen(val creatorID: String) : Recipes
 
         @Serializable
-        data class RecipePage(val recipeID: String) : Recipes
+        data class RecipePage(val recipeID: String?) : Recipes
 
-        @Serializable
-        object RecipeAddingPage : Recipes
 
         @Serializable
         data class ReviewsScreen(val recipeID: String) : Recipes

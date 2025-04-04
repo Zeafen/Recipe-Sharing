@@ -43,6 +43,12 @@ import com.receipts.receipt_sharing.domain.recipes.Recipe
 import com.receipts.receipt_sharing.domain.recipes.Step
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
 
+/**
+ * Composes view-only step row
+ * @param stepOrder current step index
+ * @param modifier Modifier applied to row
+ * @param step step information
+ */
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun StepRow(
@@ -146,6 +152,12 @@ fun StepRow(
     }
 }
 
+/**
+ * Composes instructions view-only row
+ * @param modifier Modifier applied to StepsRows
+ * @param itemPadding padding between items
+ * @param steps steps list
+ */
 @Composable
 fun StepsRows(
     modifier: Modifier = Modifier,
@@ -263,7 +275,10 @@ private fun StepsRowsPreview() {
                                 "Phasellus nulla leo, condimentum in est et, ornare tincidunt neque. Morbi lectus velit, cursus quis pharetra sed, semper rhoncus felis. Pellentesque volutpat ipsum vitae mattis sodales. Proin mattis nulla velit, ac venenatis nisi euismod ut. Sed non imperdiet neque. Sed lacinia libero erat. Vestibulum id pellentesque tellus, at suscipit nulla. Duis ut erat interdum, laoreet nibh ut, lobortis est.",
                         123123123L
                     )
-                )
+                ),
+                reviewsCount = 100_000_000,
+                currentRating = 0f,
+                viewsCount = 0L
             )
         )
     }

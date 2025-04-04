@@ -7,11 +7,9 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -55,6 +53,16 @@ import com.receipts.receipt_sharing.presentation.auth.AuthPageState
 import com.receipts.receipt_sharing.ui.infoPages.ErrorInfoPage
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
 
+/**
+ * Composes authorization screen
+ * @param state the state object user to control screen layout
+ * @param modifier Modifier applied to the LoginScreen
+ * @param onEvent called when user interacts with ui elements
+ * @param onOpenMenu called when user click menu button
+ * @param onAuthorizationFinished called when user finishes authorization
+ * @param onGotoRegister called when user click on "Register" button
+ * @param onGoToChangePassword called when user clicks on "Forgot password" button
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
@@ -64,17 +72,18 @@ fun LoginScreen(
     onOpenMenu: () -> Unit,
     onAuthorizationFinished: () -> Unit,
     onGotoRegister: () -> Unit,
-    onGoToChangePassword : () -> Unit,
+    onGoToChangePassword: () -> Unit,
 ) {
     Scaffold(
         modifier = modifier,
         topBar = {
-            TopAppBar(colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                titleContentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                navigationIconContentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                actionIconContentColor = MaterialTheme.colorScheme.onSecondaryContainer
-            ),
+            TopAppBar(
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    actionIconContentColor = MaterialTheme.colorScheme.secondary,
+                    navigationIconContentColor = MaterialTheme.colorScheme.secondary
+                ),
                 navigationIcon = {
                     IconButton(onClick = onOpenMenu) {
                         Icon(Icons.Default.Menu, contentDescription = "")
@@ -86,8 +95,9 @@ fun LoginScreen(
                             .padding(horizontal = 8.dp)
                             .fillMaxWidth(),
                         text = stringResource(id = R.string.login_page_header),
+                        style = MaterialTheme.typography.headlineMedium,
+                        maxLines = 2,
                         textAlign = TextAlign.Start,
-                        style = MaterialTheme.typography.headlineLarge
                     )
                 })
         }
@@ -100,7 +110,7 @@ fun LoginScreen(
             is AuthResult.Error -> ErrorInfoPage(
                 modifier = Modifier
                     .padding(it),
-                errorInfo = state.result.data ?: stringResource(id = R.string.unknown_error_txt)
+                errorInfo = state.result.info ?: stringResource(id = R.string.unknown_error_txt)
             ) {
                 onEvent(AuthEvent.ClearData)
             }
@@ -109,8 +119,7 @@ fun LoginScreen(
                 Column(
                     modifier = Modifier
                         .padding(it)
-                        .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.surface),
+                        .fillMaxSize(),
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -126,8 +135,7 @@ fun LoginScreen(
                 Column(
                     modifier = Modifier
                         .padding(it)
-                        .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.surface),
+                        .fillMaxSize(),
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -138,7 +146,6 @@ fun LoginScreen(
                         maxLines = 1,
                         singleLine = true,
                         value = state.login,
-                        visualTransformation = if (!state.showPassword) PasswordVisualTransformation('*') else VisualTransformation.None,
                         onValueChange = { onEvent(AuthEvent.SetLogin(it)) },
                         leadingIcon = {
                             Icon(
@@ -146,7 +153,7 @@ fun LoginScreen(
                                 contentDescription = null
                             )
                         },
-                        isError = state.login.isEmpty(),
+                        isError = state.login.isEmpty() || state.login.length < 10,
                         supportingText = {
                             AnimatedVisibility(visible = state.login.isEmpty(),
                                 enter = slideInVertically(spring(stiffness = Spring.StiffnessMediumLow)) { -it } + fadeIn(
@@ -157,7 +164,15 @@ fun LoginScreen(
                                 )
                             ) {
                                 Text(
-                                    text = stringResource(R.string.empty_field_error),
+                                    text =
+                                    when {
+                                        state.login.isEmpty() -> stringResource(R.string.empty_field_error)
+                                        state.login.length < 10 -> stringResource(
+                                            R.string.incorrect_length_least_error,
+                                            10
+                                        )
+                                        else -> stringResource(R.string.illegal_data_format)
+                                    },
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.W400,
                                     color = MaterialTheme.colorScheme.error
@@ -167,93 +182,95 @@ fun LoginScreen(
                         label = {
                             Text(
                                 text = stringResource(
-                                    R.string.login_enter_str
+                                    R.string.login_email_str
                                 )
                             )
                         }
                     )
                     OutlinedTextField(modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 16.dp, horizontal = 12.dp),
-                    maxLines = 1,
-                    singleLine = true,
-                    value = state.password,
-                    visualTransformation = if (!state.showPassword) PasswordVisualTransformation('*') else VisualTransformation.None,
-                    onValueChange = { onEvent(AuthEvent.SetPassword(it)) },
-                    trailingIcon = {
-                        IconButton(
-                            onClick = { onEvent(AuthEvent.SetShowPassword(!state.showPassword)) }
-                        ) {
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp, horizontal = 12.dp),
+                        maxLines = 1,
+                        singleLine = true,
+                        value = state.password,
+                        visualTransformation = if (!state.showPassword) PasswordVisualTransformation(
+                            '*'
+                        ) else VisualTransformation.None,
+                        onValueChange = { onEvent(AuthEvent.SetPassword(it)) },
+                        trailingIcon = {
+                            IconButton(
+                                onClick = { onEvent(AuthEvent.SetShowPassword(!state.showPassword)) }
+                            ) {
+                                Icon(
+                                    painter = painterResource(
+                                        if (state.showPassword) R.drawable.hide_ic
+                                        else R.drawable.show_ic
+                                    ),
+                                    contentDescription = null
+                                )
+                            }
+                        },
+                        leadingIcon = {
                             Icon(
-                                painter = painterResource(
-                                    if (state.showPassword) R.drawable.hide_ic
-                                    else R.drawable.show_ic
-                                ),
+                                painter = painterResource(R.drawable.passw_ic),
                                 contentDescription = null
                             )
-                        }
-                    },
-                    leadingIcon = {
-                        Icon(
-                            painter = painterResource(R.drawable.passw_ic),
-                            contentDescription = null
-                        )
-                    },
-                    isError = !state.passwordOK,
-                    supportingText = {
-                        AnimatedVisibility(visible = !state.passwordOK,
-                            enter = slideInVertically(spring(stiffness = Spring.StiffnessMediumLow)) { -it } + fadeIn(
-                                spring(stiffness = Spring.StiffnessLow)
-                            ),
-                            exit = slideOutVertically(spring(stiffness = Spring.StiffnessMediumLow)) { it } + fadeOut(
-                                spring(stiffness = Spring.StiffnessLow)
-                            )
-                        ) {
+                        },
+                        isError = !state.passwordOK,
+                        supportingText = {
+                            AnimatedVisibility(visible = !state.passwordOK,
+                                enter = slideInVertically(spring(stiffness = Spring.StiffnessMediumLow)) { -it } + fadeIn(
+                                    spring(stiffness = Spring.StiffnessLow)
+                                ),
+                                exit = slideOutVertically(spring(stiffness = Spring.StiffnessMediumLow)) { it } + fadeOut(
+                                    spring(stiffness = Spring.StiffnessLow)
+                                )
+                            ) {
+                                Text(
+                                    text = when {
+                                        state.password.length < PasswordChecker.MinLength -> stringResource(
+                                            R.string.incorrect_length_least_error,
+                                            PasswordChecker.MinLength
+                                        )
+
+                                        state.password.count { it.isDigit() } < PasswordChecker.NumbersLeastCount -> stringResource(
+                                            R.string.must_contain_least_numbers_error,
+                                            PasswordChecker.NumbersLeastCount
+                                        )
+
+                                        state.password.count { it.isLetter() } < PasswordChecker.LettersLeastCount -> stringResource(
+                                            R.string.must_contain_least_letters_error,
+                                            PasswordChecker.LettersLeastCount
+                                        )
+
+                                        PasswordChecker.HasSpecials && !state.password.contains("[!\"#\$%&'()*+,-./:;\\\\<=>?@\\[\\]^_`{|}~]".toRegex()) -> stringResource(
+                                            R.string.must_contain_specials_error
+                                        )
+
+                                        PasswordChecker.HasUpperCase && !state.password.contains("[A-Z]".toRegex()) -> stringResource(
+                                            R.string.must_contain_uppercase
+                                        )
+
+                                        PasswordChecker.HasLowerCase && !state.password.contains("[a-z]".toRegex()) -> stringResource(
+                                            R.string.must_contain_lowercase
+                                        )
+
+                                        else -> ""
+                                    },
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.W400,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            }
+                        },
+                        label = {
                             Text(
-                                text = when {
-                                    state.password.length < PasswordChecker.MinLength -> stringResource(
-                                        R.string.incorrect_length_least_error,
-                                        PasswordChecker.MinLength
-                                    )
-
-                                    state.password.count { it.isDigit() } < PasswordChecker.NumbersLeastCount -> stringResource(
-                                        R.string.must_contain_least_numbers_error,
-                                        PasswordChecker.NumbersLeastCount
-                                    )
-
-                                    state.password.count { it.isLetter() } < PasswordChecker.LettersLeastCount -> stringResource(
-                                        R.string.must_contain_least_letters_error,
-                                        PasswordChecker.LettersLeastCount
-                                    )
-
-                                    PasswordChecker.HasSpecials && !state.password.contains("[!\"#\$%&'()*+,-./:;\\\\<=>?@\\[\\]^_`{|}~]".toRegex()) -> stringResource(
-                                        R.string.must_contain_specials_error
-                                    )
-
-                                    PasswordChecker.HasUpperCase && !state.password.contains("[A-Z]".toRegex()) -> stringResource(
-                                        R.string.must_contain_uppercase
-                                    )
-
-                                    PasswordChecker.HasLowerCase && !state.password.contains("[a-z]".toRegex()) -> stringResource(
-                                        R.string.must_contain_lowercase
-                                    )
-
-                                    else -> ""
-                                },
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.W400,
-                                color = MaterialTheme.colorScheme.error
+                                text = stringResource(
+                                    R.string.password_enter_str
+                                )
                             )
                         }
-                    },
-                    label = {
-                        Text(
-                            text = stringResource(
-                                R.string.password_enter_str
-                            )
-                        )
-                    }
-                )
+                    )
                     Button(modifier = Modifier
                         .fillMaxWidth()
                         .padding(start = 24.dp, end = 24.dp, top = 12.dp),
@@ -261,29 +278,32 @@ fun LoginScreen(
                         onClick = { onEvent(AuthEvent.ConfirmLogin) }) {
                         Text(text = stringResource(R.string.login_confirm_str))
                     }
-                    Row(modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                        horizontalAlignment = Alignment.End,
+                        verticalArrangement = Arrangement.Top
                     ) {
                         Text(
                             modifier = Modifier
-                                .alpha(0.3f)
+                                .alpha(0.5f)
                                 .clickable {
                                     onGoToChangePassword()
                                 },
                             text = stringResource(R.string.forgot_password_lbl),
-                            style = MaterialTheme.typography.titleMedium
+                            color = MaterialTheme.colorScheme.secondary,
+                            style = MaterialTheme.typography.bodyLarge
                         )
                         Text(
                             modifier = Modifier
-                                .alpha(0.3f)
+                                .alpha(0.5f)
                                 .clickable {
                                     onGotoRegister()
                                 },
                             text = stringResource(R.string.register_confirm_str),
-                            style = MaterialTheme.typography.titleMedium
+                            color = MaterialTheme.colorScheme.secondary,
+                            style = MaterialTheme.typography.bodyLarge
                         )
                     }
                 }

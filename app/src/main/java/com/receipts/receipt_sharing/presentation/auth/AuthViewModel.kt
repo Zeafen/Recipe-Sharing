@@ -5,10 +5,10 @@ import androidx.lifecycle.viewModelScope
 import com.receipts.receipt_sharing.data.helpers.PasswordChecker
 import com.receipts.receipt_sharing.data.repositoriesImpl.AuthDataStoreRepository
 import com.receipts.receipt_sharing.domain.creators.ChangePasswRequest
-import com.receipts.receipt_sharing.domain.repositories.IAuthRepository
-import com.receipts.receipt_sharing.domain.repositories.ICreatorsRepository
+import com.receipts.receipt_sharing.domain.repositories.AuthRepository
+import com.receipts.receipt_sharing.domain.repositories.CreatorsRepository
+import com.receipts.receipt_sharing.domain.response.ApiResult
 import com.receipts.receipt_sharing.domain.response.AuthResult
-import com.receipts.receipt_sharing.domain.response.RecipeResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
@@ -18,13 +18,13 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class AuthViewModel(
-    private val authRepo: IAuthRepository,
-    private val creatorsRepo: ICreatorsRepository,
+    private val authRepo: AuthRepository,
+    private val creatorsRepo: CreatorsRepository,
 ) : ViewModel() {
 
     private val authDataStoreRepo = AuthDataStoreRepository.get()
 
-    private val _result = MutableStateFlow<AuthResult<String>>(AuthResult.Unauthorized())
+    private val _result = MutableStateFlow<AuthResult<String>>(AuthResult.Loading())
 
     private val _state = MutableStateFlow(AuthPageState())
 
@@ -35,26 +35,11 @@ class AuthViewModel(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), AuthPageState())
 
 
-    init {
-        viewModelScope.launch {
-            val token = authDataStoreRepo.authDataStoreFlow.first().token
-
-            _result.update {
-                AuthResult.Loading()
-            }
-            _result.update {
-                token?.let { tok ->
-                    val userInfo = creatorsRepo.getUserInfo(tok)
-                    if (userInfo.data != null) {
-                        authDataStoreRepo.updateUserName(userInfo.data.nickname)
-                        authDataStoreRepo.updateImageUrl(userInfo.data.imageUrl)
-                    }
-                    authRepo.authorize(tok)
-                } ?: AuthResult.Unauthorized()
-            }
-        }
-    }
-
+    /**
+     * Processes Auth page events
+     * @param event Auth page event
+     * @see [AuthEvent]
+     */
     fun onEvent(event: AuthEvent) {
         viewModelScope.launch {
             when (event) {
@@ -71,6 +56,7 @@ class AuthViewModel(
                         authRepo.logIn(login, password)
                     }
                     state.value.result.data?.let {
+                        authDataStoreRepo.updateSelectedPageIndex(-1)
                         authDataStoreRepo.updateUserToken(it)
                         creatorsRepo.getUserInfo(it).data?.let {
                             authDataStoreRepo.updateUserName(it.nickname)
@@ -82,6 +68,7 @@ class AuthViewModel(
                 AuthEvent.ConfirmRegister -> {
                     val login = state.value.login
                     val password = state.value.password
+                    val email = state.value.email
                     val repeatPassword = state.value.repeatPassword
                     if (login.isBlank() || password.isBlank() || repeatPassword.isBlank() || password != repeatPassword)
                         return@launch
@@ -89,7 +76,7 @@ class AuthViewModel(
                         AuthResult.Loading()
                     }
                     _result.update {
-                        authRepo.register(login, password)
+                        authRepo.register(login, email, password)
                     }
                     state.value.result.data?.let {
                         authDataStoreRepo.updateUserToken(it)
@@ -107,7 +94,7 @@ class AuthViewModel(
                                 state.value.email, state.value.password, state.value.emailCode
                             )
                         )) {
-                            is RecipeResult.Error -> _state.update {
+                            is ApiResult.Error -> _state.update {
                                 it.copy(infoMessage = result.info ?: "Unknown error")
                             }
 
@@ -120,10 +107,41 @@ class AuthViewModel(
                     }
                 }
 
+                AuthEvent.Authorize -> {
+                    val token = authDataStoreRepo.authDataStoreFlow.first().token
+
+                    _result.update {
+                        AuthResult.Loading()
+                    }
+                    _result.update {
+                        token?.let { tok ->
+                            val result = authRepo.authorize(tok)
+                            when (result) {
+                                is AuthResult.Authorized -> {
+                                    authDataStoreRepo.updateUserToken(tok)
+                                    creatorsRepo.getUserInfo(tok).data?.let {
+                                        authDataStoreRepo.updateUserName(it.nickname)
+                                        authDataStoreRepo.updateImageUrl(it.imageUrl)
+                                    }
+                                }
+
+                                is AuthResult.Error -> {
+                                    authDataStoreRepo.updateUserToken(null)
+                                    authDataStoreRepo.updateUserName("")
+                                    authDataStoreRepo.updateImageUrl("")
+                                }
+
+                                else -> {}
+                            }
+                            result
+                        } ?: AuthResult.Unauthorized()
+                    }
+                }
+
                 AuthEvent.SendCode -> {
                     if (state.value.email.isNotEmpty())
                         when (val result = authRepo.sendCode(state.value.email)) {
-                            is RecipeResult.Error -> _state.update {
+                            is ApiResult.Error -> _state.update {
                                 it.copy(infoMessage = result.info ?: "Unknown error")
                             }
 
@@ -138,7 +156,15 @@ class AuthViewModel(
                 }
 
                 is AuthEvent.SetEmail -> _state.update {
-                    it.copy(email = event.email)
+                    it.copy(
+                        email = event.email,
+                        emailOk = event.email.matches(
+                            Regex(
+                                "[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}",
+                                RegexOption.IGNORE_CASE
+                            )
+                        )
+                    )
                 }
 
                 is AuthEvent.SetEmailCode -> _state.update {
@@ -188,20 +214,4 @@ class AuthViewModel(
             }
         }
     }
-}
-
-
-sealed interface AuthEvent {
-    data class SetLogin(val login: String) : AuthEvent
-    data class SetEmail(val email: String) : AuthEvent
-    data class SetEmailCode(val emailCode: String) : AuthEvent
-    data class SetPassword(val password: String) : AuthEvent
-    data class SetRepeatPassword(val password: String) : AuthEvent
-    data class SetShowPassword(val showPassword: Boolean) : AuthEvent
-    data object ConfirmLogin : AuthEvent
-    data object ConfirmRegister : AuthEvent
-    data object SendCode : AuthEvent
-    data object ResetPassword : AuthEvent
-    data object ClearData : AuthEvent
-    data object ClearMessage : AuthEvent
 }
