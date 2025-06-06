@@ -1,6 +1,5 @@
 package com.receipts.receipt_sharing.presentation.creators.profile
 
-import RecipesRepository
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.receipts.receipt_sharing.data.helpers.FileHelper
@@ -10,7 +9,9 @@ import com.receipts.receipt_sharing.domain.creators.ChangePasswRequest
 import com.receipts.receipt_sharing.domain.creators.EmailConfirmRequest
 import com.receipts.receipt_sharing.domain.creators.ProfileRequest
 import com.receipts.receipt_sharing.domain.repositories.CreatorsRepository
+import com.receipts.receipt_sharing.domain.repositories.RecipesRepository
 import com.receipts.receipt_sharing.domain.response.ApiResult
+import com.receipts.receipt_sharing.presentation.ValidationInfo
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -144,7 +145,10 @@ class ProfileViewModel(
                             }
 
                             else -> _state.update {
-                                it.copy(infoMessage = "Password changed")
+                                it.copy(
+                                    infoMessage = "Password changed",
+                                    screen = ProfileConfigScreens.MainScreen
+                                )
                             }
                         }
                     } ?: _state.update {
@@ -208,7 +212,7 @@ class ProfileViewModel(
                                 imageUrl = state.value.creator.data!!.imageUrl,
                                 newPassword = "",
                                 repeatPassword = "",
-                                passwordOk = false,
+                                passwordOk = ValidationInfo(),
                                 passwordsMatch = false,
                                 emailCode = "",
                                 isError = false
@@ -224,10 +228,21 @@ class ProfileViewModel(
                 }
 
                 is ProfilePageEvent.LogOut -> {
+                    _state.update {
+                        it.copy(
+                            openConfirmDeleteDialog = false,
+                            openConfirmExitDialog = false,
+                            openEditEmailDialog = false
+                        )
+                    }
+                    _userInfo.update {
+                        ApiResult.Downloading()
+                    }
                     launch {
                         authDataStoreRepo.updateUserName("")
                         authDataStoreRepo.updateImageUrl("")
                         authDataStoreRepo.updateUserToken(null)
+                        authDataStoreRepo.updateSelectedPageIndex(0)
                     }.invokeOnCompletion {
                         event.onLogOut()
                     }
@@ -339,7 +354,8 @@ class ProfileViewModel(
                                 it.copy(
                                     infoMessage = "Email confirmed",
                                     creatorEmailConfirmed = true,
-                                    openEditEmailDialog = false
+                                    openEditEmailDialog = false,
+                                    emailCode = ""
                                 )
                             }
                         }
@@ -355,6 +371,45 @@ class ProfileViewModel(
 
                 ProfilePageEvent.ClearInfo -> _state.update {
                     it.copy(infoMessage = null)
+                }
+
+                is ProfilePageEvent.DeleteAccount -> {
+                    authDataStoreRepo.authDataStoreFlow.first().token?.let { token ->
+                        when (val result = creatorRepo.deleteAccount(token)) {
+                            is ApiResult.Error -> _state.update {
+                                it.copy(infoMessage = result.info ?: "Could not delete account")
+                            }
+
+                            else -> {
+                                _state.update {
+                                    it.copy(
+                                        openConfirmDeleteDialog = false,
+                                        openConfirmExitDialog = false,
+                                        openEditEmailDialog = false
+                                    )
+                                }
+                                _userInfo.update {
+                                    ApiResult.Downloading()
+                                }
+                                launch {
+                                    authDataStoreRepo.updateUserToken(null)
+                                    authDataStoreRepo.updateUserName("")
+                                    authDataStoreRepo.updateImageUrl("")
+                                    authDataStoreRepo.updateSelectedPageIndex(0)
+                                }.invokeOnCompletion {
+                                    event.onLogOut()
+                                }
+                            }
+                        }
+                    } ?: _state.update {
+                        it.copy(infoMessage = "Could not find authorization info")
+                    }
+                }
+
+                is ProfilePageEvent.SetOpenConfirmDeleteDialog -> {
+                    _state.update {
+                        it.copy(openConfirmDeleteDialog = event.openDialog)
+                    }
                 }
             }
         }

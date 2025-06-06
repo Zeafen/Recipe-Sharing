@@ -4,7 +4,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class RecipeFilteringRequest(
-    val filters : List<String>,
     val ordering: OrderingRequest? = null,
-    val ingredients : List<String>? = null
+    val filters : FiltersModel? = null
 )

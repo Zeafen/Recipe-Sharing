@@ -1,47 +1,56 @@
 package com.receipts.receipt_sharing.domain.repositories
 
 import com.receipts.receipt_sharing.domain.response.ApiResult
+import java.util.Locale
 
 interface FiltersRepository {
 
     /**
      * Attempts to get filters' categories
      * @param token Authorization token
+     * @param locale Current Locale
      * @return [ApiResult.Error] if request failed; [ApiResult.Succeed] if categories have been obtained
      */
     suspend fun getCategories(
-        token : String
+        token : String,
+        locale : String = Locale.getDefault().language
     ) : ApiResult<List<String>>
 
     /**
      * Attempts to get filters by category
      * @param token Authorization token
      * @param category Category name to get filters by
+     * @param locale current Locale
      * @return [ApiResult.Error] if request failed; [ApiResult.Succeed] if filters have been obtained
      */
     suspend fun getFiltersByCategory(
         token : String,
-        category : String
+        category : String,
+        locale : String = Locale.getDefault().language
     ) : ApiResult<List<String>>
 
     /**
      * Attempts to get filters grouped by categories
      * @param token Authorization token
+     * @param locale current Locale
      * @return [ApiResult.Error] if request failed; [ApiResult.Succeed] if filters have been obtained
      */
     suspend fun getCategorizedFilters(
-        token : String
+        token : String,
+        locale : String = Locale.getDefault().language
     ) : ApiResult<Map<String, List<String>>>
 
     /**
      * Attempts to get recipe's filters
      * @param token Authorization token
+     * @param locale current Locale
      * @param id Recipe identifier to get filters by
      * @return [ApiResult.Error] if request failed; [ApiResult.Succeed] if filters have been obtained
      */
     suspend fun getFiltersByRecipe(
         token : String,
-        id : String
+        id : String,
+        locale : String = Locale.getDefault().language
     ) : ApiResult<List<String>>
 
     /**

@@ -378,4 +378,15 @@ class CreatorsRepositoryImpl(
             ApiResult.Error(e.message)
         }
     }
+
+    override suspend fun deleteAccount(token: String): ApiResult<Unit> {
+        return try {
+            api.deleteAccount(token)
+            ApiResult.Succeed()
+        } catch (e: HttpException) {
+            ApiResult.Error(e.response()?.message() ?: e.message())
+        } catch (e: Exception) {
+            ApiResult.Error(e.message)
+        }
+    }
 }

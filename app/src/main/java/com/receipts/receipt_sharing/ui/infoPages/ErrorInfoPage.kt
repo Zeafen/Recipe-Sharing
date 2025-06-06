@@ -3,9 +3,12 @@ package com.receipts.receipt_sharing.ui.infoPages
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -121,6 +124,7 @@ private fun Preview() {
                 ErrorInfoPage(
                     modifier = Modifier
                         .fillMaxSize()
+                        .windowInsetsPadding(WindowInsets.systemBars)
                         .padding(vertical = 12.dp),
                     errorInfo = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam eu mauris semper metus cursus rhoncus vitae vel odio. Sed iaculis aliquam nisl quis tincidunt. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus vestibulum tincidunt pharetra. Etiam ac lacus vel arcu elementum bibendum. Duis finibus orci nulla, vitae finibus lacus varius tincidunt. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Sed"
                 ) {

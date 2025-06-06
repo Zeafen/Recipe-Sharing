@@ -1,7 +1,7 @@
 package com.receipts.receipt_sharing.data.repositoriesImpl
 
-import com.receipts.receipt_sharing.domain.filters.FilterRequest
 import com.receipts.receipt_sharing.domain.apiServices.RecipesAPIService
+import com.receipts.receipt_sharing.domain.filters.ApplyFiltersRequest
 import com.receipts.receipt_sharing.domain.repositories.FiltersRepository
 import com.receipts.receipt_sharing.domain.response.ApiResult
 import retrofit2.HttpException
@@ -9,9 +9,9 @@ import retrofit2.HttpException
 class FiltersRepositoryImpl(
     private val api : RecipesAPIService
 ) : FiltersRepository {
-    override suspend fun getCategories(token: String): ApiResult<List<String>> {
+    override suspend fun getCategories(token: String, locale : String): ApiResult<List<String>> {
         return try {
-            ApiResult.Succeed(api.getCategories(token))
+            ApiResult.Succeed(api.getCategories(token, locale))
         } catch(e : HttpException){
             ApiResult.Error(e.response()?.message()?:e.message())
         } catch (e : Exception){
@@ -21,10 +21,11 @@ class FiltersRepositoryImpl(
 
     override suspend fun getFiltersByCategory(
         token: String,
-        category: String
+        category: String,
+        locale : String
     ): ApiResult<List<String>> {
         return try {
-            ApiResult.Succeed(api.getFiltersByCategory(token, category))
+            ApiResult.Succeed(api.getFiltersByCategory(token, category, locale))
         } catch(e : HttpException){
             ApiResult.Error(e.response()?.message()?:e.message())
         } catch (e : Exception){
@@ -32,9 +33,9 @@ class FiltersRepositoryImpl(
         }
     }
 
-    override suspend fun getCategorizedFilters(token: String): ApiResult<Map<String, List<String>>> {
+    override suspend fun getCategorizedFilters(token: String, locale : String): ApiResult<Map<String, List<String>>> {
         return try {
-            ApiResult.Succeed(api.getCategorizedFilters(token))
+            ApiResult.Succeed(api.getCategorizedFilters(token, locale))
         } catch(e : HttpException){
             ApiResult.Error(e.response()?.message()?:e.message())
         } catch (e : Exception){
@@ -42,9 +43,9 @@ class FiltersRepositoryImpl(
         }
     }
 
-    override suspend fun getFiltersByRecipe(token: String, id: String): ApiResult<List<String>> {
+    override suspend fun getFiltersByRecipe(token: String, id: String, locale : String): ApiResult<List<String>> {
         return try {
-            ApiResult.Succeed(api.getFiltersByRecipe(token, id))
+            ApiResult.Succeed(api.getFiltersByRecipe(token, id, locale))
         } catch(e : HttpException){
             ApiResult.Error(e.response()?.message()?:e.message())
         } catch (e : Exception){
@@ -58,7 +59,7 @@ class FiltersRepositoryImpl(
         filters: List<String>
     ): ApiResult<Unit> {
         return try {
-            api.attachFiltersToRecipe(token, FilterRequest(recipeID, filters))
+            api.attachFiltersToRecipe(token, ApplyFiltersRequest(recipeID, filters))
             ApiResult.Succeed()
         } catch(e : HttpException){
             ApiResult.Error(e.response()?.message()?:e.message())
@@ -73,7 +74,7 @@ class FiltersRepositoryImpl(
         filters: List<String>
     ): ApiResult<Unit> {
         return try {
-            api.removeFiltersFromRecipe(token, FilterRequest(recipeID, filters))
+            api.removeFiltersFromRecipe(token, ApplyFiltersRequest(recipeID, filters))
             ApiResult.Succeed()
         } catch(e : HttpException){
             ApiResult.Error(e.response()?.message()?:e.message())

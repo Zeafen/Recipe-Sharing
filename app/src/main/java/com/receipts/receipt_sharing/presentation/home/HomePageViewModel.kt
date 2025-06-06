@@ -1,6 +1,5 @@
 package com.receipts.receipt_sharing.presentation.home
 
-import RecipesRepository
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.receipts.receipt_sharing.data.repositoriesImpl.AuthDataStoreRepository
@@ -10,6 +9,7 @@ import com.receipts.receipt_sharing.domain.filters.RecipeFilteringRequest
 import com.receipts.receipt_sharing.domain.filters.RecipeOrdering
 import com.receipts.receipt_sharing.domain.recipes.Recipe
 import com.receipts.receipt_sharing.domain.repositories.CreatorsRepository
+import com.receipts.receipt_sharing.domain.repositories.RecipesRepository
 import com.receipts.receipt_sharing.domain.response.ApiResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -68,6 +68,7 @@ class HomePageViewModel(
         viewModelScope.launch {
             when(event){
                 HomePageEvent.LoadData -> {
+
                     launch {
                         _popularRecipes.update {
                             ApiResult.Downloading()
@@ -76,8 +77,8 @@ class HomePageViewModel(
                         val result = token?.let { tok ->
                             recipesRepo.getFilteredRecipes(
                                 tok, RecipeFilteringRequest(
-                                    emptyList(),
-                                    OrderingRequest(RecipeOrdering.Rating, false)
+                                    OrderingRequest(RecipeOrdering.Rating, false),
+                                    null,
                                 ),
                                 1,
                                 15
@@ -99,8 +100,8 @@ class HomePageViewModel(
                         val result = token?.let { tok ->
                             recipesRepo.getFilteredRecipes(
                                 tok, RecipeFilteringRequest(
-                                    emptyList(),
-                                    OrderingRequest(RecipeOrdering.DatePublished, false)
+                                    OrderingRequest(RecipeOrdering.DatePublished, false),
+                                    null,
                                 ),
                                 1,
                                 30
@@ -139,8 +140,8 @@ class HomePageViewModel(
                     val result = token?.let { tok ->
                         recipesRepo.getFilteredRecipes(
                             tok, RecipeFilteringRequest(
-                                emptyList(),
-                                OrderingRequest(RecipeOrdering.Rating, false)
+                                OrderingRequest(RecipeOrdering.Rating, false),
+                                null,
                             ),
                             1,
                             15
@@ -178,8 +179,8 @@ class HomePageViewModel(
                     val result = token?.let { tok ->
                         recipesRepo.getFilteredRecipes(
                             tok, RecipeFilteringRequest(
-                                emptyList(),
-                                OrderingRequest(RecipeOrdering.DatePublished, false)
+                                OrderingRequest(RecipeOrdering.DatePublished, false),
+                                null
                             ),
                             1,
                             30

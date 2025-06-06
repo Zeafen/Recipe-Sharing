@@ -1,15 +1,17 @@
 package com.receipts.receipt_sharing.presentation.recipes.recipesScreen
 
-import RecipesRepository
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.receipts.receipt_sharing.data.repositoriesImpl.AuthDataStoreRepository
+import com.receipts.receipt_sharing.domain.filters.FiltersModel
 import com.receipts.receipt_sharing.domain.filters.OrderingRequest
 import com.receipts.receipt_sharing.domain.filters.RecipeFilteringRequest
 import com.receipts.receipt_sharing.domain.recipes.Recipe
 import com.receipts.receipt_sharing.domain.repositories.FiltersRepository
+import com.receipts.receipt_sharing.domain.repositories.RecipesRepository
 import com.receipts.receipt_sharing.domain.response.ApiResult
 import com.receipts.receipt_sharing.presentation.PageSizes
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
@@ -24,7 +26,7 @@ class RecipesScreenViewModel(
     private val filtersRepo: FiltersRepository
 ) : ViewModel() {
     private val authDataStoreRepo = AuthDataStoreRepository.get()
-
+    private var loadingJob: Job? = null
     private val _recipes = MutableStateFlow<ApiResult<List<Recipe>>>(ApiResult.Downloading())
     private val _filters =
         MutableStateFlow<ApiResult<Map<String, List<String>>>>(ApiResult.Downloading())
@@ -45,193 +47,234 @@ class RecipesScreenViewModel(
         viewModelScope.launch {
             when (event) {
                 RecipesScreenEvent.LoadData -> {
-                    _recipes.update { ApiResult.Downloading() }
-                    val token = authDataStoreRepo.authDataStoreFlow.first().token
-                    val result = token?.let { tok ->
-                        when (state.value.recipesLoadedDataType) {
-                            RecipesLoadedDataType.OwnDataRecipes -> {
-                                if (state.value.searchString.isEmpty()) recipesRepo.getFilteredOwnRecipes(
-                                    tok,
-                                    RecipeFilteringRequest(
-                                        state.value.searchedFilters,
-                                        state.value.recipeOrdering?.let {
-                                            OrderingRequest(
-                                                it,
-                                                state.value.ascending
+                    if (loadingJob?.isActive == true)
+                        loadingJob?.cancel()
+                    loadingJob = launch {
+                        _recipes.update { ApiResult.Downloading() }
+                        val token = authDataStoreRepo.authDataStoreFlow.first().token
+                        launch {
+                            authDataStoreRepo.authDataStoreFlow.first().token?.let { token ->
+                                recipesRepo.getTimeStats(token).data?.let { maxTime ->
+                                    _state.update {
+                                        if (it.timeTo > maxTime)
+                                            it.copy(
+                                                maxTime = maxTime,
+                                                timeTo = maxTime
                                             )
-                                        },
-                                        state.value.searchedIngredients
-                                    ),
-                                    state.value.currentPage,
-                                    state.value.pageSize.pageSize,
-                                ) else recipesRepo.getFilteredOwnRecipesByName(
-                                    tok,
-                                    state.value.searchString,
-                                    RecipeFilteringRequest(
-                                        state.value.searchedFilters,
-                                        state.value.recipeOrdering?.let {
-                                            OrderingRequest(
-                                                it,
-                                                state.value.ascending
+                                        else
+                                            it.copy(
+                                                maxTime = maxTime,
                                             )
-                                        },
-                                        state.value.searchedIngredients
-                                    ),
-                                    state.value.currentPage,
-                                    state.value.pageSize.pageSize,
-                                )
-                            }
-
-                            is RecipesLoadedDataType.CreatorRecipes -> {
-                                if (state.value.searchString.isEmpty()) recipesRepo.getFilteredRecipesByCreator(
-                                    tok,
-                                    (state.value.recipesLoadedDataType as RecipesLoadedDataType.CreatorRecipes).creatorID,
-                                    RecipeFilteringRequest(
-                                        state.value.searchedFilters,
-                                        state.value.recipeOrdering?.let {
-                                            OrderingRequest(
-                                                it,
-                                                state.value.ascending
-                                            )
-                                        },
-                                        state.value.searchedIngredients
-                                    ),
-                                    state.value.currentPage,
-                                    state.value.pageSize.pageSize,
-                                ) else recipesRepo.getFilteredRecipesByCreatorByName(
-                                    tok,
-                                    (state.value.recipesLoadedDataType as RecipesLoadedDataType.CreatorRecipes).creatorID,
-                                    state.value.searchString,
-                                    RecipeFilteringRequest(
-                                        state.value.searchedFilters,
-                                        state.value.recipeOrdering?.let {
-                                            OrderingRequest(
-                                                it,
-                                                state.value.ascending
-                                            )
-                                        },
-                                        state.value.searchedIngredients
-                                    ),
-                                    state.value.currentPage,
-                                    state.value.pageSize.pageSize,
-                                )
-                            }
-
-                            RecipesLoadedDataType.Favorites -> {
-                                if (state.value.searchString.isEmpty()) recipesRepo.getFilteredFavorites(
-                                    tok,
-                                    RecipeFilteringRequest(
-                                        state.value.searchedFilters,
-                                        state.value.recipeOrdering?.let {
-                                            OrderingRequest(
-                                                it,
-                                                state.value.ascending
-                                            )
-                                        },
-                                        state.value.searchedIngredients
-                                    ),
-                                    state.value.currentPage,
-                                    state.value.pageSize.pageSize,
-                                ) else recipesRepo.getFilteredFavoritesByName(
-                                    tok,
-                                    state.value.searchString,
-                                    RecipeFilteringRequest(
-                                        state.value.searchedFilters,
-                                        state.value.recipeOrdering?.let {
-                                            OrderingRequest(
-                                                it,
-                                                state.value.ascending
-                                            )
-                                        },
-                                        state.value.searchedIngredients
-                                    ),
-                                    state.value.currentPage,
-                                    state.value.pageSize.pageSize,
-                                )
-                            }
-
-                            RecipesLoadedDataType.All -> {
-                                if (state.value.searchString.isEmpty()) recipesRepo.getFilteredRecipes(
-                                    tok,
-                                    RecipeFilteringRequest(
-                                        state.value.searchedFilters,
-                                        state.value.recipeOrdering?.let {
-                                            OrderingRequest(
-                                                it,
-                                                state.value.ascending
-                                            )
-                                        },
-                                        state.value.searchedIngredients
-                                    ),
-                                    state.value.currentPage,
-                                    state.value.pageSize.pageSize,
-                                ) else recipesRepo.getFilteredRecipesByName(
-                                    tok,
-                                    RecipeFilteringRequest(
-                                        state.value.searchedFilters,
-                                        state.value.recipeOrdering?.let {
-                                            OrderingRequest(
-                                                it,
-                                                state.value.ascending
-                                            )
-                                        },
-                                        state.value.searchedIngredients
-                                    ),
-                                    state.value.searchString,
-                                    state.value.currentPage,
-                                    state.value.pageSize.pageSize,
-                                )
-                            }
-
-                            is RecipesLoadedDataType.Similar -> {
-                                if (state.value.searchString.isEmpty()) recipesRepo.getFilteredRecipes(
-                                    tok,
-                                    RecipeFilteringRequest(
-                                        state.value.searchedFilters,
-                                        state.value.recipeOrdering?.let {
-                                            OrderingRequest(
-                                                it,
-                                                state.value.ascending
-                                            )
-                                        },
-                                        state.value.searchedIngredients
-                                    ),
-                                    state.value.currentPage,
-                                    state.value.pageSize.pageSize,
-                                ) else recipesRepo.getFilteredRecipesByName(
-                                    tok,
-                                    RecipeFilteringRequest(
-                                        state.value.searchedFilters,
-                                        state.value.recipeOrdering?.let {
-                                            OrderingRequest(
-                                                it,
-                                                state.value.ascending
-                                            )
-                                        },
-                                        state.value.searchedIngredients
-                                    ),
-                                    state.value.searchString,
-                                    state.value.currentPage,
-                                    state.value.pageSize.pageSize,
-                                )
+                                    }
+                                }
                             }
                         }
-                    } ?: ApiResult.Error()
-                    when (result) {
-                        is ApiResult.Downloading -> {}
-                        is ApiResult.Error -> _recipes.update {
-                            ApiResult.Error(result.info ?: "Unknown error")
-                        }
+                        val result = token?.let { tok ->
+                            when (state.value.recipesLoadedDataType) {
+                                RecipesLoadedDataType.OwnDataRecipes -> {
+                                    if (state.value.searchString.isEmpty()) recipesRepo.getFilteredOwnRecipes(
+                                        tok,
+                                        RecipeFilteringRequest(
+                                            ordering = state.value.recipeOrdering?.let {
+                                                OrderingRequest(
+                                                    it,
+                                                    state.value.ascending
+                                                )
+                                            },
+                                            filters = FiltersModel(
+                                                tags = state.value.searchedFilters,
+                                                ingredients = state.value.searchedIngredients
+                                            )
+                                        ),
+                                        state.value.currentPage,
+                                        state.value.pageSize.pageSize,
+                                    ) else recipesRepo.getFilteredOwnRecipesByName(
+                                        tok,
+                                        state.value.searchString,
+                                        RecipeFilteringRequest(
+                                            ordering = state.value.recipeOrdering?.let {
+                                                OrderingRequest(
+                                                    it,
+                                                    state.value.ascending
+                                                )
+                                            },
+                                            filters = FiltersModel(
+                                                tags = state.value.searchedFilters,
+                                                ingredients = state.value.searchedIngredients
+                                            )
+                                        ),
+                                        state.value.currentPage,
+                                        state.value.pageSize.pageSize,
+                                    )
+                                }
 
-                        is ApiResult.Succeed -> {
-                            _state.update {
-                                it.copy(
-                                    currentPage = result.data?.currentPage ?: it.currentPage,
-                                    maxPages = result.data?.totalPages ?: it.currentPage
-                                )
+                                is RecipesLoadedDataType.CreatorRecipes -> {
+                                    if (state.value.searchString.isEmpty()) recipesRepo.getFilteredRecipesByCreator(
+                                        tok,
+                                        (state.value.recipesLoadedDataType as RecipesLoadedDataType.CreatorRecipes).creatorID,
+                                        RecipeFilteringRequest(
+                                            ordering = state.value.recipeOrdering?.let {
+                                                OrderingRequest(
+                                                    it,
+                                                    state.value.ascending
+                                                )
+                                            },
+                                            filters = FiltersModel(
+                                                tags = state.value.searchedFilters,
+                                                ingredients = state.value.searchedIngredients
+                                            )
+                                        ),
+                                        state.value.currentPage,
+                                        state.value.pageSize.pageSize,
+                                    ) else recipesRepo.getFilteredRecipesByCreatorByName(
+                                        tok,
+                                        (state.value.recipesLoadedDataType as RecipesLoadedDataType.CreatorRecipes).creatorID,
+                                        state.value.searchString,
+                                        RecipeFilteringRequest(
+                                            ordering = state.value.recipeOrdering?.let {
+                                                OrderingRequest(
+                                                    it,
+                                                    state.value.ascending
+                                                )
+                                            },
+                                            filters = FiltersModel(
+                                                tags = state.value.searchedFilters,
+                                                ingredients = state.value.searchedIngredients
+                                            )
+                                        ),
+                                        state.value.currentPage,
+                                        state.value.pageSize.pageSize,
+                                    )
+                                }
+
+                                RecipesLoadedDataType.Favorites -> {
+                                    if (state.value.searchString.isEmpty()) recipesRepo.getFilteredFavorites(
+                                        tok,
+                                        RecipeFilteringRequest(
+                                            ordering = state.value.recipeOrdering?.let {
+                                                OrderingRequest(
+                                                    it,
+                                                    state.value.ascending
+                                                )
+                                            },
+                                            filters = FiltersModel(
+                                                tags = state.value.searchedFilters,
+                                                ingredients = state.value.searchedIngredients
+                                            )
+                                        ),
+                                        state.value.currentPage,
+                                        state.value.pageSize.pageSize,
+                                    ) else recipesRepo.getFilteredFavoritesByName(
+                                        tok,
+                                        state.value.searchString,
+                                        RecipeFilteringRequest(
+                                            ordering = state.value.recipeOrdering?.let {
+                                                OrderingRequest(
+                                                    it,
+                                                    state.value.ascending
+                                                )
+                                            },
+                                            filters = FiltersModel(
+                                                tags = state.value.searchedFilters,
+                                                ingredients = state.value.searchedIngredients
+                                            )
+                                        ),
+                                        state.value.currentPage,
+                                        state.value.pageSize.pageSize,
+                                    )
+                                }
+
+                                RecipesLoadedDataType.All -> {
+                                    if (state.value.searchString.isEmpty()) recipesRepo.getFilteredRecipes(
+                                        tok,
+                                        RecipeFilteringRequest(
+                                            ordering = state.value.recipeOrdering?.let {
+                                                OrderingRequest(
+                                                    it,
+                                                    state.value.ascending
+                                                )
+                                            },
+                                            filters = FiltersModel(
+                                                tags = state.value.searchedFilters,
+                                                ingredients = state.value.searchedIngredients
+                                            )
+                                        ),
+                                        state.value.currentPage,
+                                        state.value.pageSize.pageSize,
+                                    ) else recipesRepo.getFilteredRecipesByName(
+                                        tok,
+                                        RecipeFilteringRequest(
+                                            ordering = state.value.recipeOrdering?.let {
+                                                OrderingRequest(
+                                                    it,
+                                                    state.value.ascending
+                                                )
+                                            },
+                                            filters = FiltersModel(
+                                                tags = state.value.searchedFilters,
+                                                ingredients = state.value.searchedIngredients
+                                            )
+                                        ),
+                                        state.value.searchString,
+                                        state.value.currentPage,
+                                        state.value.pageSize.pageSize,
+                                    )
+                                }
+
+                                is RecipesLoadedDataType.Similar -> {
+                                    if (state.value.searchString.isEmpty()) recipesRepo.getFilteredRecipes(
+                                        tok,
+                                        RecipeFilteringRequest(
+                                            ordering = state.value.recipeOrdering?.let {
+                                                OrderingRequest(
+                                                    it,
+                                                    state.value.ascending
+                                                )
+                                            },
+                                            filters = FiltersModel(
+                                                tags = state.value.searchedFilters,
+                                                ingredients = state.value.searchedIngredients
+                                            )
+                                        ),
+                                        state.value.currentPage,
+                                        state.value.pageSize.pageSize,
+                                    ) else recipesRepo.getFilteredRecipesByName(
+                                        tok,
+                                        RecipeFilteringRequest(
+                                            ordering = state.value.recipeOrdering?.let {
+                                                OrderingRequest(
+                                                    it,
+                                                    state.value.ascending
+                                                )
+                                            },
+                                            filters = FiltersModel(
+                                                tags = state.value.searchedFilters,
+                                                ingredients = state.value.searchedIngredients
+                                            )
+                                        ),
+                                        state.value.searchString,
+                                        state.value.currentPage,
+                                        state.value.pageSize.pageSize,
+                                    )
+                                }
                             }
-                            _recipes.update {
-                                ApiResult.Succeed(result.data?.result)
+                        } ?: ApiResult.Error()
+                        when (result) {
+                            is ApiResult.Downloading -> {}
+                            is ApiResult.Error -> _recipes.update {
+                                ApiResult.Error(result.info ?: "Unknown error")
+                            }
+
+                            is ApiResult.Succeed -> {
+                                _state.update {
+                                    it.copy(
+                                        currentPage = result.data?.currentPage ?: it.currentPage,
+                                        maxPages = result.data?.totalPages ?: it.currentPage
+                                    )
+                                }
+                                _recipes.update {
+                                    ApiResult.Succeed(result.data?.result)
+                                }
                             }
                         }
                     }
@@ -241,6 +284,7 @@ class RecipesScreenViewModel(
                     _state.update {
                         it.copy(searchString = event.recipeName)
                     }
+                    onEvent(RecipesScreenEvent.LoadData)
                 }
 
                 is RecipesScreenEvent.SetCellsAmount -> _state.update {
@@ -253,15 +297,14 @@ class RecipesScreenViewModel(
                             searchedFilters = event.filters
                         )
                     }
-                    onEvent(RecipesScreenEvent.LoadData)
                 }
+
                 is RecipesScreenEvent.SetIngredients -> {
                     _state.update {
                         it.copy(
                             searchedIngredients = event.ingredients
                         )
                     }
-                    onEvent(RecipesScreenEvent.LoadData)
                 }
 
                 is RecipesScreenEvent.SetOrdering -> {
@@ -321,24 +364,55 @@ class RecipesScreenViewModel(
                 }
 
                 is RecipesScreenEvent.SetLoadDataType -> {
-                    if (state.value.recipesLoadedDataType != event.dataType)
-                        _state.update {
-                            it.copy(
-                                recipesLoadedDataType = event.dataType,
-                                searchedFilters = emptyList(),
-                                searchedIngredients = emptyList(),
-                                searchString = "",
-                                pageSize = PageSizes.Standard,
-                                currentPage = 1
-                            )
+                    when {
+                        state.value.recipesLoadedDataType != event.dataType -> {
+                            _state.update {
+                                it.copy(
+                                    recipesLoadedDataType = event.dataType,
+                                    searchedFilters = emptyList(),
+                                    searchedIngredients = emptyList(),
+                                    searchString = "",
+                                    pageSize = PageSizes.Standard,
+                                    currentPage = 1
+                                )
+                            }
+                            onEvent(RecipesScreenEvent.LoadData)
                         }
-                    onEvent(RecipesScreenEvent.LoadData)
+
+                        state.value.recipes !is ApiResult.Succeed -> {
+                            onEvent(RecipesScreenEvent.LoadData)
+                        }
+                    }
                 }
 
                 is RecipesScreenEvent.SetExpandFiltersTab -> {
                     _state.update {
                         it.copy(expandFiltersTab = event.expandTab)
                     }
+                }
+
+                RecipesScreenEvent.ClearFilters -> {
+                    _state.update {
+                        it.copy(
+                            timeFrom = state.value.minTime,
+                            timeTo = state.value.maxTime,
+                            searchedIngredients = emptyList(),
+                            searchedFilters = emptyList()
+                        )
+                    }
+                    onEvent(RecipesScreenEvent.LoadData)
+                }
+
+                is RecipesScreenEvent.SetTimeFrom -> _state.update {
+                    it.copy(
+                        timeFrom = event.timeFrom
+                    )
+                }
+
+                is RecipesScreenEvent.SetTimeTo -> _state.update {
+                    it.copy(
+                        timeTo = event.timeTo
+                    )
                 }
             }
         }

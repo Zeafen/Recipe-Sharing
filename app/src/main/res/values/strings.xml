@@ -30,6 +30,7 @@
 
     <string name="recipe_ordering_date">Date published</string>
     <string name="recipe_ordering_rating">Rating</string>
+    <string name="recipe_ordering_difficulty">Difficulty</string>
 
     <string name="small_page_size_name">Compact</string>
     <string name="standard_page_size_name">Standard</string>
@@ -47,7 +48,7 @@
 
 <!--Other stuff-->
     <string name="error_info_title">Oops, something went wrong</string>
-
+    <string name="time_lbl">Time</string>
     <string name="filters_lbl">Filters</string>
     <string name="go_to_reviews_label">All reviews</string>
     <string name="creator_recipes_count">Recipes: %1$s</string>
@@ -59,6 +60,8 @@
     <string name="recipe_name_input">Recipe name</string>
     <string name="ingredient_name_input">Name</string>
     <string name="ingredient_amount_input">Amount</string>
+    <string name="from_lbl">From</string>
+    <string name="to_lbl">To</string>
     <string name="add_ingredient_str">Add ingredient</string>
     <string name="add_step_str">Add Step</string>
     <string name="add_txt">Add</string>
@@ -98,6 +101,7 @@
 
     <string name="unauthorized_txt">Sign in</string>
     <string name="sign_out_lbl">Sign out</string>
+    <string name="delete_account_lbl">Delete account</string>
     <string name="recipes_page_title">Recipes</string>
     <string name="home_page_title">Home</string>
     <string name="recipe_page_title">Recipe Info</string>
@@ -112,10 +116,12 @@
     <string name="confirm_delete_title">Are you sure?</string>
     <string name="confirm_delete_recipe_text">Confirm to delete recipe: "%1$s"?</string>
     <string name="confirm_delete_review_text">Confirm to delete review: "%1$s"?</string>
+    <string name="confirm_delete_account">Confirm to delete account?</string>
     <string name="confirm_logout_text">Confirm to log out?</string>
 
 <!--Error messages-->
     <string name="illegal_data_format">Illegal data format</string>
+    <string name="rating_not_selected_error">Select the rating</string>
     <string name="must_contain_least_numbers_error">Value must contain at least %1$d numbers</string>
     <string name="must_contain_specials_error">Value must contain specials</string>
     <string name="must_contain_least_letters_error">Value must contain at least %1$d letters</string>
@@ -150,4 +156,8 @@
     <string name="no_ingredients">It seems this recipe does not have any ingredient yet.</string>
     <string name="reviews_load_error">Oops. Could not load reviews. Please, return later or try to reload the page.</string>
     <string name="token_expired">Authentication token has expired. Try to login again</string>
+    <string name="beginner_dif_name">Beginner</string>
+    <string name="common_dif_name">Common</string>
+    <string name="adept_dif_name">Adept</string>
+    <string name="masterpiece_dif_name">Masterpiece</string>
 </resources>

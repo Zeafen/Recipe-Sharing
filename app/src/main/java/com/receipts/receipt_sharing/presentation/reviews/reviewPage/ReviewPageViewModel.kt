@@ -1,6 +1,6 @@
 package com.receipts.receipt_sharing.presentation.reviews.reviewPage
 
-import RecipesRepository
+import com.receipts.receipt_sharing.domain.repositories.RecipesRepository
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.receipts.receipt_sharing.data.repositoriesImpl.AuthDataStoreRepository
@@ -11,6 +11,7 @@ import com.receipts.receipt_sharing.domain.reviews.ReviewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
@@ -21,6 +22,12 @@ class ReviewPageViewModel(
     private val recipesRepo: RecipesRepository,
     private val reviewsRepo: ReviewsRepository,
 ) : ViewModel() {
+
+    companion object{
+        const val TEXT_MIN_LENGTH = 50
+        const val WORDS_MIN_COUNT = 5
+    }
+
     private val authDataStoreRepo = AuthDataStoreRepository.get()
 
     private val _review: MutableStateFlow<ApiResult<ReviewModel>> =
@@ -30,6 +37,10 @@ class ReviewPageViewModel(
     val state: StateFlow<ReviewPageState> = combine(_state, _review) { state, review ->
         state.copy(review = review)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), _state.value)
+
+    private val _effect : MutableStateFlow<ReviewPageEffect> = MutableStateFlow(ReviewPageEffect.None)
+    val effect : StateFlow<ReviewPageEffect>
+        get() = _effect.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -98,6 +109,10 @@ class ReviewPageViewModel(
                             }
                         }
                     }
+
+                    _effect.update {
+                        ReviewPageEffect.GoBack
+                    }
                 }
 
                 is ReviewPageEvent.LoadReviewByRecipe -> {
@@ -140,7 +155,10 @@ class ReviewPageViewModel(
                             _state.update {
                                 it.copy(
                                     reviewText = owns.data?.text ?: "",
-                                    reviewRating = owns.data?.rating ?: 0
+                                    reviewRating = owns.data?.rating ?: 0,
+                                    isError = owns.data?.let { review ->
+                                        review.text.length < TEXT_MIN_LENGTH || review.text.split(" ").size < WORDS_MIN_COUNT || review.rating !in 1..5
+                                    } ?: true,
                                 )
                             }
                         }
@@ -162,18 +180,18 @@ class ReviewPageViewModel(
                 is ReviewPageEvent.SetReviewRating -> _state.update {
                     it.copy(
                         reviewRating = event.rating,
-                        isError = state.value.reviewRating !in 1..5 && state.value.reviewText.length < 100 && state.value.reviewText.split(
+                        isError = state.value.reviewRating !in 1..5 || state.value.reviewText.length < TEXT_MIN_LENGTH || state.value.reviewText.split(
                             " "
-                        ).size < 15
+                        ).size < WORDS_MIN_COUNT
                     )
                 }
 
                 is ReviewPageEvent.SetReviewText -> _state.update {
                     it.copy(
                         reviewText = event.text,
-                        isError = state.value.reviewRating !in 1..5 && event.text.length < 50 && event.text.split(
+                        isError = state.value.reviewRating !in 1..5 || event.text.length < TEXT_MIN_LENGTH || event.text.split(
                             " "
-                        ).size < 5
+                        ).size < WORDS_MIN_COUNT
                     )
                 }
 
@@ -233,6 +251,18 @@ class ReviewPageViewModel(
                                 }
                             }
                         }
+                    }
+                }
+
+                ReviewPageEvent.GoBack -> {
+                    _effect.update {
+                        ReviewPageEffect.GoBack
+                    }
+                }
+
+                ReviewPageEvent.Refresh -> {
+                    _effect.update {
+                        ReviewPageEffect.Refresh
                     }
                 }
             }

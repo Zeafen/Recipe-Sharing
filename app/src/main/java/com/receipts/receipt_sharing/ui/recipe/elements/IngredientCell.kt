@@ -1,4 +1,4 @@
-package com.receipts.receipt_sharing.ui.recipe
+package com.receipts.receipt_sharing.ui.recipe.elements
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

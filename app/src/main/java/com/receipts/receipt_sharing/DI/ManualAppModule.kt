@@ -1,6 +1,5 @@
 package com.receipts.receipt_sharing.DI
 
-import RecipesRepository
 import android.content.Context
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.initializer
@@ -17,6 +16,7 @@ import com.receipts.receipt_sharing.domain.apiServices.RecipesAPIService
 import com.receipts.receipt_sharing.domain.repositories.AuthRepository
 import com.receipts.receipt_sharing.domain.repositories.CreatorsRepository
 import com.receipts.receipt_sharing.domain.repositories.FiltersRepository
+import com.receipts.receipt_sharing.domain.repositories.RecipesRepository
 import com.receipts.receipt_sharing.domain.repositories.ReviewsRepository
 import com.receipts.receipt_sharing.presentation.auth.AuthViewModel
 import com.receipts.receipt_sharing.presentation.creators.creatorPage.CreatorPageViewModel
@@ -36,7 +36,7 @@ class ManualAppModule(
     private val applicationContext: Context
 ) : AppModule {
     override val BASE_URL: String
-        get() = "https://192.168.148.103:7129/"
+        get() = "<api_address>/"
 
     override val apiService: RecipesAPIService
         get() {
@@ -77,7 +77,7 @@ class ManualAppModule(
     override val reviewsVMFactory: ViewModelProvider.Factory by lazy{
         viewModelFactory {
             initializer {
-                ReviewsScreenViewModel(reviewsRepo, creatorsRepo)
+                ReviewsScreenViewModel(reviewsRepo, creatorsRepo, recipesRepo)
             }
         }
     }
@@ -128,7 +128,7 @@ class ManualAppModule(
     override val reviewsScreenVMFactory: ViewModelProvider.Factory by lazy{
         viewModelFactory {
             initializer {
-                ReviewsScreenViewModel(reviewsRepo, creatorsRepo)
+                ReviewsScreenViewModel(reviewsRepo, creatorsRepo, recipesRepo)
             }
         }
     }

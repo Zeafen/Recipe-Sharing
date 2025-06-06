@@ -4,10 +4,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.receipts.receipt_sharing.data.repositoriesImpl.AuthDataStoreRepository
 import com.receipts.receipt_sharing.domain.repositories.CreatorsRepository
+import com.receipts.receipt_sharing.domain.repositories.RecipesRepository
 import com.receipts.receipt_sharing.domain.repositories.ReviewsRepository
 import com.receipts.receipt_sharing.domain.response.ApiResult
 import com.receipts.receipt_sharing.domain.reviews.OrderRequest
 import com.receipts.receipt_sharing.domain.reviews.ReviewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -20,8 +24,11 @@ import kotlinx.coroutines.launch
 class ReviewsScreenViewModel(
     private val reviewsRepo: ReviewsRepository,
     private val creatorsRepo: CreatorsRepository,
+    private val recipesRepo: RecipesRepository
 ) : ViewModel() {
     private val authDataStoreRepo = AuthDataStoreRepository.get()
+    private var loadingJob: Job? = null
+
     private val _reviews: MutableStateFlow<ApiResult<List<ReviewModel>>> =
         MutableStateFlow(ApiResult.Downloading())
     private val _ownReviews: MutableStateFlow<ApiResult<ReviewModel>> =
@@ -90,84 +97,107 @@ class ReviewsScreenViewModel(
                 }
 
                 is ReviewsScreenEvent.LoadReviews -> {
-                    _reviews.update {
-                        ApiResult.Downloading()
-                    }
-                    if (state.value.selectedRecipeID != event.recipeID)
-                        _state.update {
-                            it.copy(
-                                selectedRecipeID = event.recipeID,
-                                currentPage = 1
-                            )
+                    if (loadingJob?.isActive == true)
+                        loadingJob?.cancel()
+                    loadingJob = launch {
+                        _reviews.update {
+                            ApiResult.Downloading()
                         }
-                    authDataStoreRepo.authDataStoreFlow.first().token?.let { tok ->
-                        when (val reviews =
-                            reviewsRepo.getReviewsByRecipe(
-                                tok,
-                                event.recipeID,
-                                state.value.currentPage,
-                                state.value.pageSize.pageSize
-                            )) {
-                            is ApiResult.Downloading -> {}
-                            is ApiResult.Error ->
-                                _reviews.update {
-                                    ApiResult.Error(reviews.info)
-                                }
+                        if (state.value.selectedRecipeID != event.recipeID) {
+                            _state.update {
+                                it.copy(
+                                    selectedRecipeID = event.recipeID,
+                                    currentPage = 1
+                                )
+                            }
+                            launch {
+                                authDataStoreRepo.authDataStoreFlow.first().token?.let {
+                                    val recipe = recipesRepo.getRecipeByID(it, event.recipeID)
+                                    val averageRating =
+                                        reviewsRepo.getRecipeRating(it, event.recipeID)
 
-                            is ApiResult.Succeed -> {
-                                _state.update {
-                                    it.copy(
-                                        currentPage = reviews.data?.currentPage ?: it.currentPage,
-                                        totalPages = reviews.data?.totalPages ?: it.currentPage
-                                    )
-                                }
-                                _reviews.update {
-                                    ApiResult.Succeed(reviews.data?.result?.mapNotNull {
-                                        creatorsRepo.getCreatorById(
-                                            tok,
-                                            it.userID
-                                        ).data?.let { creator ->
-                                            ReviewModel(
-                                                id = it._id,
-                                                userName = creator.nickname,
-                                                userImageUrl = creator.imageUrl,
-                                                text = it.text,
-                                                rating = it.rating
-                                            )
-                                        }
-                                    })
+                                    _state.update {
+                                        it.copy(
+                                            recipeName = recipe.data?.recipeName ?: "",
+                                            recipeRating = averageRating.data?.toFloat() ?: 0f
+                                        )
+                                    }
                                 }
                             }
                         }
-                    } ?: _reviews.update {
-                        ApiResult.Error("Cannot find token info")
-                    }
-                    launch {
-                        _ownReviews.update {
-                            ApiResult.Downloading()
-                        }
-                        _ownReviews.update {
-                            authDataStoreRepo.authDataStoreFlow.first().token?.let { tok ->
-                                when (val review =
-                                    reviewsRepo.getOwnReviewByRecipe(tok, event.recipeID)) {
-                                    is ApiResult.Downloading -> ApiResult.Downloading()
-                                    is ApiResult.Error -> ApiResult.Error(review.info)
-                                    is ApiResult.Succeed -> ApiResult.Succeed(review.data?.let { rev ->
-                                        creatorsRepo.getCreatorById(
-                                            tok,
-                                            rev.userID
-                                        ).data?.let { creator ->
-                                            ReviewModel(
-                                                id = rev._id,
-                                                userName = creator.nickname,
-                                                userImageUrl = creator.imageUrl,
-                                                text = rev.text,
-                                                rating = rev.rating
-                                            )
+                        authDataStoreRepo.authDataStoreFlow.first().token?.let { tok ->
+                            when (val reviews =
+                                reviewsRepo.getReviewsByRecipe(
+                                    tok,
+                                    event.recipeID,
+                                    state.value.currentPage,
+                                    state.value.pageSize.pageSize
+                                )) {
+                                is ApiResult.Downloading -> {}
+                                is ApiResult.Error ->
+                                    _reviews.update {
+                                        ApiResult.Error(reviews.info)
+                                    }
+
+                                is ApiResult.Succeed -> {
+                                    _state.update {
+                                        it.copy(
+                                            currentPage = reviews.data?.currentPage
+                                                ?: it.currentPage,
+                                            totalPages = reviews.data?.totalPages ?: it.currentPage
+                                        )
+                                    }
+                                    val reviewsModel = reviews.data?.result?.map {
+                                        async {
+                                            creatorsRepo.getCreatorById(
+                                                tok,
+                                                it.userID
+                                            ).data?.let { creator ->
+                                                ReviewModel(
+                                                    id = it._id,
+                                                    userName = creator.nickname,
+                                                    userImageUrl = creator.imageUrl,
+                                                    text = it.text,
+                                                    rating = it.rating
+                                                )
+                                            }
                                         }
-                                    })
+                                    }
+                                    _reviews.update {
+                                        ApiResult.Succeed(reviewsModel?.awaitAll()?.mapNotNull { it })
+                                    }
                                 }
-                            } ?: ApiResult.Error("Cannot find token info")
+                            }
+                        } ?: _reviews.update {
+                            ApiResult.Error("Cannot find token info")
+                        }
+                        launch {
+                            _ownReviews.update {
+                                ApiResult.Downloading()
+                            }
+                            _ownReviews.update {
+                                authDataStoreRepo.authDataStoreFlow.first().token?.let { tok ->
+                                    when (val review =
+                                        reviewsRepo.getOwnReviewByRecipe(tok, event.recipeID)) {
+                                        is ApiResult.Downloading -> ApiResult.Downloading()
+                                        is ApiResult.Error -> ApiResult.Error(review.info)
+                                        is ApiResult.Succeed -> ApiResult.Succeed(review.data?.let { rev ->
+                                            creatorsRepo.getCreatorById(
+                                                tok,
+                                                rev.userID
+                                            ).data?.let { creator ->
+                                                ReviewModel(
+                                                    id = rev._id,
+                                                    userName = creator.nickname,
+                                                    userImageUrl = creator.imageUrl,
+                                                    text = rev.text,
+                                                    rating = rev.rating
+                                                )
+                                            }
+                                        })
+                                    }
+                                } ?: ApiResult.Error("Cannot find token info")
+                            }
                         }
                     }
                 }

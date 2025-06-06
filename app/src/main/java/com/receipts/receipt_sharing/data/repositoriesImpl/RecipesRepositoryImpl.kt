@@ -1,9 +1,9 @@
 package com.receipts.receipt_sharing.data.repositoriesImpl
 
-import RecipesRepository
 import com.receipts.receipt_sharing.domain.apiServices.RecipesAPIService
 import com.receipts.receipt_sharing.domain.filters.RecipeFilteringRequest
 import com.receipts.receipt_sharing.domain.recipes.Recipe
+import com.receipts.receipt_sharing.domain.repositories.RecipesRepository
 import com.receipts.receipt_sharing.domain.response.ApiResult
 import com.receipts.receipt_sharing.domain.response.PagedResult
 import okhttp3.MultipartBody
@@ -16,6 +16,17 @@ import java.io.IOException
 class RecipesRepositoryImpl(
     private val api: RecipesAPIService,
 ) : RecipesRepository {
+    override suspend fun getTimeStats(token: String): ApiResult<Int> {
+        return try {
+            ApiResult.Succeed(
+                api.getTimeStats(token)
+            )
+        } catch (e: HttpException) {
+            ApiResult.Error(e.response()?.errorBody()?.string() ?: e.message())
+        } catch (e: Exception) {
+            ApiResult.Error(e.message)
+        }
+    }
 
     override suspend fun uploadRecipeImage(token: String, imageFile: File): ApiResult<String> {
         return try {
@@ -265,7 +276,7 @@ class RecipesRepositoryImpl(
     override suspend fun getTopRecipesByCreator(
         token: String,
         creatorID: String,
-        amount : Int
+        amount: Int
     ): ApiResult<List<Recipe>> {
         return try {
             ApiResult.Succeed(api.getTopRecipesByCreator(token, creatorID, amount))
@@ -467,7 +478,6 @@ class RecipesRepositoryImpl(
             ApiResult.Error(e.message)
         }
     }
-
 
 
 }

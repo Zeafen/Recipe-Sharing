@@ -31,6 +31,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -74,6 +75,7 @@ import com.receipts.receipt_sharing.data.helpers.PasswordChecker
 import com.receipts.receipt_sharing.data.helpers.UnsafeImageLoader
 import com.receipts.receipt_sharing.domain.creators.ProfileRequest
 import com.receipts.receipt_sharing.domain.response.ApiResult
+import com.receipts.receipt_sharing.presentation.ValidationInfo
 import com.receipts.receipt_sharing.presentation.creators.profile.ProfileConfigScreens
 import com.receipts.receipt_sharing.presentation.creators.profile.ProfilePageEvent
 import com.receipts.receipt_sharing.presentation.creators.profile.ProfilePageState
@@ -312,7 +314,7 @@ fun CreatorConfigPage(
                     },
                     enabled = when {
                         state.screen == ProfileConfigScreens.EditInfo -> !state.isError
-                        state.screen == ProfileConfigScreens.ChangePassword -> state.passwordOk && state.passwordsMatch && state.emailCode.isNotEmpty()
+                        state.screen == ProfileConfigScreens.ChangePassword -> state.passwordOk.isValid && state.passwordsMatch && state.emailCode.isNotEmpty()
                         else -> false
                     }
                 ) {
@@ -359,8 +361,9 @@ fun CreatorConfigPage(
 
                 is ApiResult.Succeed -> {
                     state.creator.data?.let {
-                        if (state.openConfirmExitDialog)
-                            AlertDialog(
+                        when{
+                            state.openConfirmExitDialog -> {
+                                AlertDialog(
                                 onDismissRequest = {
                                     onEvent(
                                         ProfilePageEvent.SetOpenConfirmExitDialog(
@@ -448,23 +451,116 @@ fun CreatorConfigPage(
                                     )
                                 },
                             )
-                        if (state.openEditEmailDialog)
-                            EditEmailDialog(
-                                email = state.creatorEmail,
-                                emailCode = state.emailCode,
-                                onEnterEmail = { onEvent(ProfilePageEvent.SetEmail(it)) },
-                                onEnterCode = { onEvent(ProfilePageEvent.SetEmailCode(it)) },
-                                onDismissRequest = {
-                                    onEvent(
-                                        ProfilePageEvent.SetOpenEditEmailDialog(
-                                            false
+                            }
+                            state.openConfirmDeleteDialog -> {
+                                AlertDialog(
+                                    onDismissRequest = {
+                                        onEvent(
+                                            ProfilePageEvent.SetOpenConfirmDeleteDialog(
+                                                false
+                                            )
                                         )
-                                    )
-                                    onEvent(ProfilePageEvent.DiscardChanges)
-                                },
-                                onConfirmClick = { onEvent(ProfilePageEvent.ChangeEmail) },
-                                onGenerateCodeClick = { onEvent(ProfilePageEvent.SetEmailGetCode) }
-                            )
+                                    },
+                                    confirmButton = {
+                                        TextButton(
+                                            modifier = Modifier
+                                                .padding(horizontal = 8.dp),
+                                            onClick = {
+                                                onEvent(ProfilePageEvent.DeleteAccount(onLogOut))
+                                            },
+                                            shape = CircleShape
+                                        ) {
+                                            Text(
+                                                text = stringResource(R.string.confirm_txt),
+                                                textAlign = TextAlign.Center,
+                                                style = MaterialTheme.typography.titleLarge,
+                                                letterSpacing = TextUnit(
+                                                    1.5f,
+                                                    TextUnitType.Sp
+                                                ),
+                                                fontWeight = FontWeight.W500
+                                            )
+                                        }
+                                    },
+                                    dismissButton = {
+                                        TextButton(
+                                            modifier = Modifier
+                                                .padding(horizontal = 8.dp),
+                                            colors = ButtonDefaults.outlinedButtonColors(
+                                                contentColor = MaterialTheme.colorScheme.error
+                                            ),
+                                            onClick = {
+                                                onEvent(ProfilePageEvent.SetOpenConfirmDeleteDialog(false))
+                                            },
+                                            shape = CircleShape
+                                        ) {
+                                            Text(
+                                                text = stringResource(R.string.cancel_txt),
+                                                textAlign = TextAlign.Center,
+                                                style = MaterialTheme.typography.titleLarge,
+                                                letterSpacing = TextUnit(
+                                                    1.5f,
+                                                    TextUnitType.Sp
+                                                ),
+                                                fontWeight = FontWeight.W500
+                                            )
+                                        }
+                                    },
+                                    shape = RoundedCornerShape(16.dp),
+                                    icon = {
+                                        Icon(
+                                            imageVector = Icons.Default.Warning,
+                                            tint = MaterialTheme.colorScheme.error,
+                                            contentDescription = null
+                                        )
+                                    },
+                                    title = {
+                                        Text(
+                                            text = stringResource(R.string.confirm_delete_title),
+                                            textAlign = TextAlign.Center,
+                                            style = MaterialTheme.typography.headlineMedium,
+                                            overflow = TextOverflow.Ellipsis,
+                                            letterSpacing = TextUnit(
+                                                0.1f,
+                                                TextUnitType.Em
+                                            ),
+                                            fontWeight = FontWeight.W500
+                                        )
+                                    },
+                                    text = {
+                                        Text(
+                                            text = stringResource(R.string.confirm_delete_account),
+                                            textAlign = TextAlign.Justify,
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            overflow = TextOverflow.Ellipsis,
+                                            letterSpacing = TextUnit(
+                                                2f,
+                                                TextUnitType.Sp
+                                            ),
+                                            fontWeight = FontWeight.W400
+                                        )
+                                    },
+                                )
+                            }
+                            state.openEditEmailDialog -> {
+                                EditEmailDialog(
+                                    email = state.creatorEmail,
+                                    emailCode = state.emailCode,
+                                    onEnterEmail = { onEvent(ProfilePageEvent.SetEmail(it)) },
+                                    onEnterCode = { onEvent(ProfilePageEvent.SetEmailCode(it)) },
+                                    onDismissRequest = {
+                                        onEvent(
+                                            ProfilePageEvent.SetOpenEditEmailDialog(
+                                                false
+                                            )
+                                        )
+                                        onEvent(ProfilePageEvent.DiscardChanges)
+                                    },
+                                    onConfirmClick = { onEvent(ProfilePageEvent.ChangeEmail) },
+                                    onGenerateCodeClick = { onEvent(ProfilePageEvent.SetEmailGetCode) }
+                                )
+                            }
+                        }
                         AnimatedContent(targetState = state.screen,
                             transitionSpec = {
                                 if (targetState in arrayOf(
@@ -575,6 +671,43 @@ fun CreatorConfigPage(
                                             onClick = {
                                                 onEvent(
                                                     ProfilePageEvent.SetOpenConfirmExitDialog(
+                                                        true
+                                                    )
+                                                )
+                                            }
+                                        )
+                                        SectionButton(
+                                            modifier = Modifier
+                                                .padding(8.dp),
+                                            title = {
+                                                Text(
+                                                    style = MaterialTheme.typography.titleLarge,
+                                                    text = stringResource(R.string.delete_account_lbl),
+                                                    textAlign = TextAlign.Start,
+                                                    fontWeight = FontWeight.W400,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis,
+                                                    letterSpacing = TextUnit(
+                                                        0.15f,
+                                                        TextUnitType.Em
+                                                    )
+                                                )
+                                            },
+                                            trailingIcon = {
+                                                Icon(
+                                                    painterResource(R.drawable.forward_ic),
+                                                    contentDescription = null
+                                                )
+                                            },
+                                            leadingIcon = {
+                                                Icon(
+                                                    imageVector = Icons.Default.Delete,
+                                                    contentDescription = null
+                                                )
+                                            },
+                                            onClick = {
+                                                onEvent(
+                                                    ProfilePageEvent.SetOpenConfirmDeleteDialog(
                                                         true
                                                     )
                                                 )
@@ -783,7 +916,7 @@ private fun Preview() {
                             imageUrl = "",
                             newPassword = "",
                             repeatPassword = "",
-                            passwordOk = false,
+                            passwordOk = ValidationInfo(),
                             passwordsMatch = false,
                             emailCode = "",
                             isError = false

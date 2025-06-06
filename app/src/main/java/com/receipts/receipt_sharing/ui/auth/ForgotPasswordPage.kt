@@ -36,7 +36,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.receipts.receipt_sharing.R
-import com.receipts.receipt_sharing.data.helpers.PasswordChecker
+import com.receipts.receipt_sharing.presentation.ValidationInfo
 import com.receipts.receipt_sharing.presentation.auth.AuthEvent
 import com.receipts.receipt_sharing.presentation.auth.AuthPageState
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
@@ -217,9 +217,9 @@ fun ForgotPasswordPage(
                         contentDescription = null
                     )
                 },
-                isError = !state.passwordOK,
+                isError = !state.passwordValidation.isValid,
                 supportingText = {
-                    AnimatedVisibility(visible = !state.passwordOK,
+                    AnimatedVisibility(visible = !state.passwordValidation.isValid,
                         enter = slideInVertically(spring(stiffness = Spring.StiffnessMediumLow)) { -it } + fadeIn(
                             spring(stiffness = Spring.StiffnessLow)
                         ),
@@ -227,41 +227,17 @@ fun ForgotPasswordPage(
                             spring(stiffness = Spring.StiffnessLow)
                         )
                     ) {
+                        state.passwordValidation.errorInfoID?.let {
                         Text(
-                            text = when {
-                                state.password.length < PasswordChecker.MinLength -> stringResource(
-                                    R.string.incorrect_length_least_error,
-                                    PasswordChecker.MinLength
-                                )
-
-                                state.password.count { it.isDigit() } < PasswordChecker.NumbersLeastCount -> stringResource(
-                                    R.string.must_contain_least_numbers_error,
-                                    PasswordChecker.NumbersLeastCount
-                                )
-
-                                state.password.count { it.isLetter() } < PasswordChecker.LettersLeastCount -> stringResource(
-                                    R.string.must_contain_least_letters_error,
-                                    PasswordChecker.LettersLeastCount
-                                )
-
-                                PasswordChecker.HasSpecials && !state.password.contains("[!\"#\$%&'()*+,-./:;\\\\<=>?@\\[\\]^_`{|}~]".toRegex()) -> stringResource(
-                                    R.string.must_contain_specials_error
-                                )
-
-                                PasswordChecker.HasUpperCase && !state.password.contains("[A-Z]".toRegex()) -> stringResource(
-                                    R.string.must_contain_uppercase
-                                )
-
-                                PasswordChecker.HasLowerCase && !state.password.contains("[a-z]".toRegex()) -> stringResource(
-                                    R.string.must_contain_lowercase
-                                )
-
-                                else -> ""
-                            },
+                            text = stringResource(
+                                state.passwordValidation.errorInfoID,
+                                *state.passwordValidation.formatArgs.toTypedArray()
+                            ),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.W400,
                             color = MaterialTheme.colorScheme.error
                         )
+                    }
                     }
                 },
                 label = {
@@ -286,10 +262,10 @@ fun ForgotPasswordPage(
                         contentDescription = null
                     )
                 },
-                enabled = state.passwordOK,
+                enabled = state.passwordValidation.isValid,
                 isError = !state.passwordsMatch,
                 supportingText = {
-                    AnimatedVisibility(visible = !state.passwordsMatch && state.passwordOK,
+                    AnimatedVisibility(visible = !state.passwordsMatch && state.passwordValidation.isValid,
                         enter = slideInVertically(spring(stiffness = Spring.StiffnessMediumLow)) { -it } + fadeIn(
                             spring(stiffness = Spring.StiffnessLow)
                         ),
@@ -316,7 +292,7 @@ fun ForgotPasswordPage(
             Button(modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = 24.dp, end = 24.dp, top = 12.dp),
-                enabled = state.passwordOK && state.passwordsMatch && state.emailOk && state.emailCode.isNotEmpty(),
+                enabled = state.passwordValidation.isValid && state.passwordsMatch && state.emailOk && state.emailCode.isNotEmpty(),
                 shape = RoundedCornerShape(16.dp),
                 onClick = { onEvent(AuthEvent.ResetPassword) }) {
                 Text(text = stringResource(R.string.change_password_lbl))
@@ -328,10 +304,18 @@ fun ForgotPasswordPage(
 @Preview
 @Composable
 private fun Preview() {
-    RecipeSharing_theme {
+    RecipeSharing_theme(darkTheme = true) {
         Surface {
             ForgotPasswordPage(
-                state = AuthPageState(),
+                state = AuthPageState(
+                    email = "someEmail@gmail.com",
+                    emailOk = true,
+                    emailCode = "SLKSDSDSA",
+                    password = "SomePassword@_123123123",
+                    repeatPassword = "SomePassword@_123123123",
+                    passwordValidation = ValidationInfo(true),
+                    passwordsMatch = true
+                ),
                 onEvent = {},
                 onGoBackClick = {}
             )

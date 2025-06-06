@@ -1,6 +1,5 @@
 package com.receipts.receipt_sharing.presentation.recipes.recipePage
 
-import RecipesRepository
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.receipts.receipt_sharing.data.helpers.FileHelper
@@ -11,9 +10,11 @@ import com.receipts.receipt_sharing.domain.recipes.Recipe
 import com.receipts.receipt_sharing.domain.recipes.Step
 import com.receipts.receipt_sharing.domain.repositories.CreatorsRepository
 import com.receipts.receipt_sharing.domain.repositories.FiltersRepository
+import com.receipts.receipt_sharing.domain.repositories.RecipesRepository
 import com.receipts.receipt_sharing.domain.repositories.ReviewsRepository
 import com.receipts.receipt_sharing.domain.response.ApiResult
 import com.receipts.receipt_sharing.domain.reviews.ReviewModel
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
@@ -56,9 +57,14 @@ class RecipePageViewModel(
             when (event) {
                 is RecipePageEvent.AddIngredient -> {
                     _state.update {
-                        it.copy(
-                            ingredients = state.value.ingredients.plus(event.ingredient)
-                        )
+                        if (state.value.ingredients.any { ing -> ing.name == event.ingredient.name })
+                            it.copy(
+                                infoMessage = "Already exists"
+                            )
+                        else
+                            it.copy(
+                                ingredients = state.value.ingredients.plus(event.ingredient)
+                            )
                     }
                 }
 
@@ -83,43 +89,39 @@ class RecipePageViewModel(
                     _selectedRecipe.update {
                         ApiResult.Downloading()
                     }
-                    _selectedRecipe.update {
+                    val recipe = token?.let {
+                        recipesRepo.getRecipeByID(it, event.recipeID)
+                    } ?: ApiResult.Error("Unauthorized")
+                    val filters = async {
+                        if (!token.isNullOrEmpty()) filtersRepo.getFiltersByRecipe(
+                            token,
+                            event.recipeID
+                        ) else ApiResult.Error("Unauthorized")
+                    }
+                    val owns = async {
                         token?.let {
-                            recipesRepo.getRecipeByID(it, event.recipeID)
-                        } ?: ApiResult.Error("Unauthorized")
+                            recipesRepo.isRecipeOwn(it, event.recipeID)
+                        }
                     }
-                    val filters = if (!token.isNullOrEmpty()) filtersRepo.getFiltersByRecipe(
-                        token,
-                        event.recipeID
-                    ) else ApiResult.Error("Unauthorized")
-
-
-                    val owns = token?.let {
-                        recipesRepo.isRecipeOwn(it, event.recipeID)
+                    val isFavorite = async {
+                        token?.let {
+                            recipesRepo.isRecipeInFavorites(it, event.recipeID)
+                        }
                     }
-                    val isFavorite = token?.let {
-                        recipesRepo.isRecipeInFavorites(it, event.recipeID)
-                    }
-                    val recipeRating = token?.let {
-                        reviewsRepo.getRecipeRating(token, event.recipeID).data?.toFloat()
-                    } ?: 0f
-                    val reviewsCount = token?.let {
-                        reviewsRepo.getReviewsCountByRecipe(token, event.recipeID).data
-                    } ?: 0
 
                     _state.update {
                         it.copy(
-                            recipeName = state.value.recipe.data?.recipeName ?: "",
-                            recipeDescription = state.value.recipe.data?.description ?: "",
-                            imageUrl = state.value.recipe.data?.imageUrl,
-                            recipeRating = recipeRating,
-                            recipeReviewsCount = reviewsCount,
-                            own = owns?.data ?: false,
+                            recipeName = recipe.data?.recipeName ?: "",
+                            recipeDescription = recipe.data?.description ?: "",
+                            imageUrl = recipe.data?.imageUrl,
+                            recipeRating = recipe.data?.currentRating ?: 0f,
+                            recipeReviewsCount = recipe.data?.reviewsCount ?: 0,
+                            own = owns.await()?.data ?: false,
                             isEditingRecord = false,
-                            filters = filters,
-                            isFavorite = isFavorite?.data ?: false,
-                            ingredients = state.value.recipe.data?.ingredients ?: emptyList(),
-                            steps = state.value.recipe.data?.steps ?: emptyList(),
+                            filters = filters.await(),
+                            isFavorite = isFavorite.await()?.data ?: false,
+                            ingredients = recipe.data?.ingredients ?: emptyList(),
+                            steps = recipe.data?.steps ?: emptyList(),
                             reviews = ApiResult.Downloading(),
                             selectedRecipeTabIndex = 0,
                             openFiltersPage = false,
@@ -127,6 +129,10 @@ class RecipePageViewModel(
                             openAddStepDialog = false,
                             openConfirmDeleteDialog = false
                         )
+                    }
+
+                    _selectedRecipe.update {
+                        recipe
                     }
 
                     launch {
@@ -173,6 +179,11 @@ class RecipePageViewModel(
                 }
 
                 RecipePageEvent.SaveChanges -> {
+                    _state.update {
+                        it.copy(
+                            isEditingRecord = false
+                        )
+                    }
                     val token = authDataStoreRepo.authDataStoreFlow.first().token
                     val name = state.value.recipeName
                     val desc = state.value.recipeDescription
@@ -188,13 +199,16 @@ class RecipePageViewModel(
                         }
                         return@launch
                     }
-                    var recipe = state.value.recipe.data?.copy(
+                    val recipe = state.value.recipe.data?.copy(
                         recipeName = name,
                         description = desc,
                         ingredients = ingr,
                         steps = steps,
                         imageUrl = imageUrl
                     )
+                    _selectedRecipe.update {
+                        ApiResult.Downloading()
+                    }
                     if (!token.isNullOrEmpty() && recipe != null && state.value.own) {
                         val updateID = if (recipe.recipeID.isEmpty())
                             recipesRepo.postRecipe(token, recipe).data
@@ -210,12 +224,8 @@ class RecipePageViewModel(
                             _selectedRecipe.update {
                                 ApiResult.Succeed(recipe.copy(recipeID = updateID))
                             }
-                        }
-
-                        _state.update {
-                            it.copy(
-                                isEditingRecord = false,
-                            )
+                        } ?: _selectedRecipe.update {
+                            ApiResult.Error("Error")
                         }
                     }
                 }
@@ -282,13 +292,20 @@ class RecipePageViewModel(
                     }
                 }
 
-                is RecipePageEvent.UpdateIngredient -> _state.update {
-                    it.copy(
-                        ingredients = state.value.ingredients.toMutableList().apply {
-                            set(event.index, event.ingredient)
-                            toList()
-                        }
-                    )
+                is RecipePageEvent.UpdateIngredient -> {
+                    _state.update {
+                        if (state.value.ingredients.any { ing -> ing.name == event.ingredient.name && event.index != state.value.ingredients.indexOf(ing) })
+                            it.copy(
+                                infoMessage = "Already exists"
+                            )
+                        else
+                            it.copy(
+                                ingredients = state.value.ingredients.toMutableList().apply {
+                                    set(event.index, event.ingredient)
+                                    toList()
+                                }
+                            )
+                    }
                 }
 
                 is RecipePageEvent.UpdateStep -> _state.update {

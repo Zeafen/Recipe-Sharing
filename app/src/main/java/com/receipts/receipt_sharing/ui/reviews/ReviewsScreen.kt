@@ -154,7 +154,7 @@ fun ReviewsScreen(
                                 String.format(
                                     Locale.getDefault(),
                                     "%.1f",
-                                    (it.sumOf { review -> review.rating }.toFloat() / it.size)
+                                    state.recipeRating
                                 )
                             } ?: "0f",
                             style = MaterialTheme.typography.bodyLarge,

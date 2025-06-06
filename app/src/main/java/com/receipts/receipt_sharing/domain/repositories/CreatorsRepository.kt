@@ -1,11 +1,11 @@
 package com.receipts.receipt_sharing.domain.repositories
 
-import com.receipts.receipt_sharing.domain.response.PagedResult
 import com.receipts.receipt_sharing.domain.creators.ChangePasswRequest
 import com.receipts.receipt_sharing.domain.creators.CreatorRequest
 import com.receipts.receipt_sharing.domain.creators.EmailConfirmRequest
 import com.receipts.receipt_sharing.domain.creators.ProfileRequest
 import com.receipts.receipt_sharing.domain.response.ApiResult
+import com.receipts.receipt_sharing.domain.response.PagedResult
 
 interface CreatorsRepository {
 
@@ -239,4 +239,11 @@ interface CreatorsRepository {
      * @return [ApiResult.Error] if request failed; [ApiResult.Succeed] if account information has been obtained
      */
     suspend fun getUserInfo(token : String) : ApiResult<ProfileRequest>
+
+    /**
+     * Attempts to delete user account
+     * @param token Authorization token
+     * @return [ApiResult.Error] if request failed; [ApiResult.Succeed] if account has been successfully deleted
+     */
+    suspend fun deleteAccount(token : String) : ApiResult<Unit>
 }

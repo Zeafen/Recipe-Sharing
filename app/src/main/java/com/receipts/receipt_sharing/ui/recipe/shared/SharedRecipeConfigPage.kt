@@ -107,6 +107,7 @@ import com.receipts.receipt_sharing.data.helpers.toAmountString
 import com.receipts.receipt_sharing.domain.recipes.Ingredient
 import com.receipts.receipt_sharing.domain.recipes.Measure
 import com.receipts.receipt_sharing.domain.recipes.Recipe
+import com.receipts.receipt_sharing.domain.recipes.RecipeDifficulty
 import com.receipts.receipt_sharing.domain.recipes.Step
 import com.receipts.receipt_sharing.domain.response.ApiResult
 import com.receipts.receipt_sharing.domain.reviews.ReviewModel
@@ -120,8 +121,8 @@ import com.receipts.receipt_sharing.ui.dialogs.StepConfigureDialog
 import com.receipts.receipt_sharing.ui.effects.shimmerEffect
 import com.receipts.receipt_sharing.ui.filters.FiltersPage
 import com.receipts.receipt_sharing.ui.infoPages.ErrorInfoPage
-import com.receipts.receipt_sharing.ui.recipe.IngredientCell
-import com.receipts.receipt_sharing.ui.recipe.RatingRow
+import com.receipts.receipt_sharing.ui.recipe.elements.IngredientCell
+import com.receipts.receipt_sharing.ui.recipe.elements.RatingRow
 import com.receipts.receipt_sharing.ui.recipe.steps.EditableStepsRows
 import com.receipts.receipt_sharing.ui.reviews.ReviewCard
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
@@ -221,7 +222,8 @@ fun RecipeConfigPage(
                                         onClick = {
                                             onEvent(RecipePageEvent.DiscardChanges)
                                         },
-                                        enabled = !state.recipe.data?.recipeID.isNullOrEmpty()) {
+                                        enabled = !state.recipe.data?.recipeID.isNullOrEmpty()
+                                    ) {
                                         Icon(Icons.Default.Clear, contentDescription = "'")
                                     }
 
@@ -251,15 +253,19 @@ fun RecipeConfigPage(
                                     else Row {
                                         IconButton(
                                             onClick = onGoToPostReview,
-                                            enabled = !state.recipe.data?.recipeID.isNullOrEmpty()) {
+                                            enabled = !state.recipe.data?.recipeID.isNullOrEmpty()
+                                        ) {
                                             Icon(
                                                 painter = painterResource(R.drawable.comment_ic),
                                                 contentDescription = ""
                                             )
                                         }
-                                        IconButton(onClick = {
-                                            onEvent(RecipePageEvent.ChangeIsFavorite)
-                                        }) {
+                                        IconButton(
+                                            onClick = {
+                                                onEvent(RecipePageEvent.ChangeIsFavorite)
+                                            },
+                                            enabled = !state.recipe.data?.recipeID.isNullOrEmpty()
+                                        ) {
                                             Icon(
                                                 painter = painterResource(
                                                     if (state.isFavorite) R.drawable.in_favorite_ic
@@ -830,17 +836,67 @@ fun RecipeConfigPage(
                                                                                 color = MaterialTheme.colorScheme.error
                                                                             )
                                                                     })
-                                                            else Text(
-                                                                text = state.recipeName,
-                                                                textAlign = TextAlign.Justify,
-                                                                style = MaterialTheme.typography.headlineMedium,
-                                                                overflow = TextOverflow.Ellipsis,
-                                                                letterSpacing = TextUnit(
-                                                                    0.1f,
-                                                                    TextUnitType.Em
-                                                                ),
-                                                                fontWeight = FontWeight.W500
-                                                            )
+                                                            else {
+                                                                val difficultyTint = remember(state.recipe.data.difficulty) {
+                                                                    when (state.recipe.data.difficulty) {
+                                                                        RecipeDifficulty.Beginner -> Color(
+                                                                            0xFF388E3C
+                                                                        )
+
+                                                                        RecipeDifficulty.Common -> Color(
+                                                                            0xFFCCC916
+                                                                        )
+
+                                                                        RecipeDifficulty.Adept -> Color(
+                                                                            0xFFE3700B
+                                                                        )
+
+                                                                        RecipeDifficulty.MasterPiece -> Color(
+                                                                            0xFFFF0000
+                                                                        )
+                                                                    }
+                                                                }
+                                                                Row(
+                                                                    verticalAlignment = Alignment.CenterVertically,
+                                                                    horizontalArrangement = Arrangement.Absolute.SpaceAround
+                                                                ) {
+                                                                    Text(
+                                                                        text = state.recipeName,
+                                                                        textAlign = TextAlign.Justify,
+                                                                        style = MaterialTheme.typography.headlineMedium,
+                                                                        overflow = TextOverflow.Ellipsis,
+                                                                        letterSpacing = TextUnit(
+                                                                            0.1f,
+                                                                            TextUnitType.Em
+                                                                        ),
+                                                                        fontWeight = FontWeight.W500
+                                                                    )
+                                                                    Row(verticalAlignment = Alignment.CenterVertically){
+                                                                        Icon(
+                                                                            painter = painterResource(
+                                                                                R.drawable.kitchen_ic
+                                                                            ),
+                                                                            contentDescription = null,
+                                                                            tint = difficultyTint
+                                                                        )
+                                                                        Text(
+                                                                            text = stringResource(
+                                                                                state.recipe.data.difficulty.nameRes
+                                                                            ),
+                                                                            textAlign = TextAlign.Justify,
+                                                                            style = MaterialTheme.typography.titleLarge,
+                                                                            overflow = TextOverflow.Ellipsis,
+                                                                            letterSpacing = TextUnit(
+                                                                                0.1f,
+                                                                                TextUnitType.Em
+                                                                            ),
+                                                                            color = difficultyTint,
+                                                                            fontWeight = FontWeight.W400
+                                                                        )
+                                                                    }
+
+                                                                }
+                                                            }
                                                         }
                                                     }
                                                     item {
@@ -1203,7 +1259,9 @@ fun RecipeConfigPage(
                                                                         }
                                                                         if (!state.own)
                                                                             IconButton(onClick = {
-
+                                                                                onGoToReviews(
+                                                                                    state.recipe.data.recipeID
+                                                                                )
                                                                             }) {
                                                                                 Image(
                                                                                     painter = painterResource(
@@ -1341,8 +1399,8 @@ private fun ReceiptPagePreview() {
                                 "FilterTwo"
                             )
                         ),
-                        own = false,
-                        isEditingRecord = true,
+                        own = true,
+                        isEditingRecord = false,
                         recipeRating = 3.5f,
                         recipeReviewsCount = 1_000_000_000,
                         selectedRecipeTabIndex = 0,

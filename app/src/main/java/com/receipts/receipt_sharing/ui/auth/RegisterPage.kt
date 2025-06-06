@@ -30,6 +30,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -42,12 +43,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.receipts.receipt_sharing.R
-import com.receipts.receipt_sharing.data.helpers.PasswordChecker
 import com.receipts.receipt_sharing.domain.response.AuthResult
 import com.receipts.receipt_sharing.presentation.auth.AuthEvent
 import com.receipts.receipt_sharing.presentation.auth.AuthPageState
 import com.receipts.receipt_sharing.ui.infoPages.ErrorInfoPage
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
+
 /**
  * Composes registration screen
  * @param state the state object user to control screen layout
@@ -67,6 +68,9 @@ fun RegisterScreen(
     onOpenMenu: () -> Unit,
     onAuthorizationFinished: () -> Unit
 ) {
+    val loginError = remember(state.login) {
+        state.login.isEmpty() || state.login.length < 10
+    }
     Scaffold(
         modifier = modifier,
         topBar = {
@@ -145,9 +149,9 @@ fun RegisterScreen(
                                 contentDescription = null
                             )
                         },
-                        isError = state.login.isEmpty() || state.login.length < 10,
+                        isError = loginError,
                         supportingText = {
-                            AnimatedVisibility(visible = state.login.isEmpty(),
+                            AnimatedVisibility(visible = loginError,
                                 enter = slideInVertically(spring(stiffness = Spring.StiffnessMediumLow)) { -it } + fadeIn(
                                     spring(stiffness = Spring.StiffnessLow)
                                 ),
@@ -162,6 +166,7 @@ fun RegisterScreen(
                                             R.string.incorrect_length_least_error,
                                             10
                                         )
+
                                         else -> stringResource(R.string.illegal_data_format)
                                     },
                                     style = MaterialTheme.typography.bodyMedium,
@@ -193,7 +198,7 @@ fun RegisterScreen(
                         },
                         isError = !state.emailOk,
                         supportingText = {
-                            AnimatedVisibility(visible = state.login.isEmpty(),
+                            AnimatedVisibility(visible = !state.emailOk,
                                 enter = slideInVertically(spring(stiffness = Spring.StiffnessMediumLow)) { -it } + fadeIn(
                                     spring(stiffness = Spring.StiffnessLow)
                                 ),
@@ -246,9 +251,9 @@ fun RegisterScreen(
                                 contentDescription = null
                             )
                         },
-                        isError = !state.passwordOK,
+                        isError = !state.passwordValidation.isValid,
                         supportingText = {
-                            AnimatedVisibility(visible = !state.passwordOK,
+                            AnimatedVisibility(visible = !state.passwordValidation.isValid,
                                 enter = slideInVertically(spring(stiffness = Spring.StiffnessMediumLow)) { -it } + fadeIn(
                                     spring(stiffness = Spring.StiffnessLow)
                                 ),
@@ -256,41 +261,17 @@ fun RegisterScreen(
                                     spring(stiffness = Spring.StiffnessLow)
                                 )
                             ) {
-                                Text(
-                                    text = when {
-                                        state.password.length < PasswordChecker.MinLength -> stringResource(
-                                            R.string.incorrect_length_least_error,
-                                            PasswordChecker.MinLength
-                                        )
-
-                                        state.password.count { it.isDigit() } < PasswordChecker.NumbersLeastCount -> stringResource(
-                                            R.string.must_contain_least_numbers_error,
-                                            PasswordChecker.NumbersLeastCount
-                                        )
-
-                                        state.password.count { it.isLetter() } < PasswordChecker.LettersLeastCount -> stringResource(
-                                            R.string.must_contain_least_letters_error,
-                                            PasswordChecker.LettersLeastCount
-                                        )
-
-                                        PasswordChecker.HasSpecials && !state.password.contains("[!\"#\$%&'()*+,-./:;\\\\<=>?@\\[\\]^_`{|}~]".toRegex()) -> stringResource(
-                                            R.string.must_contain_specials_error
-                                        )
-
-                                        PasswordChecker.HasUpperCase && !state.password.contains("[A-Z]".toRegex()) -> stringResource(
-                                            R.string.must_contain_uppercase
-                                        )
-
-                                        PasswordChecker.HasLowerCase && !state.password.contains("[a-z]".toRegex()) -> stringResource(
-                                            R.string.must_contain_lowercase
-                                        )
-
-                                        else -> ""
-                                    },
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.W400,
-                                    color = MaterialTheme.colorScheme.error
-                                )
+                                state.passwordValidation.errorInfoID?.let {
+                                    Text(
+                                        text = stringResource(
+                                            state.passwordValidation.errorInfoID,
+                                            *state.passwordValidation.formatArgs.toTypedArray()
+                                        ),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.W400,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
                             }
                         },
                         label = {
@@ -301,6 +282,8 @@ fun RegisterScreen(
                             )
                         }
                     )
+
+
                     OutlinedTextField(modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 16.dp, horizontal = 12.dp),
@@ -314,10 +297,10 @@ fun RegisterScreen(
                                 contentDescription = null
                             )
                         },
-                        enabled = state.passwordOK,
+                        enabled = state.passwordValidation.isValid,
                         isError = !state.passwordsMatch,
                         supportingText = {
-                            AnimatedVisibility(visible = !state.passwordsMatch && state.passwordOK,
+                            AnimatedVisibility(visible = !state.passwordsMatch && state.passwordValidation.isValid,
                                 enter = slideInVertically(spring(stiffness = Spring.StiffnessMediumLow)) { -it } + fadeIn(
                                     spring(stiffness = Spring.StiffnessLow)
                                 ),
@@ -341,10 +324,11 @@ fun RegisterScreen(
                             )
                         }
                     )
+
                     Button(modifier = Modifier
                         .fillMaxWidth()
                         .padding(start = 24.dp, end = 24.dp, top = 12.dp),
-                        enabled = state.passwordOK && state.passwordsMatch && state.login.isNotEmpty() && state.emailOk,
+                        enabled = state.passwordValidation.isValid && state.passwordsMatch && state.login.isNotEmpty() && state.emailOk,
                         shape = RoundedCornerShape(16.dp),
                         onClick = { onEvent(AuthEvent.ConfirmRegister) }) {
                         Text(text = stringResource(R.string.register_confirm_str))

@@ -40,7 +40,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -111,9 +110,9 @@ fun RecipesScreen(
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibility: AnimatedVisibilityScope,
     onEvent: (RecipesScreenEvent) -> Unit,
-    onOpenMenu: () -> Unit,
     onGoToRecipe: (recipeId: String) -> Unit,
     onGoToAddRecipe: () -> Unit,
+    onGoBack: () -> Unit,
 ) {
     val refreshState = rememberPullToRefreshState()
     val animatedExpandRotation by animateFloatAsState(
@@ -202,8 +201,8 @@ fun RecipesScreen(
                         }
                     },
                     navigationIcon = {
-                        IconButton(onClick = onOpenMenu) {
-                            Icon(Icons.Default.Menu, contentDescription = "")
+                        IconButton(onClick = onGoBack) {
+                            Icon(painter = painterResource(R.drawable.back_ic), contentDescription = "")
                         }
                     })
             },
@@ -514,7 +513,6 @@ fun RecipesScreen(
         }
     }
 }
-
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable

@@ -13,5 +13,6 @@ data class Recipe(
     val steps : List<Step>,
     val currentRating : Float,
     val reviewsCount : Long,
-    val viewsCount : Long
+    val viewsCount : Long,
+    val difficulty : RecipeDifficulty = RecipeDifficulty.Common
 )

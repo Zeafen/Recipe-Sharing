@@ -9,6 +9,7 @@ import com.receipts.receipt_sharing.domain.repositories.AuthRepository
 import com.receipts.receipt_sharing.domain.repositories.CreatorsRepository
 import com.receipts.receipt_sharing.domain.response.ApiResult
 import com.receipts.receipt_sharing.domain.response.AuthResult
+import com.receipts.receipt_sharing.presentation.ValidationInfo
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
@@ -52,17 +53,20 @@ class AuthViewModel(
                     _result.update {
                         AuthResult.Loading()
                     }
-                    _result.update {
-                        authRepo.logIn(login, password)
-                    }
-                    state.value.result.data?.let {
-                        authDataStoreRepo.updateSelectedPageIndex(-1)
-                        authDataStoreRepo.updateUserToken(it)
-                        creatorsRepo.getUserInfo(it).data?.let {
-                            authDataStoreRepo.updateUserName(it.nickname)
-                            authDataStoreRepo.updateImageUrl(it.imageUrl)
+                    val result = authRepo.logIn(login, password).also {
+                        it.data?.let {
+                            authDataStoreRepo.updateSelectedPageIndex(0)
+                            authDataStoreRepo.updateUserToken(it)
+                            creatorsRepo.getUserInfo(it).data?.let {
+                                authDataStoreRepo.updateUserName(it.nickname)
+                                authDataStoreRepo.updateImageUrl(it.imageUrl)
+                            }
                         }
                     }
+                    _result.update {
+                        result
+                    }
+
                 }
 
                 AuthEvent.ConfirmRegister -> {
@@ -75,20 +79,21 @@ class AuthViewModel(
                     _result.update {
                         AuthResult.Loading()
                     }
-                    _result.update {
-                        authRepo.register(login, email, password)
-                    }
-                    state.value.result.data?.let {
+                    val token = authRepo.register(login, email, password)
+                    token.data?.let {
                         authDataStoreRepo.updateUserToken(it)
                         creatorsRepo.getUserInfo(it).data?.let {
                             authDataStoreRepo.updateUserName(it.nickname)
                             authDataStoreRepo.updateImageUrl(it.imageUrl)
                         }
                     }
+                    _result.update {
+                        token
+                    }
                 }
 
                 AuthEvent.ResetPassword -> {
-                    if (state.value.passwordOK && state.value.passwordsMatch) {
+                    if (state.value.passwordValidation.isValid && state.value.passwordsMatch) {
                         when (val result = authRepo.updatePassword(
                             ChangePasswRequest(
                                 state.value.email, state.value.password, state.value.emailCode
@@ -174,7 +179,7 @@ class AuthViewModel(
                 is AuthEvent.SetPassword -> _state.update {
                     it.copy(
                         password = event.password,
-                        passwordOK = PasswordChecker.checkPassword(event.password)
+                        passwordValidation = PasswordChecker.checkPassword(event.password)
                     )
                 }
 
@@ -199,8 +204,9 @@ class AuthViewModel(
                             emailCode = "",
                             password = "",
                             repeatPassword = "",
-                            passwordOK = false,
-                            passwordsMatch = false
+                            passwordValidation = ValidationInfo(),
+                            passwordsMatch = false,
+                            emailOk = false
                         )
                     }
                     _result.update {

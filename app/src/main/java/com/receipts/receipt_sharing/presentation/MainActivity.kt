@@ -4,7 +4,6 @@ import NavigationRoutes
 import android.Manifest
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -20,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -78,6 +78,7 @@ import com.receipts.receipt_sharing.presentation.recipes.recipePage.RecipePageVi
 import com.receipts.receipt_sharing.presentation.recipes.recipesScreen.RecipesLoadedDataType
 import com.receipts.receipt_sharing.presentation.recipes.recipesScreen.RecipesScreenEvent
 import com.receipts.receipt_sharing.presentation.recipes.recipesScreen.RecipesScreenViewModel
+import com.receipts.receipt_sharing.presentation.reviews.reviewPage.ReviewPageEffect
 import com.receipts.receipt_sharing.presentation.reviews.reviewPage.ReviewPageEvent
 import com.receipts.receipt_sharing.presentation.reviews.reviewPage.ReviewPageViewModel
 import com.receipts.receipt_sharing.presentation.reviews.reviewsScreen.ReviewsScreenEvent
@@ -95,6 +96,7 @@ import kotlinx.coroutines.launch
 
 data class RecipeNavigationItem(
     val route: NavigationRoutes,
+    val parentRoute : NavigationRoutes? = null,
     val nameID: Int,
     val iconID: Int
 )
@@ -118,38 +120,43 @@ class MainActivity : ComponentActivity() {
         val navItems = listOf(
             RecipeNavigationItem(
                 NavigationRoutes.Recipes.RecipesFolder,
-                R.string.home_page_title,
-                R.drawable.home_ic
+                nameID = R.string.home_page_title,
+                iconID = R.drawable.home_ic
             ),
             RecipeNavigationItem(
                 NavigationRoutes.Recipes.RecipesScreen,
-                R.string.recipes_page_title,
-                R.drawable.recipes_page_ic
+                parentRoute = NavigationRoutes.Recipes.RecipesFolder,
+                nameID = R.string.recipes_page_title,
+                iconID = R.drawable.recipes_page_ic
             ),
             RecipeNavigationItem(
                 NavigationRoutes.Recipes.OwnRecipesScreen,
-                R.string.own_recipes_page_title,
-                R.drawable.own_recipes_page_ic
+                parentRoute = NavigationRoutes.Recipes.RecipesFolder,
+                nameID = R.string.own_recipes_page_title,
+                iconID = R.drawable.own_recipes_page_ic
             ),
             RecipeNavigationItem(
                 NavigationRoutes.Recipes.FavoritesPage,
-                R.string.favorites_page_title,
-                R.drawable.in_favorite_ic
+                parentRoute = NavigationRoutes.Recipes.RecipesFolder,
+                nameID = R.string.favorites_page_title,
+                iconID = R.drawable.in_favorite_ic
             ),
             RecipeNavigationItem(
                 NavigationRoutes.Creators.CreatorsFolder,
-                R.string.creator_screen_header,
-                R.drawable.creators_page_ic
+                nameID = R.string.creator_screen_header,
+                iconID = R.drawable.creators_page_ic
             ),
             RecipeNavigationItem(
                 NavigationRoutes.Creators.FollowsScreen,
-                R.string.follows_page_title,
-                R.drawable.follows_page_ic
+                parentRoute = NavigationRoutes.Creators.CreatorsFolder,
+                nameID = R.string.follows_page_title,
+                iconID = R.drawable.follows_page_ic
             ),
             RecipeNavigationItem(
                 NavigationRoutes.Creators.ProfilePage,
-                R.string.profile_page_header,
-                R.drawable.user_info_page_ic
+                parentRoute = NavigationRoutes.Creators.CreatorsFolder,
+                nameID = R.string.profile_page_header,
+                iconID = R.drawable.user_info_page_ic
             )
         )
 
@@ -176,8 +183,9 @@ class MainActivity : ComponentActivity() {
                                         verticalArrangement = Arrangement.Center
                                     ) {
                                         Button(onClick = {
-                                            navController.popBackStack()
-                                            navController.navigate(NavigationRoutes.Auth.AuthFolder)
+                                            navController.navigate(NavigationRoutes.Auth.AuthFolder){
+                                                popUpTo(NavigationRoutes.Auth.AuthFolder){ inclusive = true }
+                                            }
                                         }) {
                                             Text(text = stringResource(id = R.string.unauthorized_txt))
                                         }
@@ -226,8 +234,13 @@ class MainActivity : ComponentActivity() {
                                             selected = userState.lastSelectedPageInd == it,
                                             onClick = {
                                                 try {
-                                                    navController.popBackStack()
-                                                    navController.navigate(navItems[it].route)
+                                                    navController.navigate(navItems[it].route) {
+                                                        popUpTo(
+                                                            with(navItems[userState.lastSelectedPageInd]){
+                                                                this.parentRoute ?: this.route
+                                                            }
+                                                        ) { inclusive = true }
+                                                    }
                                                     scope.launch {
                                                         context.authDataStore.updateData { uf ->
                                                             uf.copy(lastSelectedPageInd = it)
@@ -278,7 +291,9 @@ class MainActivity : ComponentActivity() {
                                         val state by authVM.state.collectAsState()
                                         RegisterScreen(
                                             onGotoLogin = {
-                                                navController.navigate(NavigationRoutes.Auth.AuthorizePage)
+                                                navController.navigate(NavigationRoutes.Auth.AuthorizePage){
+                                                    popUpTo(NavigationRoutes.Auth.RegisterPage){ inclusive = true }
+                                                }
                                             },
                                             state = state,
                                             onEvent = authVM::onEvent,
@@ -291,7 +306,9 @@ class MainActivity : ComponentActivity() {
                                                 }
                                             },
                                             onAuthorizationFinished = {
-                                                navController.navigate(NavigationRoutes.Recipes.RecipesFolder)
+                                                navController.navigate(NavigationRoutes.Recipes.RecipesFolder){
+                                                    popUpTo(NavigationRoutes.Auth.AuthFolder){ inclusive = true }
+                                                }
                                             })
                                     }
                                     composable<NavigationRoutes.Auth.AuthorizePage> {
@@ -304,7 +321,6 @@ class MainActivity : ComponentActivity() {
                                             )
                                         LaunchedEffect(Unit) {
                                             authVM.onEvent(AuthEvent.ClearData)
-                                            Log.i("composing", "Composing authorizePage")
                                         }
                                         val state by authVM.state.collectAsState()
 
@@ -312,7 +328,9 @@ class MainActivity : ComponentActivity() {
                                             onGotoRegister = {
                                                 navController.navigate(
                                                     NavigationRoutes.Auth.RegisterPage
-                                                )
+                                                ){
+                                                    popUpTo(NavigationRoutes.Auth.AuthorizePage){ inclusive = true }
+                                                }
                                             },
                                             state = state,
                                             onEvent = authVM::onEvent,
@@ -325,9 +343,9 @@ class MainActivity : ComponentActivity() {
                                                 }
                                             },
                                             onAuthorizationFinished = {
-                                                navController.navigate(
-                                                    NavigationRoutes.Recipes.RecipesFolder
-                                                )
+                                                navController.navigate(NavigationRoutes.Recipes.RecipesFolder){
+                                                    popUpTo(NavigationRoutes.Auth.AuthFolder){ inclusive = true }
+                                                }
                                             },
                                             onGoToChangePassword = {
                                                 navController.navigate(NavigationRoutes.Auth.ForgotPasswordPage)
@@ -376,16 +394,21 @@ class MainActivity : ComponentActivity() {
                                         LaunchedEffect(state.result) {
                                             when (state.result) {
                                                 is AuthResult.Authorized -> {
-                                                    navController.popBackStack()
-                                                    if (userState.lastSelectedPageInd > 0)
-                                                        navController.navigate(navItems[userState.lastSelectedPageInd].route)
-                                                    else
-                                                        navController.navigate(NavigationRoutes.Recipes.RecipesFolder)
+                                                    if (!userState.token.isNullOrEmpty()) {
+                                                        navController.popBackStack(NavigationRoutes.Auth.AuthFolder, inclusive = true)
+                                                        navController.navigate(
+                                                            if (userState.lastSelectedPageInd > 0)
+                                                                navItems[userState.lastSelectedPageInd].route
+                                                            else
+                                                                NavigationRoutes.Recipes.RecipesFolder
+                                                        )
+                                                    }
                                                 }
 
                                                 is AuthResult.Unauthorized -> {
-                                                    navController.popBackStack()
-                                                    navController.navigate(NavigationRoutes.Auth.RegisterPage)
+                                                    navController.navigate(NavigationRoutes.Auth.RegisterPage){
+                                                        popUpTo<NavigationRoutes.Auth.AuthFolder>()
+                                                    }
                                                 }
 
                                                 else -> {}
@@ -407,7 +430,8 @@ class MainActivity : ComponentActivity() {
                                                 )
                                             }
                                         } else if (state.result is AuthResult.Error)
-                                            ErrorInfoPage(
+                                            ErrorInfoPage(modifier = Modifier
+                                                .windowInsetsPadding(WindowInsets.safeDrawing),
                                                 errorInfo = state.result.info
                                                     ?: stringResource(R.string.unknown_error_txt),
                                                 onReloadPage = { viewModel.onEvent(AuthEvent.Authorize) }
@@ -459,7 +483,7 @@ class MainActivity : ComponentActivity() {
                                     }
                                     composable<NavigationRoutes.Creators.CreatorPage> {
                                         val parentEntry =
-                                            remember { navController.getBackStackEntry<NavigationRoutes.Creators.CreatorsFolder>() }
+                                            remember { navController.getBackStackEntry<NavigationRoutes.Creators.CreatorPage>() }
                                         val args =
                                             it.toRoute<NavigationRoutes.Creators.CreatorPage>().creatorID
                                         val creatorVm =
@@ -482,7 +506,6 @@ class MainActivity : ComponentActivity() {
                                             },
                                             onEvent = creatorVm::onEvent,
                                             onGoToCreatorRecipes = {
-                                                navController.popBackStack()
                                                 navController.navigate(
                                                     NavigationRoutes.Recipes.CreatorRecipesScreen(
                                                         it
@@ -575,8 +598,9 @@ class MainActivity : ComponentActivity() {
                                                 }
                                             },
                                             onLogOut = {
-                                                navController.popBackStack()
-                                                navController.navigate(NavigationRoutes.Auth.RegisterPage)
+                                                navController.navigate(NavigationRoutes.Auth.TryAuthorizePage){
+                                                    popUpTo<NavigationRoutes.Creators.CreatorsFolder>(){ inclusive = true }
+                                                }
                                             })
                                     }
                                     composable<NavigationRoutes.Creators.FollowersScreen> {
@@ -701,13 +725,8 @@ class MainActivity : ComponentActivity() {
                                             sharedTransitionScope = this@SharedTransitionLayout,
                                             animatedVisibility = this,
                                             onEvent = recipesScreenVm::onEvent,
-                                            onOpenMenu = {
-                                                scope.launch {
-                                                    drawerState.apply {
-                                                        if (drawerState.isOpen) drawerState.close()
-                                                        else drawerState.open()
-                                                    }
-                                                }
+                                            onGoBack = {
+                                                navController.popBackStack<NavigationRoutes.Creators.CreatorPage>(inclusive = false)
                                             },
                                             onGoToRecipe = {
                                                 navController.navigate(
@@ -817,7 +836,7 @@ class MainActivity : ComponentActivity() {
                                         val args =
                                             it.toRoute<NavigationRoutes.Recipes.RecipePage>().recipeID
                                         val parentEntry =
-                                            remember { navController.getBackStackEntry<NavigationRoutes.Recipes.RecipesFolder>() }
+                                            remember { navController.getBackStackEntry<NavigationRoutes.Recipes.RecipePage>() }
                                         val recipePVM: RecipePageViewModel = viewModel(
                                             parentEntry,
                                             factory = RecipesApplication.appModule.recipePageVMFactory
@@ -847,12 +866,12 @@ class MainActivity : ComponentActivity() {
                                                             it
                                                         )
                                                     )
-                                                } ?: if(!state.recipe.data?.recipeID.isNullOrEmpty()){
-                                                    RecipePageEvent.LoadRecipe(state.recipe.data!!.recipeID)
                                                 }
-                                                else {
-                                                    RecipePageEvent.InitializeRecipe
-                                                }
+                                                    ?: if (!state.recipe.data?.recipeID.isNullOrEmpty()) {
+                                                        RecipePageEvent.LoadRecipe(state.recipe.data!!.recipeID)
+                                                    } else {
+                                                        RecipePageEvent.InitializeRecipe
+                                                    }
                                             },
                                             onGoToPostReview = {
                                                 args?.let {
@@ -964,6 +983,8 @@ class MainActivity : ComponentActivity() {
                                             viewModelStoreOwner = parentEntry,
                                             factory = RecipesApplication.appModule.reviewPageVMFactory
                                         )
+                                        val state by reviewPageVM.state.collectAsState()
+                                        val effect by reviewPageVM.effect.collectAsState()
                                         LaunchedEffect(Unit) {
                                             reviewPageVM.onEvent(
                                                 ReviewPageEvent.LoadReviewByRecipe(
@@ -972,18 +993,27 @@ class MainActivity : ComponentActivity() {
                                             )
                                         }
 
-                                        val state by reviewPageVM.state.collectAsState()
+                                        LaunchedEffect(effect) {
+                                            when(effect){
+                                                ReviewPageEffect.None -> {
+
+                                                }
+                                                ReviewPageEffect.GoBack -> {
+                                                    navController.navigateUp()
+                                                }
+                                                ReviewPageEffect.Refresh -> {
+                                                    reviewPageVM.onEvent(
+                                                        ReviewPageEvent.LoadReviewByRecipe(
+                                                            args.recipeID
+                                                        )
+                                                    )
+                                                }
+                                            }
+                                        }
+
                                         ReviewPage(
                                             state = state,
                                             onEvent = reviewPageVM::onEvent,
-                                            onGoBack = { navController.navigateUp() },
-                                            onRefresh = {
-                                                reviewPageVM.onEvent(
-                                                    ReviewPageEvent.LoadReviewByRecipe(
-                                                        args.recipeID
-                                                    )
-                                                )
-                                            }
                                         )
                                     }
                                 }

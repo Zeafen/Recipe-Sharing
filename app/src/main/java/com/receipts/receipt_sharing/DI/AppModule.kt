@@ -1,6 +1,6 @@
 package com.receipts.receipt_sharing.DI
 
-import RecipesRepository
+import com.receipts.receipt_sharing.domain.repositories.RecipesRepository
 import androidx.lifecycle.ViewModelProvider
 import com.receipts.receipt_sharing.data.repositoriesImpl.AuthDataStoreRepository
 import com.receipts.receipt_sharing.domain.apiServices.RecipesAPIService

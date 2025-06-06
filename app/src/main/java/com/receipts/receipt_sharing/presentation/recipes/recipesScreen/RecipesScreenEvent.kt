@@ -13,6 +13,8 @@ sealed interface RecipesScreenEvent {
     data class SetFilters(val filters: List<String>) : RecipesScreenEvent
     data class SetIngredients(val ingredients: List<String>) : RecipesScreenEvent
     data class SetOrdering(val ordering: RecipeOrdering?) : RecipesScreenEvent
+    data class SetTimeFrom(val timeFrom : Int) : RecipesScreenEvent
+    data class SetTimeTo(val timeTo : Int) : RecipesScreenEvent
     data object LoadFilters : RecipesScreenEvent
 
     data class SetExpandFiltersTab(val expandTab : Boolean) : RecipesScreenEvent
@@ -21,4 +23,5 @@ sealed interface RecipesScreenEvent {
     data class SetOpenSearch(val openSearch: Boolean) : RecipesScreenEvent
     data class SetCurrentPage(val currentPage: Int) : RecipesScreenEvent
     data class SetPageSize(val pageSizes: PageSizes) : RecipesScreenEvent
+    data object ClearFilters : RecipesScreenEvent
 }

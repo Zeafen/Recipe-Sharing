@@ -71,7 +71,7 @@ import com.receipts.receipt_sharing.ui.PageSelectionRow
 import com.receipts.receipt_sharing.ui.TwoLayerTopAppBar
 import com.receipts.receipt_sharing.ui.effects.shimmerEffect
 import com.receipts.receipt_sharing.ui.infoPages.ErrorInfoPage
-import com.receipts.receipt_sharing.ui.recipe.ColumnAmountDropDownMenu
+import com.receipts.receipt_sharing.ui.recipe.elements.ColumnAmountDropDownMenu
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
 
 /**

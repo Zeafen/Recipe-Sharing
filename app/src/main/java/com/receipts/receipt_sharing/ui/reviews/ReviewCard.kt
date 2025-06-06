@@ -39,7 +39,7 @@ import coil.request.ImageRequest
 import com.receipts.receipt_sharing.R
 import com.receipts.receipt_sharing.data.helpers.UnsafeImageLoader
 import com.receipts.receipt_sharing.domain.reviews.ReviewModel
-import com.receipts.receipt_sharing.ui.recipe.RatingRow
+import com.receipts.receipt_sharing.ui.recipe.elements.RatingRow
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
 import kotlin.random.Random
 import kotlin.random.nextInt

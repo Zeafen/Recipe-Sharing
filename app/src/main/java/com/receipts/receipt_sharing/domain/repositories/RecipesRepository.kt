@@ -1,10 +1,18 @@
-import com.receipts.receipt_sharing.domain.response.PagedResult
+package com.receipts.receipt_sharing.domain.repositories
+
 import com.receipts.receipt_sharing.domain.filters.RecipeFilteringRequest
 import com.receipts.receipt_sharing.domain.recipes.Recipe
 import com.receipts.receipt_sharing.domain.response.ApiResult
+import com.receipts.receipt_sharing.domain.response.PagedResult
 import java.io.File
 
 interface RecipesRepository {
+
+    /**
+     * @param token Authorization token
+     * @return [ApiResult.Error] if request failed; [ApiResult.Succeed] with the recipe max time
+     */
+    suspend fun getTimeStats(token : String) : ApiResult<Int>
 
     /**
      * Attempts to upload image to recipe

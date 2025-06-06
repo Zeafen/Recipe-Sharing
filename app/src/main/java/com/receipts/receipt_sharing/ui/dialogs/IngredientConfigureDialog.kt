@@ -35,10 +35,12 @@ import androidx.compose.ui.window.DialogProperties
 import com.receipts.receipt_sharing.R
 import com.receipts.receipt_sharing.domain.recipes.Ingredient
 import com.receipts.receipt_sharing.domain.recipes.Measure
+import com.receipts.receipt_sharing.presentation.ValidationInfo
 import com.receipts.receipt_sharing.ui.effects.SwipeableSelection
 import com.receipts.receipt_sharing.ui.effects.rememberSelectionState
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
 import kotlin.Float.Companion.MAX_VALUE
+
 /**
  * Composes email editing dialog
  * @param ingredient initial ingredient value
@@ -57,9 +59,37 @@ fun IngredientConfigureDialog(
     var amountInput by rememberSaveable {
         mutableStateOf(ingredientState.amount.toString())
     }
-    var isError = remember(amountInput) {
-        amountInput.isEmpty() || amountInput.toFloatOrNull() == null || amountInput.length > 5 || amountInput.toFloat() !in 1f..MAX_VALUE
+    val amountError = remember(amountInput) {
+        when {
+            amountInput.isEmpty() -> ValidationInfo(false, R.string.empty_field_error)
+            amountInput.toFloatOrNull() == null || amountInput.toFloat() !in 1f..MAX_VALUE -> ValidationInfo(
+                false,
+                R.string.illegal_data_format
+            )
+
+            amountInput.split(',', '.').first().length !in 1..5 -> ValidationInfo(
+                false,
+                R.string.incorrect_length_range_error,
+                listOf(1, 5)
+            )
+
+            else -> ValidationInfo(true)
+        }
+
     }
+    val nameError = remember(ingredientState.name) {
+        when {
+            ingredientState.name.isEmpty() -> ValidationInfo(false, R.string.empty_field_error)
+            !ingredientState.name.matches(Regex("[A-Za-zА-ЯА-я0-9][A-Za-zА-ЯА-я0-9 ]*[A-Za-zА-ЯА-я0-9]*")) -> ValidationInfo(
+                false,
+                R.string.illegal_data_format
+            )
+
+            else -> ValidationInfo(true)
+        }
+
+    }
+
 
     Dialog(
         onDismissRequest = onDismissRequest,
@@ -75,20 +105,22 @@ fun IngredientConfigureDialog(
                 .padding(top = 8.dp, bottom = 12.dp, start = 8.dp, end = 8.dp)
                 .fillMaxWidth(),
                 value = ingredientState.name,
-                isError = ingredientState.name.isEmpty(),
+                isError = !nameError.isValid,
                 label = {
                     Text(
                         text = stringResource(R.string.ingredient_name_input),
                     )
                 },
                 supportingText = {
-                    if (ingredientState.name.isEmpty())
-                        Text(
-                            text = stringResource(R.string.empty_field_error),
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.W400,
-                            color = MaterialTheme.colorScheme.error
-                        )
+                    if (!nameError.isValid)
+                        nameError.errorInfoID?.let {
+                            Text(
+                                text = stringResource(it, *nameError.formatArgs.toTypedArray()),
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.W400,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
                 },
                 onValueChange = {
                     ingredientState = ingredientState.copy(
@@ -104,7 +136,7 @@ fun IngredientConfigureDialog(
                         .weight(2f)
                         .padding(vertical = 12.dp, horizontal = 8.dp),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    isError = isError,
+                    isError = !amountError.isValid,
                     label = {
                         Text(
                             text = stringResource(R.string.ingredient_amount_input),
@@ -112,25 +144,18 @@ fun IngredientConfigureDialog(
                     },
                     value = amountInput,
                     supportingText = {
-                        AnimatedVisibility(isError) {
-                            Text(
-                                text = when {
-                                    amountInput.isEmpty() -> stringResource(R.string.empty_field_error)
-
-                                    amountInput.length > 5 -> stringResource(
-                                        R.string.incorrect_length_range_error,
-                                        1,
-                                        5
-                                    )
-
-                                    else -> {
-                                        stringResource(R.string.illegal_data_format)
-                                    }
-                                },
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.W400,
-                                color = MaterialTheme.colorScheme.error
-                            )
+                        AnimatedVisibility(!amountError.isValid) {
+                            amountError.errorInfoID?.let {
+                                Text(
+                                    text = stringResource(
+                                        it,
+                                        *amountError.formatArgs.toTypedArray()
+                                    ),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.W400,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            }
                         }
                     },
                     onValueChange = { amountInput = it },
@@ -171,7 +196,7 @@ fun IngredientConfigureDialog(
                         contentColor = MaterialTheme.colorScheme.onSecondary
                     ),
                     shape = RoundedCornerShape(16.dp),
-                    enabled = !isError && ingredientState.name.isNotEmpty(),
+                    enabled = amountError.isValid && nameError.isValid,
                     onClick = {
                         onSaveChanges(
                             ingredientState.copy(

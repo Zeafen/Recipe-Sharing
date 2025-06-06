@@ -1,4 +1,4 @@
-package com.receipts.receipt_sharing.ui.recipe
+package com.receipts.receipt_sharing.ui.recipe.elements
 
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem

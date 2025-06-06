@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.rememberScrollState
@@ -76,10 +77,13 @@ import com.receipts.receipt_sharing.R
 import com.receipts.receipt_sharing.data.helpers.UnsafeImageLoader
 import com.receipts.receipt_sharing.data.helpers.toAmountString
 import com.receipts.receipt_sharing.domain.recipes.Recipe
+import com.receipts.receipt_sharing.domain.recipes.RecipeDifficulty
 import com.receipts.receipt_sharing.presentation.RecipeSharedElementKey
 import com.receipts.receipt_sharing.presentation.RecipeSharedElementType
-import com.receipts.receipt_sharing.ui.recipe.RatingRow
+import com.receipts.receipt_sharing.ui.recipe.elements.DifficultyMeter
+import com.receipts.receipt_sharing.ui.recipe.elements.RatingRow
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
+import kotlin.random.Random
 
 /**
  * Composes Recipe card
@@ -105,11 +109,22 @@ fun RecipeCard(
         mutableStateOf(32.dp)
     }
     val starSizePx = remember(starsSize) { with(localDensity) { starsSize.toPx() + 8.dp.toPx() } }
-    val viewsSizePx = remember (recipe.viewsCount.toAmountString().length) {
+
+    var meterRadius by remember {
+        mutableStateOf(48.dp)
+    }
+    val meterRadiusPx = remember(meterRadius) {
+        with(localDensity) { meterRadius.toPx() }
+    }
+
+    val viewsSizePx = remember(recipe.viewsCount.toAmountString().length) {
         with(localDensity) {
-            Offset(y = 24.dp.toPx(), x = 24.dp.toPx() + (6.75 * (recipe.viewsCount.toAmountString().length + 2)).dp.toPx())
+            Offset(
+                y = 24.dp.toPx(),
+                x = 24.dp.toPx() + (6.75 * (recipe.viewsCount.toAmountString().length + 2)).dp.toPx()
+            )
         }
-     }
+    }
 
     val scrollState = rememberScrollState(0)
     with(sharedTransitionScope) {
@@ -129,6 +144,8 @@ fun RecipeCard(
                 .onGloballyPositioned { coords ->
                     if (coords.size.width.toFloat() < starSizePx * 5f)
                         starsSize *= (coords.size.width.toFloat() * 0.8f) / (starSizePx * 5f)
+                    if ((meterRadiusPx * 2) / coords.size.width.toFloat() > 0.3f)
+                        meterRadius *= (coords.size.width.toFloat() * 0.25f) / (meterRadiusPx * 2f)
                 },
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -183,8 +200,17 @@ fun RecipeCard(
                                         blendMode = BlendMode.Clear,
                                         cornerRadius = CornerRadius(
                                             x = 0f,
-                                            y = with(localDensity){ 8.dp.toPx() },
+                                            y = with(localDensity) { 8.dp.toPx() },
                                         )
+                                    )
+                                    drawCircle(
+                                        Color.Black,
+                                        radius = meterRadiusPx + 6.dp.toPx(),
+                                        center = Offset(
+                                            x = (meterRadius + 12.dp).toPx(),
+                                            y = (meterRadius + 12.dp).toPx()
+                                        ),
+                                        blendMode = BlendMode.Clear,
                                     )
                                 }
                             },
@@ -222,8 +248,17 @@ fun RecipeCard(
                                         blendMode = BlendMode.Clear,
                                         cornerRadius = CornerRadius(
                                             x = 0f,
-                                            y = with(localDensity){ 8.dp.toPx() },
+                                            y = with(localDensity) { 8.dp.toPx() },
                                         )
+                                    )
+                                    drawCircle(
+                                        Color.Black,
+                                        radius = meterRadiusPx + 6.dp.toPx(),
+                                        center = Offset(
+                                            x = (meterRadius + 12.dp).toPx(),
+                                            y = (meterRadius + 12.dp).toPx()
+                                        ),
+                                        blendMode = BlendMode.Clear,
                                     )
                                 }
                             },
@@ -234,6 +269,17 @@ fun RecipeCard(
                         imageLoader = UnsafeImageLoader.getInstance(),
                         contentScale = ContentScale.Fit,
                         contentDescription = "",
+                    )
+                }
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(top = 12.dp, start = 12.dp)
+                ) {
+                    DifficultyMeter(
+                        modifier = Modifier
+                            .size(meterRadius * 2),
+                        difficulty = recipe.difficulty
                     )
                 }
                 Row(
@@ -360,7 +406,7 @@ private fun ReceiptCardPreview() {
                     modifier = Modifier
                         .padding(it)
                         .fillMaxWidth(),
-                    columns = StaggeredGridCells.Fixed(2),
+                    columns = StaggeredGridCells.Fixed(1),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     if (openDialog)
@@ -396,7 +442,8 @@ private fun ReceiptCardPreview() {
                                     emptyList(),
                                     reviewsCount = 100_000_000,
                                     currentRating = 0f,
-                                    viewsCount = 100L
+                                    viewsCount = 100L,
+                                    difficulty = RecipeDifficulty.entries[Random.nextInt(4)]
                                 )
                             )
                         }

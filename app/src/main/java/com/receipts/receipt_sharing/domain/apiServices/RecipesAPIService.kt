@@ -4,7 +4,7 @@ import com.receipts.receipt_sharing.domain.creators.ChangePasswRequest
 import com.receipts.receipt_sharing.domain.creators.CreatorRequest
 import com.receipts.receipt_sharing.domain.creators.EmailConfirmRequest
 import com.receipts.receipt_sharing.domain.creators.ProfileRequest
-import com.receipts.receipt_sharing.domain.filters.FilterRequest
+import com.receipts.receipt_sharing.domain.filters.ApplyFiltersRequest
 import com.receipts.receipt_sharing.domain.filters.RecipeFilteringRequest
 import com.receipts.receipt_sharing.domain.recipes.Recipe
 import com.receipts.receipt_sharing.domain.request.AuthRequest
@@ -116,6 +116,11 @@ interface RecipesAPIService {
         @Header("Authorization") token: String,
         @Path("id") id: String
     )
+
+    @GET("recipes/maxtime")
+    suspend fun getTimeStats(
+        @Header("Authorization") token : String
+    ) : Int
 
     @GET("Recipes/own/{id}")
     suspend fun getOwn(
@@ -333,6 +338,11 @@ interface RecipesAPIService {
         @Header("Authorization") token: String
     ): ProfileRequest
 
+    @GET("Creators/self/delete")
+    suspend fun deleteAccount(
+        @Header("Authorization") token: String
+    )
+
     @GET("Follows")
     suspend fun getFollows(
         @Header("Authorization") token: String,
@@ -442,36 +452,40 @@ interface RecipesAPIService {
 
     @GET("Filters/categories")
     suspend fun getCategories(
-        @Header("Authorization") token: String
+        @Header("Authorization") token: String,
+        @Query("locale") locale : String
     ): List<String>
 
-    @GET("Filters/by")
+    @GET("Filters/bycategory")
     suspend fun getFiltersByCategory(
         @Header("Authorization") token: String,
-        @Query("categoryName") categoryName: String
+        @Query("categoryName") categoryName: String,
+        @Query("locale") locale : String
     ): List<String>
 
     @GET("Filters/categorized")
     suspend fun getCategorizedFilters(
-        @Header("Authorization") token: String
+        @Header("Authorization") token: String,
+        @Query("locale") locale : String
     ): Map<String, List<String>>
 
     @GET("Filters/byrecipe/{id}")
     suspend fun getFiltersByRecipe(
         @Header("Authorization") token: String,
-        @Path("id") id: String
+        @Path("id") id: String,
+        @Query("locale") locale : String
     ): List<String>
 
     @POST("Filters")
     suspend fun attachFiltersToRecipe(
         @Header("Authorization") token: String,
-        @Body request: FilterRequest
+        @Body request: ApplyFiltersRequest
     )
 
     @DELETE("Filters")
     suspend fun removeFiltersFromRecipe(
         @Header("Authorization") token: String,
-        @Body request: FilterRequest
+        @Body request: ApplyFiltersRequest
     )
 
     @DELETE("Filters/{id}")

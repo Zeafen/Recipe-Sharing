@@ -1,4 +1,4 @@
-package com.receipts.receipt_sharing.ui.recipe
+package com.receipts.receipt_sharing.ui.recipe.elements
 
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -10,11 +10,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults.buttonColors
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -61,15 +64,23 @@ fun FiltersTab(
     onRemoveIngredient: (String) -> Unit,
     filters: List<String>,
     onRemoveFilter: (String) -> Unit,
-    onAddIngredient: (String) -> Unit
+    onAddIngredient: (String) -> Unit,
+    minTime : Int = 0,
+    maxTime : Int = 99999,
+    timeFrom : Int,
+    timeTo : Int,
+    onTimeFromChanged : (Int) -> Unit,
+    onTimeToChanged : (Int) -> Unit,
+    onClearFilters : () -> Unit,
+    onConfirmFilters : () -> Unit
 ) {
     val ctx = LocalContext.current
     var ingredientInput by rememberSaveable {
         mutableStateOf("")
     }
-    val isError = remember(ingredientInput) {
+    val isError = remember(ingredientInput, ingredients) {
         ingredientInput.isEmpty() || ingredients.any { it == ingredientInput } || !ingredientInput.matches(
-            Regex("[A-Za-z0-9]{2,}")
+            Regex("[A-Za-zА-Яа-я0-9 ]{2,}")
         )
     }
     Column(
@@ -265,6 +276,76 @@ fun FiltersTab(
                 }
             }
         }
+
+        HorizontalDivider(
+            modifier = Modifier
+                .padding(vertical = 4.dp),
+            thickness = 2.dp
+        )
+        HorizontalDivider(
+            modifier = Modifier
+                .padding(vertical = 4.dp),
+            thickness = 2.dp
+        )
+        Text(
+            text = stringResource(R.string.time_lbl),
+            style = MaterialTheme.typography.titleLarge,
+            letterSpacing = TextUnit(
+                0.15f,
+                TextUnitType.Em
+            ),
+            textAlign = TextAlign.Start,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            fontWeight = FontWeight.W400,
+        )
+        TimeSlider(
+            minTime = minTime,
+            maxTime = maxTime,
+            currentTimeTo = timeTo,
+            currentTimeFrom = timeFrom,
+            onTimeToChanged = onTimeToChanged,
+            onTimeFromChanged = onTimeFromChanged
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Button(
+                modifier = Modifier
+                    .padding(horizontal = 4.dp, vertical = 12.dp)
+                    .weight(1f),
+                colors = buttonColors(
+                    containerColor = MaterialTheme.colorScheme.secondary,
+                    contentColor = MaterialTheme.colorScheme.onSecondary
+                ),
+                shape = RoundedCornerShape(16.dp),
+                onClick = onConfirmFilters
+            ) {
+                Text(
+                    style = MaterialTheme.typography.titleSmall,
+                    text = stringResource(id = R.string.confirm_txt)
+                )
+            }
+            Button(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 4.dp, vertical = 12.dp),
+                colors = buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error,
+                    contentColor = MaterialTheme.colorScheme.onError
+                ),
+                shape = RoundedCornerShape(16.dp),
+                onClick = onClearFilters
+            ) {
+                Text(
+                    style = MaterialTheme.typography.titleSmall,
+                    text = stringResource(id = R.string.cancel_txt)
+                )
+            }
+        }
     }
 }
 
@@ -278,7 +359,15 @@ private fun Preview() {
                 filters = listOf("F1", "F2", "F3", "F4"),
                 onRemoveFilter = {},
                 onRemoveIngredient = {},
-                onAddIngredient = {}
+                onAddIngredient = {},
+                maxTime = 125,
+                minTime = 0,
+                timeFrom = 25,
+                timeTo = 75,
+                onTimeToChanged = {},
+                onTimeFromChanged = {},
+                onConfirmFilters = {},
+                onClearFilters = {}
             )
         }
     }

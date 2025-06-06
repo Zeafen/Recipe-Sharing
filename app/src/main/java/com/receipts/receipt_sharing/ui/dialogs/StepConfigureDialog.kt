@@ -39,6 +39,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.core.text.isDigitsOnly
 import com.receipts.receipt_sharing.R
 import com.receipts.receipt_sharing.domain.recipes.Step
+import com.receipts.receipt_sharing.presentation.ValidationInfo
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
 import okhttp3.internal.toLongOrDefault
 
@@ -62,7 +63,36 @@ fun StepConfigureDialog(
             mutableStateOf(step.duration.toString())
         }
         val isError = remember(duration) {
-            duration.length !in 1..5 || !duration.isDigitsOnly() || duration.toLongOrDefault(0) <= 0
+            when {
+                duration.length !in 1..5 -> ValidationInfo(
+                    false,
+                    R.string.incorrect_length_range_error,
+                    listOf(1, 5)
+                )
+
+                !duration.isDigitsOnly() -> ValidationInfo(
+                    false,
+                    R.string.must_contain_least_numbers_error
+                )
+
+                duration.toLongOrDefault(0) <= 0 -> ValidationInfo(
+                    false,
+                    R.string.illegal_data_format
+                )
+
+                else -> ValidationInfo(true)
+            }
+        }
+        val descriptionError = remember(stepState.description) {
+            when {
+                stepState.description.isEmpty() -> ValidationInfo(false, R.string.empty_field_error)
+                !stepState.description.matches(Regex("[A-Za-zА-ЯА-я0-9][A-Za-zА-ЯА-я0-9 ]+[A-Za-zА-ЯА-я0-9]")) -> ValidationInfo(
+                    false,
+                    R.string.illegal_data_format
+                )
+
+                else -> ValidationInfo(true)
+            }
         }
 
         Column(
@@ -109,16 +139,20 @@ fun StepConfigureDialog(
                     .padding(vertical = 8.dp, horizontal = 12.dp),
                 label = { Text(text = stringResource(R.string.step_description_str)) },
                 value = stepState.description,
-                isError = stepState.description.isEmpty(),
+                isError = !descriptionError.isValid,
                 supportingText = {
-                    AnimatedVisibility(stepState.description.isEmpty()) {
-                        Text(
-                            text = stringResource(R.string.empty_field_error),
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.W400,
-                            color = MaterialTheme.colorScheme.error
-                        )
-
+                    AnimatedVisibility(!descriptionError.isValid) {
+                        descriptionError.errorInfoID?.let {
+                            Text(
+                                text = stringResource(
+                                    it,
+                                    *descriptionError.formatArgs.toTypedArray()
+                                ),
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.W400,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
                     }
                 },
                 maxLines = 2,
@@ -132,76 +166,66 @@ fun StepConfigureDialog(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 value = duration,
                 onValueChange = { duration = it },
-                isError = isError,
+                isError = !isError.isValid,
                 supportingText = {
-                    AnimatedVisibility(isError) {
-                        Text(
-                            text = when {
-                                duration.isEmpty() -> stringResource(R.string.empty_field_error)
-
-                                duration.length > 5 -> stringResource(
-                                    R.string.incorrect_length_range_error,
-                                    1,
-                                    5
-                                )
-
-                                else -> {
-                                    stringResource(R.string.illegal_data_format)
-                                }
-                            },
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.W400,
-                            color = MaterialTheme.colorScheme.error
+                    AnimatedVisibility(!isError.isValid) {
+                        isError.errorInfoID?.let {
+                            Text(
+                                text = stringResource(it, *isError.formatArgs.toTypedArray())
+                        ,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.W400,
+                        color = MaterialTheme.colorScheme.error
                         )
-
                     }
-                })
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Button(modifier = Modifier
-                    .padding(horizontal = 4.dp, vertical = 12.dp)
-                    .weight(1f),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.secondary,
-                        contentColor = MaterialTheme.colorScheme.onSecondary
-                    ),
-                    shape = RoundedCornerShape(16.dp),
-                    enabled = stepState.description.isNotEmpty() && !isError,
-                    onClick = {
-                        onSaveChanges(
-                            stepState.copy(
-                                duration = duration.toLongOrDefault(1L)
-                            )
+                }
+        })
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Button(modifier = Modifier
+                .padding(horizontal = 4.dp, vertical = 12.dp)
+                .weight(1f),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.secondary,
+                    contentColor = MaterialTheme.colorScheme.onSecondary
+                ),
+                shape = RoundedCornerShape(16.dp),
+                enabled = descriptionError.isValid && isError.isValid,
+                onClick = {
+                    onSaveChanges(
+                        stepState.copy(
+                            duration = duration.toLongOrDefault(1L)
                         )
-                    }) {
-                    Text(
-                        style = MaterialTheme.typography.titleSmall,
-                        text = stringResource(id = R.string.confirm_txt)
                     )
-                }
-                Button(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(horizontal = 4.dp, vertical = 12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error,
-                        contentColor = MaterialTheme.colorScheme.onError
-                    ),
-                    shape = RoundedCornerShape(16.dp),
-                    onClick = onDismissRequest
-                ) {
-                    Text(
-                        style = MaterialTheme.typography.titleSmall,
-                        text = stringResource(id = R.string.cancel_txt)
-                    )
-                }
+                }) {
+                Text(
+                    style = MaterialTheme.typography.titleSmall,
+                    text = stringResource(id = R.string.confirm_txt)
+                )
+            }
+            Button(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 4.dp, vertical = 12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error,
+                    contentColor = MaterialTheme.colorScheme.onError
+                ),
+                shape = RoundedCornerShape(16.dp),
+                onClick = onDismissRequest
+            ) {
+                Text(
+                    style = MaterialTheme.typography.titleSmall,
+                    text = stringResource(id = R.string.cancel_txt)
+                )
             }
         }
     }
+}
 
 }
 

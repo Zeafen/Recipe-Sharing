@@ -73,6 +73,7 @@ import com.receipts.receipt_sharing.R
 import com.receipts.receipt_sharing.data.helpers.UnsafeImageLoader
 import com.receipts.receipt_sharing.data.helpers.toAmountString
 import com.receipts.receipt_sharing.domain.recipes.Recipe
+import com.receipts.receipt_sharing.ui.recipe.elements.RatingRow
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
 
 /**
@@ -152,6 +153,15 @@ fun RecipeCard(
                                         x = 0f,
                                         y = with(localDensity){ 8.dp.toPx() },
                                     )
+                                )
+                                drawCircle(
+                                    Color.Black,
+                                    radius = 64.dp.toPx(),
+                                    center = Offset(
+                                        x = 48.dp.toPx(),
+                                        y = 48.dp.toPx()
+                                    ),
+                                    blendMode = BlendMode.Clear,
                                 )
                             }
                         },

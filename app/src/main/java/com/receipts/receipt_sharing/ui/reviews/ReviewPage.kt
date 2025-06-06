@@ -1,6 +1,13 @@
 package com.receipts.receipt_sharing.ui.reviews
 
 import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -59,9 +66,10 @@ import com.receipts.receipt_sharing.domain.response.ApiResult
 import com.receipts.receipt_sharing.domain.reviews.ReviewModel
 import com.receipts.receipt_sharing.presentation.reviews.reviewPage.ReviewPageEvent
 import com.receipts.receipt_sharing.presentation.reviews.reviewPage.ReviewPageState
+import com.receipts.receipt_sharing.presentation.reviews.reviewPage.ReviewPageViewModel
 import com.receipts.receipt_sharing.ui.effects.shimmerEffect
 import com.receipts.receipt_sharing.ui.infoPages.ErrorInfoPage
-import com.receipts.receipt_sharing.ui.recipe.RatingRow
+import com.receipts.receipt_sharing.ui.recipe.elements.RatingRow
 import com.receipts.receipt_sharing.ui.theme.RecipeSharing_theme
 
 /**
@@ -78,8 +86,6 @@ fun ReviewPage(
     modifier: Modifier = Modifier,
     state: ReviewPageState,
     onEvent: (ReviewPageEvent) -> Unit,
-    onGoBack: () -> Unit,
-    onRefresh: () -> Unit
 ) {
     val ctx = LocalContext.current
     LaunchedEffect(state.infoMessage) {
@@ -139,7 +145,7 @@ fun ReviewPage(
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = onGoBack) {
+                    IconButton(onClick = { onEvent(ReviewPageEvent.GoBack) }) {
                         Icon(
                             imageVector = Icons.Default.Clear,
                             contentDescription = null
@@ -164,7 +170,7 @@ fun ReviewPage(
             modifier = Modifier
                 .padding(innerPadding),
             isRefreshing = state.review is ApiResult.Downloading,
-            onRefresh = onRefresh,
+            onRefresh = { onEvent(ReviewPageEvent.Refresh) },
         ) {
             LazyColumn {
                 when (state.review) {
@@ -205,7 +211,7 @@ fun ReviewPage(
                             ErrorInfoPage(
                                 errorInfo = state.review.info
                                     ?: stringResource(R.string.unknown_error_txt),
-                            ) { onRefresh() }
+                            ) { onEvent(ReviewPageEvent.Refresh) }
                         }
                     }
 
@@ -283,35 +289,35 @@ fun ReviewPage(
                                         letterSpacing = TextUnit(1.5f, TextUnitType.Sp)
                                     )
                                 },
-                                isError = state.reviewText.length < 50 && state.reviewText.split(" ").size < 5,
+                                isError = state.isError,
                                 supportingText = {
-                                    if (state.reviewText.isEmpty())
+                                    AnimatedVisibility(state.isError,
+                                        enter = slideInVertically(spring(stiffness = Spring.StiffnessMediumLow)) { -it } + fadeIn(
+                                            spring(stiffness = Spring.StiffnessLow)
+                                        ),
+                                        exit = slideOutVertically(spring(stiffness = Spring.StiffnessMediumLow)) { it } + fadeOut(
+                                            spring(stiffness = Spring.StiffnessLow)
+                                        )) {
                                         Text(
-                                            text = stringResource(R.string.empty_field_error),
+                                            text =
+                                            if (state.reviewText.isEmpty())
+                                                stringResource(R.string.empty_field_error)
+                                            else if (state.reviewText.length < ReviewPageViewModel.TEXT_MIN_LENGTH)
+                                                stringResource(
+                                                    R.string.incorrect_length_least_error,
+                                                    ReviewPageViewModel.TEXT_MIN_LENGTH
+                                                )
+                                            else if (state.reviewText.split(" ").size < ReviewPageViewModel.WORDS_MIN_COUNT)
+                                                stringResource(
+                                                    R.string.incorrect_words_least_error,
+                                                    ReviewPageViewModel.WORDS_MIN_COUNT
+                                                )
+                                            else stringResource(R.string.rating_not_selected_error),
                                             style = MaterialTheme.typography.bodyMedium,
                                             fontWeight = FontWeight.W400,
                                             color = MaterialTheme.colorScheme.error
                                         )
-                                    else if (state.reviewText.length < 50)
-                                        Text(
-                                            text = stringResource(
-                                                R.string.incorrect_length_least_error,
-                                                50
-                                            ),
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            fontWeight = FontWeight.W400,
-                                            color = MaterialTheme.colorScheme.error
-                                        )
-                                    else if (state.reviewText.split(" ").size < 5)
-                                        Text(
-                                            text = stringResource(
-                                                R.string.incorrect_words_least_error,
-                                                5
-                                            ),
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            fontWeight = FontWeight.W400,
-                                            color = MaterialTheme.colorScheme.error
-                                        )
+                                    }
                                 },
                                 onValueChange = { onEvent(ReviewPageEvent.SetReviewText(it)) }
                             )
@@ -345,8 +351,6 @@ private fun Preview() {
             ReviewPage(
                 state = state,
                 onEvent = {},
-                onRefresh = {},
-                onGoBack = {}
             )
         }
     }
